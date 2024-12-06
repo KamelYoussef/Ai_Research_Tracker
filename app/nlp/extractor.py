@@ -1,6 +1,5 @@
 import re
 
-# Your custom function
 def find_words_in_texts(text, search_phrases, product, location):
     results = {
         "product": product,
@@ -17,7 +16,3 @@ def find_words_in_texts(text, search_phrases, product, location):
             results[phrase] = 0  # Match not found
 
     return results
-
-# Function that will be called from the API routes
-def extract_keywords(response_text, search_phrases, product, location):
-    return find_words_in_texts(response_text, search_phrases, product, location)
