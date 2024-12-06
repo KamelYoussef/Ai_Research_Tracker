@@ -5,6 +5,7 @@ from app.database import SessionLocal
 from app.services.ai_api import get_ai_response
 from app.services.storage import store_response
 from app.dependencies import get_db
+from app.models.response import Response
 from app.utils.helpers import load_config, find_words_in_texts
 from concurrent.futures import ThreadPoolExecutor
 
@@ -34,31 +35,22 @@ async def submit_query_with_default(db: Session = Depends(get_db)):
     return {"message": "Query submitted successfully", "search_results": results, "ai_response": ai_responses}
 
 
-@router.post("/submit_query/")
-async def submit_query():
-    prompt ="why sky is blue"
-    ai_response = get_ai_response(prompt, ai_platform="OpenAI")
-    print(ai_response)
-
-    #results = find_words_in_texts(text, search_phrases, product, location)
-
-    # Save the result in the database
-    #response = store_response(db, product=product, location=location, total_count=results["total_count"])
-
-    return {"message": "Query submitted successfully", "response": ai_response}
-
-
-@router.get("/get_responses/")
-def get_responses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    responses = get_responses(db, skip=skip, limit=limit)
+@router.get("/responses/")
+async def fetch_responses(db: Session = Depends(get_db)):
+    """
+    Fetch all saved AI responses from the database.
+    """
+    responses = db.query(Response).all()
     return {"responses": responses}
 
 
-@router.post("/store_response/")
-def store_query_response(product: str, location: str, total_count: int, db: Session = Depends(get_db)):
-    # Store the response and return the object
-    response = store_response(db=db, product=product, location=location, total_count=total_count)
-    return response  # Optionally return the stored response object
+
+@router.post("/submit_query/")
+async def submit_query(prompt, ai_platform):
+    ai_response = get_ai_response(prompt, ai_platform=ai_platform)
+
+    return {"message": "Query submitted successfully", "response": ai_response.content}
+
 
 
 def load_and_validate_config(config_path):
