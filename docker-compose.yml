@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_results_tracker_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://tracker_user:your_password@db/ai_results_tracker
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+  db:
+    image: postgres:14
+    container_name: ai_results_tracker_db
+    environment:
+      POSTGRES_USER: tracker_user
+      POSTGRES_PASSWORD: tracker_user
+      POSTGRES_DB: ai_results_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
