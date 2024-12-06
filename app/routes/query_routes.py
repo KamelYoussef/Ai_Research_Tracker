@@ -16,7 +16,20 @@ router = APIRouter()
 async def submit_query_with_default(db: Session = Depends(get_db)):
     ai_responses, results = first()
     # Store the response and AI response in the database
-    #store_response(db, response=ai_responses, platform="OpenAI")
+    for result, ai_response in zip(results, ai_responses):
+        product = result.get('product')  # Assuming the result contains 'product'
+        location = result.get('location')  # Assuming the result contains 'location'
+        total_count = result.get('total_count')  # Assuming the result contains 'total_count'
+
+        # Store the query and AI response in the database
+        store_response(
+            db=db,
+            product=product,
+            location=location,
+            total_count=total_count,
+            query="Your AI query here",  # Replace with the actual query if needed
+            response_text=ai_response  # The corresponding AI response
+        )
 
     return {"message": "Query submitted successfully", "search_results": results, "ai_response": ai_responses}
 
