@@ -8,5 +8,5 @@ class Response(Base):
     product = Column(String, index=True)
     location = Column(String, index=True)
     total_count = Column(Integer)
-    query = Column(String)  # Store the query made to AI
-    response_text = Column(String)  # Store the AI-generated response
+    ai_platform = Column(String, index=True)
+    date = Column(String(6), index=True)

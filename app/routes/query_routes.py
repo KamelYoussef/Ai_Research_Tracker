@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 #from app.nlp.extractor import find_words_in_texts  # Make sure your helper function is imported
@@ -15,6 +16,7 @@ router = APIRouter()
 
 @router.post("/submit_query_with_default/")
 async def submit_query_with_default(db: Session = Depends(get_db)):
+    current_date = datetime.now().strftime("%Y%m")
     ai_responses, results = track_responses()
     # Store the response and AI response in the database
     for result, ai_response in zip(results, ai_responses):
@@ -28,8 +30,8 @@ async def submit_query_with_default(db: Session = Depends(get_db)):
             product=product,
             location=location,
             total_count=total_count,
-            query="Your AI query here",  # Replace with the actual query if needed
-            response_text=ai_response  # The corresponding AI response
+            ai_platform="ai_platform",
+            date = current_date
         )
 
     return {"message": "Query submitted successfully", "search_results": results, "ai_response": ai_responses}
