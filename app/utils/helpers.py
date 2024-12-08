@@ -2,6 +2,10 @@ import yaml
 from app.services.ai_api import get_ai_response
 from app.nlp.extractor import find_words_in_texts
 from concurrent.futures import ThreadPoolExecutor
+from app.models.response import Response
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+
 
 def load_config(config_file):
     with open(config_file, 'r') as file:
@@ -88,3 +92,113 @@ def track_responses(ai_platfrom):
                     f"Product: {result['product']}, Location: {result['location']}\n{result['ai_response']}\n"
                 )
     return ai_responses, results
+
+
+def get_counts_from_config():
+    """
+    Get the number of locations and products from the config file.
+
+    Args:
+        config_path (str): Path to the configuration file.
+
+    Returns:
+        int: Number of products and locations.
+    """
+    try:
+        config_path = "../config.yml"
+        config = load_and_validate_config(config_path)
+
+        # Count locations and products
+        n_locations = len(config['locations'])
+        n_products = len(config['products'])
+
+        # Return the counts
+        return n_locations, n_products
+
+    except Exception as e:
+        raise RuntimeError(f"Error retrieving counts from configuration: {str(e)}")
+
+
+
+def aggregate_total_by_product(db: Session, month: str):
+    """
+    Aggregate total_count by product for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        List[dict]: Aggregated totals by product.
+    """
+    results = (
+        db.query(Response.product, func.sum(Response.total_count).label("total_count"))
+        .filter(Response.date == month)
+        .group_by(Response.product)
+        .all()
+    )
+    return [{"product": r[0], "total_count": r[1]} for r in results]
+
+
+def aggregate_total_by_location(db: Session, month: str):
+    """
+    Aggregate total_count by location for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        List[dict]: Aggregated totals by location.
+    """
+    results = (
+        db.query(Response.location, func.sum(Response.total_count).label("total_count"))
+        .filter(Response.date == month)
+        .group_by(Response.location)
+        .all()
+    )
+    return [{"location": r[0], "total_count": r[1]} for r in results]
+
+
+def aggregate_total_by_product_and_location(db: Session, month: str):
+    """
+    Aggregate total_count by product and location for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        List[dict]: Aggregated totals by product and location.
+    """
+    results = (
+        db.query(
+            Response.product,
+            Response.location,
+            func.sum(Response.total_count).label("total_count"),
+        )
+        .filter(Response.date == month)
+        .group_by(Response.product, Response.location)
+        .all()
+    )
+    return [
+        {"product": r[0], "location": r[1], "total_count": r[2]} for r in results
+    ]
+
+
+def calculate_score_ai(db: Session, month: str):
+    """
+    Calculate the score_ai by summing the total_count for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        int: Total sum of total_count for the given month.
+    """
+    # Query to sum the total_count for all products, locations, or combinations in the month
+    result = db.query(func.sum(Response.total_count)).filter(Response.date == month).scalar()
+    return result if result else 0  # Return 0 if no records found
+
+

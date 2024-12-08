@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-#from app.nlp.extractor import find_words_in_texts  # Make sure your helper function is imported
+#from web_app.py.nlp.extractor import find_words_in_texts  # Make sure your helper function is imported
 from app.services.storage import store_response
 from app.dependencies import get_db
 from app.models.response import Response
 from app.services.ai_api import get_ai_response
 from app.utils.helpers import track_responses
+from app.utils.helpers import *
 from app.utils.helpers import load_config, find_words_in_texts
 
 
@@ -51,7 +52,21 @@ async def submit_query(prompt, ai_platform):
     return {"message": "Query submitted successfully", "response": ai_response.content}
 
 
+@router.get("/aggregate_total_by_product/{month}")
+async def aggregate_total_by_product_route(month: str, db: Session = Depends(get_db)):
+    """
+    Aggregate total_count by product for a given month.
 
+    Args:
+        month (str): Month in YYYYMM format.
+        db (Session): SQLAlchemy session.
 
-
-
+    Returns:
+        List[dict]: Aggregated totals by product.
+    """
+    try:
+        # Call the helper function to aggregate data
+        aggregated_data = aggregate_total_by_product(db=db, month=month)
+        return {"aggregated_data": aggregated_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error aggregating data: {str(e)}")
