@@ -4,13 +4,13 @@ from app.database import SessionLocal
 from app.services.storage import store_response
 from app.utils.helpers import track_responses
 
-def daily_track():
+def daily_track(ai_platfrom):
     """Function to be executed daily."""
     current_date = datetime.now().strftime("%Y%m")
     db: Session = SessionLocal()
 
     try:
-        ai_responses, results = track_responses()
+        ai_responses, results = track_responses(ai_platfrom)
 
         for result, ai_response in zip(results, ai_responses):
             product = result.get('product')
@@ -22,7 +22,7 @@ def daily_track():
                 product=product,
                 location=location,
                 total_count=total_count,
-                ai_platform="ai_platform",
+                ai_platform=ai_platfrom,
                 date=current_date,
             )
     except Exception as e:
@@ -31,4 +31,4 @@ def daily_track():
         db.close()
 
 if __name__ == "__main__":
-    daily_track()
+    daily_track("CHATGPT")

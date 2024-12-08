@@ -31,7 +31,7 @@ def load_and_validate_config(config_path):
     except Exception as e:
         raise RuntimeError(f"Error loading configuration: {str(e)}")
 
-def process_product_location(product, location, search_phrases, ai):
+def process_product_location(product, location, search_phrases, ai_platform):
     """
     Generate a prompt, get AI response, and find matches in the response.
 
@@ -45,7 +45,7 @@ def process_product_location(product, location, search_phrases, ai):
     """
     try:
         prompt = f"give me the best {product} insurance companies in {location}"
-        ai_response = get_ai_response(prompt, ai).content
+        ai_response = get_ai_response(prompt, ai_platform).content
         matches = find_words_in_texts(ai_response, search_phrases, product, location)
         return {
             "product": product,
@@ -61,7 +61,7 @@ def process_product_location(product, location, search_phrases, ai):
             "error": str(e)
         }
 
-def track_responses():
+def track_responses(ai_platfrom):
     config_path = "../config.yml"
     config = load_and_validate_config(config_path)
 
@@ -72,7 +72,7 @@ def track_responses():
     with ThreadPoolExecutor() as executor:
         futures = [
             executor.submit(
-                process_product_location, product, location, config["search_phrases"],"chatgpt"
+                process_product_location, product, location, config["search_phrases"], ai_platfrom
             )
             for product in config["products"]
             for location in config["locations"]
@@ -81,9 +81,8 @@ def track_responses():
         # Collect results and AI responses as tasks complete
         for future in futures:
             result = future.result()
-            # Exclude ai_response from DataFrame
             result_data = {key: value for key, value in result.items() if key != 'ai_response'}
-            results.append(result_data)  # Append without AI response
+            results.append(result_data)
             if result.get("ai_response"):
                 ai_responses.append(
                     f"Product: {result['product']}, Location: {result['location']}\n{result['ai_response']}\n"

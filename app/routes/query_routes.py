@@ -15,9 +15,9 @@ router = APIRouter()
 
 
 @router.post("/submit_query_with_default/")
-async def submit_query_with_default(db: Session = Depends(get_db)):
+async def submit_query_with_default(ai_platform, db: Session = Depends(get_db)):
     current_date = datetime.now().strftime("%Y%m")
-    ai_responses, results = track_responses()
+    ai_responses, results = track_responses(ai_platform)
     # Store the response and AI response in the database
     for result, ai_response in zip(results, ai_responses):
         product = result.get('product')  # Assuming the result contains 'product'
