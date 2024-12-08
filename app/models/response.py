@@ -10,3 +10,4 @@ class Response(Base):
     total_count = Column(Integer)
     ai_platform = Column(String, index=True)
     date = Column(String(6), index=True)
+    day = Column(String(2), index=True)

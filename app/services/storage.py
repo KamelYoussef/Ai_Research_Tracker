@@ -1,7 +1,7 @@
 from app.models.response import Response
 from sqlalchemy.orm import Session
 
-def store_response(db: Session, product: str, location: str, total_count: int, ai_platform: str, date: str):
+def store_response(db: Session, product: str, location: str, total_count: int, ai_platform: str, date: str, day: str):
     """
     Store the AI-generated response in the database.
 
@@ -22,7 +22,8 @@ def store_response(db: Session, product: str, location: str, total_count: int, a
         location=location,
         total_count=total_count,
         ai_platform=ai_platform,
-        date=date
+        date=date,
+        day=day
     )
 
     # Add the response to the session and commit
