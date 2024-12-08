@@ -1,15 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
-#from web_app.py.nlp.extractor import find_words_in_texts  # Make sure your helper function is imported
 from app.services.storage import store_response
 from app.dependencies import get_db
-from app.models.response import Response
-from app.services.ai_api import get_ai_response
-from app.utils.helpers import track_responses
 from app.utils.helpers import *
-from app.utils.helpers import load_config, find_words_in_texts
 
 
 router = APIRouter()
@@ -107,10 +101,11 @@ def aggregate_data(month: str, db: Session = Depends(get_db)):
             Response.product,
             Response.location,
             func.sum(Response.total_count).label("total_count"),
+            Response.day,
         )
         .filter(Response.date == month)
-        .group_by(Response.product, Response.location)
+        .group_by(Response.product, Response.location, Response.day,)
         .all()
     )
-    return {"aggregated_data": [{"product": r[0], "location": r[1], "total_count": r[2]} for r in results]}
+    return {"aggregated_data": [{"product": r[0], "location": r[1], "total_count": r[2], "day": r[3]} for r in results]}
 
