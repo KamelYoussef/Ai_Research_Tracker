@@ -124,7 +124,6 @@ def get_counts_from_config():
         raise RuntimeError(f"Error retrieving counts from configuration: {str(e)}")
 
 
-
 def aggregate_total_by_product(db: Session, month: str):
     """
     Aggregate total_count by product for a given month.
@@ -137,12 +136,13 @@ def aggregate_total_by_product(db: Session, month: str):
         List[dict]: Aggregated totals by product.
     """
     results = (
-        db.query(Response.product, func.sum(Response.total_count).label("total_count"))
+        db.query(Response.product, func.sum(Response.total_count).label("total_count"), Response.day)
         .filter(Response.date == month)
-        .group_by(Response.product)
+        .group_by(Response.day, Response.product)
         .all()
     )
-    return [{"product": r[0], "total_count": r[1]} for r in results]
+    print(results)
+    return [{"product": r[0], "total_count": r[1], "day": r[2]} for r in results]
 
 
 def aggregate_total_by_location(db: Session, month: str):
@@ -157,12 +157,12 @@ def aggregate_total_by_location(db: Session, month: str):
         List[dict]: Aggregated totals by location.
     """
     results = (
-        db.query(Response.location, func.sum(Response.total_count).label("total_count"))
+        db.query(Response.location, func.sum(Response.total_count).label("total_count"), Response.day)
         .filter(Response.date == month)
-        .group_by(Response.location)
+        .group_by(Response.day, Response.location)
         .all()
     )
-    return [{"location": r[0], "total_count": r[1]} for r in results]
+    return [{"location": r[0], "total_count": r[1], "day": r[2]} for r in results]
 
 
 def aggregate_total_by_product_and_location(db: Session, month: str):

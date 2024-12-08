@@ -92,7 +92,7 @@ def process_combined_data(month):
             index=['product', 'location'],
             columns='day',
             values='total_count',
-            aggfunc='sum',  # In case there are duplicate values for the same product-location-day
+            aggfunc='max',  # In case there are duplicate values for the same product-location-day
             fill_value=0  # Fill NaN values with 0
         )
         df_pivot.reset_index(inplace=True)
@@ -120,11 +120,15 @@ def display_dashboard(month):
 
     # Product Aggregation
     st.subheader("Product Aggregation")
-    render_data("aggregate_total_by_product", "product", month)
+    df_pivot = process_combined_data_product(month)
+    if df_pivot is not None:
+        st.write(df_pivot)
 
     # Location Aggregation
     st.subheader("Location Aggregation")
-    render_data("aggregate_total_by_location", "location", month)
+    df_pivot = process_combined_data_location(month)
+    if df_pivot is not None:
+        st.write(df_pivot)
 
 
 def setup_sidebar():
@@ -151,3 +155,41 @@ def plot_bar_chart(df_pivot):
     plt.xlabel('Product')
     plt.ylabel('Total Count')
     st.pyplot(plt)
+
+
+def process_combined_data_product(month):
+    combined_data = fetch_data("aggregate_total_by_product", month)
+    if combined_data:
+        df = pd.DataFrame(combined_data)
+        df_pivot = df.pivot_table(
+            index=['product'],
+            columns='day',
+            values='total_count',
+            aggfunc='max',  # In case there are duplicate values for the same product-location-day
+            fill_value=0  # Fill NaN values with 0
+        )
+        df_pivot.reset_index(inplace=True)
+        df_pivot['Total Count'] = df_pivot.iloc[:, 2:].sum(axis=1)  # Adding total count column
+        return df_pivot
+    else:
+        st.error("No data available for the selected month.")
+        return None
+
+
+def process_combined_data_location(month):
+    combined_data = fetch_data("aggregate_total_by_location", month)
+    if combined_data:
+        df = pd.DataFrame(combined_data)
+        df_pivot = df.pivot_table(
+            index=['location'],
+            columns='day',
+            values='total_count',
+            aggfunc='max',  # In case there are duplicate values for the same product-location-day
+            fill_value=0  # Fill NaN values with 0
+        )
+        df_pivot.reset_index(inplace=True)
+        df_pivot['Total Count'] = df_pivot.iloc[:, 2:].sum(axis=1)  # Adding total count column
+        return df_pivot
+    else:
+        st.error("No data available for the selected month.")
+        return None
