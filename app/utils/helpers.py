@@ -35,6 +35,7 @@ def load_and_validate_config(config_path):
     except Exception as e:
         raise RuntimeError(f"Error loading configuration: {str(e)}")
 
+
 def process_product_location(product, location, search_phrases, ai_platform):
     """
     Generate a prompt, get AI response, and find matches in the response.
@@ -50,12 +51,15 @@ def process_product_location(product, location, search_phrases, ai_platform):
     try:
         prompt = f"give me the best {product} insurance companies in {location}"
         ai_response = get_ai_response(prompt, ai_platform).content
-        matches = find_words_in_texts(ai_response, search_phrases, product, location)
+        match_results = find_words_in_texts(ai_response, search_phrases)
+
+        has_matches = int(any(match_results.values()))
         return {
             "product": product,
             "location": location,
             "ai_response": ai_response,
-            **matches
+            "total_count": has_matches,
+            "matches": match_results
         }
     except Exception as e:
         return {
@@ -64,6 +68,7 @@ def process_product_location(product, location, search_phrases, ai_platform):
             "ai_response": "",
             "error": str(e)
         }
+
 
 def track_responses(ai_platfrom):
     config_path = "../config.yml"

@@ -19,8 +19,8 @@ def daily_track(ai_platfrom):
 
     try:
         ai_responses, results = track_responses(ai_platfrom)
-
-        for result, ai_response in zip(results, ai_responses):
+        print(results)
+        for result in results:
             product = result.get('product')
             location = result.get('location')
             total_count = result.get('total_count')
