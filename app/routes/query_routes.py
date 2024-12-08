@@ -70,3 +70,21 @@ async def aggregate_total_by_product_route(month: str, db: Session = Depends(get
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error aggregating data: {str(e)}")
+
+
+@router.get("/aggregate_total_by_location/{month}")
+async def get_total_by_location(month: str, db: Session = Depends(get_db)):
+    """
+    Get the aggregated total_count by location for a given month.
+
+    Args:
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        JSON: Aggregated totals by location.
+    """
+    try:
+        aggregated_data = aggregate_total_by_location(db, month)
+        return {"aggregated_data": aggregated_data}
+    except Exception as e:
+        return {"error": str(e)}
