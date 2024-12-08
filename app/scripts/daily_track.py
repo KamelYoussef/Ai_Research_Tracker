@@ -4,6 +4,7 @@ from app.database import SessionLocal
 from app.services.storage import store_response
 from app.utils.helpers import track_responses
 
+
 def daily_track(ai_platfrom):
     """Function to be executed daily."""
     current_date = datetime.now().strftime("%Y%m")
@@ -29,6 +30,7 @@ def daily_track(ai_platfrom):
         print(f"An error occurred: {e}")
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     daily_track("CHATGPT")
