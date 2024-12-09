@@ -16,10 +16,8 @@ app.add_middleware(
 # Include the query routes
 app.include_router(query_router)
 
+
 # Create the database tables if they don't exist
 @app.on_event("startup")
 def startup():
     Base.metadata.create_all(bind=engine)
-
-
-

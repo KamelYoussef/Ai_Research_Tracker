@@ -12,6 +12,7 @@ Base = declarative_base()
 # Create a session maker bound to the engine
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 # Dependency to get the database session
 def get_db():
     db = SessionLocal()

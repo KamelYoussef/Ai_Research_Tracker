@@ -3,7 +3,9 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.services.storage import store_response
 from app.dependencies import get_db
-from app.utils.helpers import *
+from app.models.response import Response
+from sqlalchemy import func
+from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, aggregate_total_by_location
 
 
 router = APIRouter()
@@ -15,9 +17,9 @@ async def submit_query_with_default(ai_platform, db: Session = Depends(get_db)):
     ai_responses, results = track_responses(ai_platform)
     # Store the response and AI response in the database
     for result, ai_response in zip(results, ai_responses):
-        product = result.get('product')  # Assuming the result contains 'product'
-        location = result.get('location')  # Assuming the result contains 'location'
-        total_count = result.get('total_count')  # Assuming the result contains 'total_count'
+        product = result.get('product')
+        location = result.get('location')
+        total_count = result.get('total_count')
 
         # Store the query and AI response in the database
         store_response(
@@ -26,10 +28,11 @@ async def submit_query_with_default(ai_platform, db: Session = Depends(get_db)):
             location=location,
             total_count=total_count,
             ai_platform="ai_platform",
-            date = current_date
+            date=current_date
         )
 
     return {"message": "Query submitted successfully", "search_results": results, "ai_response": ai_responses}
+
 
 @router.get("/responses/")
 async def fetch_responses(db: Session = Depends(get_db)):
@@ -38,6 +41,7 @@ async def fetch_responses(db: Session = Depends(get_db)):
     """
     responses = db.query(Response).all()
     return {"responses": responses}
+
 
 @router.post("/submit_query/")
 async def submit_query(prompt, ai_platform):
@@ -107,5 +111,14 @@ def aggregate_data(month: str, db: Session = Depends(get_db)):
         .group_by(Response.product, Response.location, Response.day,)
         .all()
     )
-    return {"aggregated_data": [{"product": r[0], "location": r[1], "total_count": r[2], "day": r[3]} for r in results]}
+    return {"aggregated_data":
+                [
+                    {"product": r[0],
+                     "location": r[1],
+                     "total_count": r[2],
+                     "day": r[3]
+                     }
+                    for r in results
+                ]
+            }
 

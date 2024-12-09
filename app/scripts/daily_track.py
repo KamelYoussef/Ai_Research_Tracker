@@ -43,3 +43,4 @@ def daily_track(ai_platfrom):
 if __name__ == "__main__":
     startup()
     daily_track("CHATGPT")
+    daily_track("PERPLEXITY")

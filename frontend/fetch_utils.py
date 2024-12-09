@@ -111,7 +111,7 @@ def display_section(endpoint, index_columns, x_label, section_title, month):
     """
     df = process_and_pivot_data(endpoint, index_columns, month)
     display_table(df, f"{section_title} Table")
-    plot_bar_chart(df, x_label, f"{section_title} Chart")
+    #plot_bar_chart(df, x_label, f"{section_title} Chart")
 
 
 # Sidebar setup
