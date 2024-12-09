@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from app.services.storage import store_response
 from app.dependencies import get_db
 from app.models.response import Response
-from sqlalchemy import func
-from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, aggregate_total_by_location
+from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
+    aggregate_total_by_location, aggregate_total_by_product_and_location
 
 
 router = APIRouter()
@@ -71,7 +71,7 @@ async def aggregate_total_by_product_route(month: str, db: Session = Depends(get
 
 
 @router.get("/aggregate_total_by_location/{month}")
-async def get_total_by_location(month: str, db: Session = Depends(get_db)):
+async def aggregate_total_by_location_route(month: str, db: Session = Depends(get_db)):
     """
     Get the aggregated total_count by location for a given month.
 
@@ -89,7 +89,7 @@ async def get_total_by_location(month: str, db: Session = Depends(get_db)):
 
 
 @router.get("/aggregate_total_by_product_and_location/{month}")
-def aggregate_data(month: str, db: Session = Depends(get_db)):
+def aggregate_total_by_product_and_location_route(month: str, db: Session = Depends(get_db)):
     """
     Endpoint to aggregate total_count by product and location for a given month.
 
@@ -100,25 +100,8 @@ def aggregate_data(month: str, db: Session = Depends(get_db)):
     Returns:
         dict: Aggregated totals by product and location.
     """
-    results = (
-        db.query(
-            Response.product,
-            Response.location,
-            func.sum(Response.total_count).label("total_count"),
-            Response.day,
-        )
-        .filter(Response.date == month)
-        .group_by(Response.product, Response.location, Response.day,)
-        .all()
-    )
-    return {"aggregated_data":
-                [
-                    {"product": r[0],
-                     "location": r[1],
-                     "total_count": r[2],
-                     "day": r[3]
-                     }
-                    for r in results
-                ]
-            }
-
+    try:
+        aggregated_data = aggregate_total_by_product_and_location(db, month)
+        return {"aggregated_data": aggregated_data}
+    except Exception as e:
+        return {"error": str(e)}

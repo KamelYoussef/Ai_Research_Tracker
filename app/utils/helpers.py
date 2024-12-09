@@ -181,14 +181,20 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
             Response.product,
             Response.location,
             func.sum(Response.total_count).label("total_count"),
+            Response.day
         )
         .filter(Response.date == month)
-        .group_by(Response.product, Response.location)
+        .group_by(Response.product, Response.location, Response.day)
         .all()
     )
     return [
-        {"product": r[0], "location": r[1], "total_count": r[2]} for r in results
-    ]
+                {"product": r[0],
+                 "location": r[1],
+                 "total_count": r[2],
+                 "day": r[3]
+                 }
+                for r in results
+            ]
 
 
 def calculate_score_ai(db: Session, month: str):
