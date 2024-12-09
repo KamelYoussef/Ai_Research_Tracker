@@ -4,8 +4,9 @@ import requests
 import streamlit as st
 import seaborn as sns
 
-# Define the FastAPI server URL (you can parameterize this if needed)
+# Define the FastAPI server URL
 FASTAPI_URL = "http://localhost:8000"
+
 
 # Utility: Fetch data from the API
 def fetch_data(endpoint, month):
@@ -28,168 +29,135 @@ def fetch_data(endpoint, month):
         st.error(f"Error fetching data from {endpoint}: {e}")
         return []
 
-# Utility: Display data as a table in Streamlit
-def display_table(data, label):
+
+# Utility: Process and pivot data
+def process_and_pivot_data(endpoint, index_columns, month):
+    """
+    Fetch and process data for given index columns.
+
+    Args:
+        endpoint (str): API endpoint to query.
+        index_columns (list): Columns to use as index.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        pd.DataFrame: Pivoted DataFrame with aggregated data or None if empty.
+    """
+    data = fetch_data(endpoint, month)
+    if data:
+        df = pd.DataFrame(data)
+        df_pivot = df.pivot_table(
+            index=index_columns,
+            columns="day",
+            values="total_count",
+            aggfunc="max",
+            fill_value=0
+        ).reset_index()
+        df_pivot["Total Count"] = df_pivot.iloc[:, len(index_columns):].sum(axis=1)
+        return df_pivot
+    else:
+        st.error(f"No data available for {month}.")
+        return None
+
+
+# Utility: Display table
+def display_table(df, title):
     """
     Display data in a table format in Streamlit.
 
     Args:
-        data (list): List of aggregated data.
-        label (str): Label for grouping data.
-
-    Returns:
-        pd.DataFrame: The DataFrame of the displayed data.
-    """
-    if data:
-        df = pd.DataFrame(data)
-        st.markdown(f"### Aggregated Data Table by {label.capitalize()}")
-        st.dataframe(df)
-        return df
-    else:
-        st.warning(f"No data found for {label.capitalize()}.")
-        return None
-
-# Utility: Plot bar chart in Streamlit
-def plot_bar_chart(df, label, month):
-    """
-    Plot data as a bar chart in Streamlit.
-
-    Args:
-        df (pd.DataFrame): DataFrame containing aggregated data.
-        label (str): Label for grouping data.
-        month (str): The month in YYYYMM format.
+        df (pd.DataFrame): DataFrame to display.
+        title (str): Title for the table.
     """
     if df is not None and not df.empty:
-        st.markdown(f"### Total Count by {label.capitalize()} (Bar Chart)")
-        fig, ax = plt.subplots(figsize=(8, 5))
-        ax.bar(df[label], df["total_count"], color="mediumseagreen")
-        ax.set_xlabel(label.capitalize())
+        st.markdown(f"### {title}")
+        st.dataframe(df)
+    else:
+        st.warning(f"No data available to display for {title}.")
+
+
+# Utility: Plot bar chart
+def plot_bar_chart(df, x_label, title):
+    """
+    Plot a bar chart using the provided DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data.
+        x_label (str): Column name to use as x-axis.
+        title (str): Title for the chart.
+    """
+    if df is not None and not df.empty:
+        st.markdown(f"### {title}")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.barplot(data=df, x=x_label, y="Total Count", ax=ax, color="mediumseagreen")
+        ax.set_xlabel(x_label.capitalize())
         ax.set_ylabel("Total Count")
-        ax.set_title(f"Total Count by {label.capitalize()} for {month}")
+        ax.set_title(title)
         plt.xticks(rotation=45)
         st.pyplot(fig)
 
-# Core: Fetch, display, and plot data
-def render_data(endpoint, label, month):
+
+# Dashboard: Display section
+def display_section(endpoint, index_columns, x_label, section_title, month):
     """
-    Fetch, display, and plot data from a specific API endpoint.
+    Display a section with a table and a bar chart.
 
     Args:
         endpoint (str): API endpoint to query.
-        label (str): Label for grouping data.
-        month (str): The month in YYYYMM format.
+        index_columns (list): Columns to use as index.
+        x_label (str): Column to use for the x-axis in the bar chart.
+        section_title (str): Title for the section.
+        month (str): Month in YYYYMM format.
     """
-    data = fetch_data(endpoint, month)
-    df = display_table(data, label)
+    df = process_and_pivot_data(endpoint, index_columns, month)
+    display_table(df, f"{section_title} Table")
+    plot_bar_chart(df, x_label, f"{section_title} Chart")
 
 
-def process_combined_data(month):
-    """Fetch and process the combined data by product and location."""
-    combined_data = fetch_data("aggregate_total_by_product_and_location", month)
-    if combined_data:
-        df = pd.DataFrame(combined_data)
-        df_pivot = df.pivot_table(
-            index=['product', 'location'],
-            columns='day',
-            values='total_count',
-            aggfunc='max',  # In case there are duplicate values for the same product-location-day
-            fill_value=0  # Fill NaN values with 0
-        )
-        df_pivot.reset_index(inplace=True)
-        df_pivot['Total Count'] = df_pivot.iloc[:, 2:].sum(axis=1)  # Adding total count column
-        return df_pivot
-    else:
-        st.error("No data available for the selected month.")
-        return None
-
-
-def display_dashboard(month):
-    """Display the main dashboard content."""
-    st.title(f"Dashboard Tracking for {month}")
-    st.markdown("---")  # Horizontal separator
-
-    # Location x Product Aggregation
-    st.subheader("Location x Product Aggregation")
-    df_pivot = process_combined_data(month)
-    if df_pivot is not None:
-        st.write(df_pivot)
-        plot_bar_chart(df_pivot)
-
-    # Separate buttons for showing product or location-specific data
-    st.sidebar.markdown("---")  # Sidebar separator
-
-    # Product Aggregation
-    st.subheader("Product Aggregation")
-    df_pivot = process_combined_data_product(month)
-    if df_pivot is not None:
-        st.write(df_pivot)
-
-    # Location Aggregation
-    st.subheader("Location Aggregation")
-    df_pivot = process_combined_data_location(month)
-    if df_pivot is not None:
-        st.write(df_pivot)
-
-
+# Sidebar setup
 def setup_sidebar():
-    """Set up the sidebar with controls for the user."""
+    """
+    Set up the sidebar controls for user input.
+
+    Returns:
+        str: Selected month in YYYYMM format.
+    """
     st.sidebar.title("Dashboard Configuration")
     st.sidebar.markdown("Use the controls below to configure the dashboard.")
     return st.sidebar.text_input("Enter Month (YYYYMM format)", placeholder="E.g., 202412")
 
 
-def plot_bar_chart(df_pivot):
-    """Plot a bar chart based on the pivot table."""
-    # Melt the dataframe without Total Count column
-    df_melted = df_pivot.drop(columns='Total Count').melt(id_vars=['product', 'location'],
-                                                          var_name='Day', value_name='Total Count')
+# Dashboard: Main display
+def display_dashboard(month):
+    """
+    Display the main dashboard content.
 
-    # Merge the 'Total Count' column back to the melted dataframe
-    df_melted['Total Count'] = df_pivot['Total Count'].repeat(df_pivot.shape[1] - 2).reset_index(drop=True)
+    Args:
+        month (str): Month in YYYYMM format.
+    """
+    st.title(f"Dashboard Tracking for {month}")
+    st.markdown("---")
 
-    # Use seaborn for styling and plotting
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x='product', y='Total Count', hue='Day', data=df_melted, ci=None)
+    # Sections
+    display_section(
+        "aggregate_total_by_product_and_location",
+        ["product", "location"],
+        "product",
+        "Product x Location Aggregation",
+        month
+    )
+    display_section(
+        "aggregate_total_by_product",
+        ["product"],
+        "product",
+        "Product Aggregation",
+        month
+    )
+    display_section(
+        "aggregate_total_by_location",
+        ["location"],
+        "location",
+        "Location Aggregation",
+        month
+    )
 
-    plt.title('Total Count by Product and Day')
-    plt.xlabel('Product')
-    plt.ylabel('Total Count')
-    st.pyplot(plt)
-
-
-def process_combined_data_product(month):
-    combined_data = fetch_data("aggregate_total_by_product", month)
-    if combined_data:
-        df = pd.DataFrame(combined_data)
-        df_pivot = df.pivot_table(
-            index=['product'],
-            columns='day',
-            values='total_count',
-            aggfunc='max',  # In case there are duplicate values for the same product-location-day
-            fill_value=0  # Fill NaN values with 0
-        )
-        df_pivot.reset_index(inplace=True)
-        df_pivot['Total Count'] = df_pivot.iloc[:, 2:].sum(axis=1)  # Adding total count column
-        return df_pivot
-    else:
-        st.error("No data available for the selected month.")
-        return None
-
-
-def process_combined_data_location(month):
-    combined_data = fetch_data("aggregate_total_by_location", month)
-    if combined_data:
-        df = pd.DataFrame(combined_data)
-        df_pivot = df.pivot_table(
-            index=['location'],
-            columns='day',
-            values='total_count',
-            aggfunc='max',  # In case there are duplicate values for the same product-location-day
-            fill_value=0  # Fill NaN values with 0
-        )
-        df_pivot.reset_index(inplace=True)
-        df_pivot['Total Count'] = df_pivot.iloc[:, 2:].sum(axis=1)  # Adding total count column
-        return df_pivot
-    else:
-        st.error("No data available for the selected month.")
-        return None
