@@ -136,13 +136,13 @@ def aggregate_total_by_product(db: Session, month: str):
         List[dict]: Aggregated totals by product.
     """
     results = (
-        db.query(Response.product, func.sum(Response.total_count).label("total_count"), Response.day)
+        db.query(Response.product, func.sum(Response.total_count).label("total_count"), Response.day, Response.ai_platform)
         .filter(Response.date == month)
-        .group_by(Response.day, Response.product)
+        .group_by(Response.day, Response.product, Response.ai_platform)
         .all()
     )
     print(results)
-    return [{"product": r[0], "total_count": r[1], "day": r[2]} for r in results]
+    return [{"product": r[0], "total_count": r[1], "day": r[2], "ai_platform": r[3]} for r in results]
 
 
 def aggregate_total_by_location(db: Session, month: str):
@@ -157,12 +157,12 @@ def aggregate_total_by_location(db: Session, month: str):
         List[dict]: Aggregated totals by location.
     """
     results = (
-        db.query(Response.location, func.sum(Response.total_count).label("total_count"), Response.day)
+        db.query(Response.location, func.sum(Response.total_count).label("total_count"), Response.day, Response.ai_platform)
         .filter(Response.date == month)
-        .group_by(Response.day, Response.location)
+        .group_by(Response.day, Response.location, Response.ai_platform)
         .all()
     )
-    return [{"location": r[0], "total_count": r[1], "day": r[2]} for r in results]
+    return [{"location": r[0], "total_count": r[1], "day": r[2], "ai_platform": r[3]} for r in results]
 
 
 def aggregate_total_by_product_and_location(db: Session, month: str):
@@ -181,17 +181,19 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
             Response.product,
             Response.location,
             func.sum(Response.total_count).label("total_count"),
-            Response.day
+            Response.day,
+            Response.ai_platform
         )
         .filter(Response.date == month)
-        .group_by(Response.product, Response.location, Response.day)
+        .group_by(Response.product, Response.location, Response.day, Response.ai_platform)
         .all()
     )
     return [
                 {"product": r[0],
                  "location": r[1],
                  "total_count": r[2],
-                 "day": r[3]
+                 "day": r[3],
+                 "ai_platform": r[4]
                  }
                 for r in results
             ]

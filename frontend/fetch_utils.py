@@ -141,21 +141,21 @@ def display_dashboard(month):
     # Sections
     display_section(
         "aggregate_total_by_product_and_location",
-        ["product", "location"],
+        ["product", "location", "ai_platform"],
         "product",
         "Product x Location Aggregation",
         month
     )
     display_section(
         "aggregate_total_by_product",
-        ["product"],
+        ["product", "ai_platform"],
         "product",
         "Product Aggregation",
         month
     )
     display_section(
         "aggregate_total_by_location",
-        ["location"],
+        ["location", "ai_platform"],
         "location",
         "Location Aggregation",
         month
