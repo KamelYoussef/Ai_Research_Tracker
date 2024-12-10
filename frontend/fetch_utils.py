@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import requests
 import streamlit as st
 import seaborn as sns
+from datetime import datetime
 
 # Define the FastAPI server URL
 FASTAPI_URL = "http://localhost:8000"
@@ -114,19 +115,6 @@ def display_section(endpoint, index_columns, x_label, section_title, month):
     #plot_bar_chart(df, x_label, f"{section_title} Chart")
 
 
-# Sidebar setup
-def setup_sidebar():
-    """
-    Set up the sidebar controls for user input.
-
-    Returns:
-        str: Selected month in YYYYMM format.
-    """
-    st.sidebar.title("Dashboard Configuration")
-    st.sidebar.markdown("Use the controls below to configure the dashboard.")
-    return st.sidebar.text_input("Enter Month (YYYYMM format)", placeholder="E.g., 202412")
-
-
 # Dashboard: Main display
 def display_dashboard(month):
     """
@@ -161,3 +149,28 @@ def display_dashboard(month):
         month
     )
 
+
+def setup_sidebar():
+    """Setup sidebar with year and month selection."""
+    # Get the current year and month
+    current_year = datetime.today().year
+    current_month = datetime.today().month
+
+    # Create a list of years
+    years = [str(year) for year in range(current_year, 2020 - 1, -1)]
+
+    # List of months as full names
+    month_names = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ]
+
+    # Allow the user to select a year and month
+    selected_year = st.sidebar.selectbox("Select Year", years, index=years.index(str(current_year)))
+    selected_month_name = st.sidebar.selectbox("Select Month", month_names, index=current_month - 1)
+
+    # Convert the selected month name to its corresponding number (01-12)
+    selected_month = month_names.index(selected_month_name) + 1
+    selected_month_str = f"{selected_year}{str(selected_month).zfill(2)}"
+
+    return selected_month_str

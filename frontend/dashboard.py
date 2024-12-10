@@ -1,7 +1,5 @@
-import streamlit as st
 from fetch_utils import *
 
-# Set up custom page configuration
 st.set_page_config(
     page_title="Dashboard Tracking",
     layout="wide",
@@ -19,6 +17,7 @@ def main():
             display_dashboard(month)
         else:
             st.error("Please enter a valid month in the YYYYMM format.")
+
 
 # Run the app
 if __name__ == "__main__":
