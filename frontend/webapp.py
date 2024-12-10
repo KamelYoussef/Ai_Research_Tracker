@@ -2,8 +2,16 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Title and Header
-st.subheader("Your AI Results For 10/24 - 10/25")
+st.set_page_config(
+    page_title="Dashboard Tracking",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# Layout for Header
+header_col1, header_col2 = st.columns([3, 1])
+with header_col2:
+    st.write("Your AI Results For 10/24 - 10/25")
 
 # Data (mock data for the example)
 models = ["ChatGPT", "Gemini", "Perplexity"]
@@ -31,7 +39,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
     models, scores.values(), locations_data["Locations Showed"], locations_data["Locations No Results"], keywords_presence.values(), columns
 ):
     with column:
-        st.write(f"{model} Score =  {score}")
+        st.write(f"{model} (Score: {score})")
 
         pie_data = pd.DataFrame({
             "Category": ["Locations Showed", "Locations No Results"],
@@ -39,7 +47,8 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         })
         pie_chart = px.pie(
             pie_data, values="Count", names="Category",
-            height=350
+            height=350,
+            color_discrete_sequence=["#1f77b4", "#e377c2"]
         )
         st.plotly_chart(pie_chart, use_container_width=True)
 
