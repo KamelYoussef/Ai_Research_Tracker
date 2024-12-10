@@ -18,6 +18,9 @@ def main():
         else:
             st.error("Please enter a valid month in the YYYYMM format.")
 
+    if st.sidebar.button("AI Tracking"):
+        display_ai_tracking()
+
 
 # Run the app
 if __name__ == "__main__":

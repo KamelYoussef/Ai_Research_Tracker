@@ -94,7 +94,7 @@ def track_responses(ai_platfrom):
             results.append(result_data)
             if result.get("ai_response"):
                 ai_responses.append(
-                    f"Product: {result['product']}, Location: {result['location']}\n{result['ai_response']}\n"
+                    f"{result['ai_response']}\n"
                 )
     return ai_responses, results
 

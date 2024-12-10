@@ -174,3 +174,47 @@ def setup_sidebar():
     selected_month_str = f"{selected_year}{str(selected_month).zfill(2)}"
 
     return selected_month_str
+
+
+def fetch_tracking_data(endpoint, ai_platform):
+    """
+    Fetch tracking data from the FastAPI endpoint.
+    """
+    url = f"{FASTAPI_URL}/{endpoint}/{ai_platform}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        return {"status": "error", "message": str(e)}
+
+
+def display_ai_tracking():
+    """
+    Display AI tracking results for a specific month.
+    """
+
+    platforms = ["CHATGPT", "PERPLEXITY"]
+    for ai_platform in platforms:
+        with st.spinner(f"Fetching data for {ai_platform}..."):
+            data = fetch_tracking_data("submit_query_with_default", ai_platform)
+
+        if data["status"] != "success":
+            st.error(f"Error fetching data for {ai_platform}: {data.get('message', 'Unknown error')}")
+            continue
+
+        results = data["data"]
+        st.markdown(f"### Results for {ai_platform}")
+
+        if not results:
+            st.warning(f"No results found for {ai_platform}.")
+            continue
+
+        # Display results in a table
+        df = pd.DataFrame(results)
+        st.dataframe(df)
+
+        # Optional: Add visualizations
+        st.markdown("#### Visualizations")
+        count_by_location = pd.DataFrame(results).groupby("location")["total_count"].sum()
+        st.bar_chart(count_by_location)

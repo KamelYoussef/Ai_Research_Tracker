@@ -11,7 +11,7 @@ from app.utils.helpers import track_responses, get_ai_response, aggregate_total_
 router = APIRouter()
 
 
-@router.post("/submit_query_with_default/")
+@router.get("/submit_query_with_default/{ai_platform}")
 async def submit_query_with_default(ai_platform: str):
     current_date = datetime.now().strftime("%Y%m")
     current_day = datetime.now().strftime("%d")
@@ -32,13 +32,11 @@ async def submit_query_with_default(ai_platform: str):
             total_count = result.get('total_count')
 
             combined_data.append({
-                "ai_response": ai_response,
                 "product": product,
                 "location": location,
                 "total_count": total_count,
+                "ai_response": ai_response,
                 "ai_platform": ai_platform,
-                "date": current_date,
-                "day": current_day,
             })
 
         return {
