@@ -71,7 +71,7 @@ def process_product_location(product, location, search_phrases, ai_platform):
 
 
 def track_responses(ai_platfrom):
-    config_path = "../config.yml"
+    config_path = "app/config.yml"
     config = load_and_validate_config(config_path)
 
     results = []

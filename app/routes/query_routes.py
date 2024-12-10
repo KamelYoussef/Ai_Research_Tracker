@@ -12,26 +12,43 @@ router = APIRouter()
 
 
 @router.post("/submit_query_with_default/")
-async def submit_query_with_default(ai_platform, db: Session = Depends(get_db)):
+async def submit_query_with_default(ai_platform: str):
     current_date = datetime.now().strftime("%Y%m")
-    ai_responses, results = track_responses(ai_platform)
-    # Store the response and AI response in the database
-    for result, ai_response in zip(results, ai_responses):
-        product = result.get('product')
-        location = result.get('location')
-        total_count = result.get('total_count')
+    current_day = datetime.now().strftime("%d")
 
-        # Store the query and AI response in the database
-        store_response(
-            db=db,
-            product=product,
-            location=location,
-            total_count=total_count,
-            ai_platform="ai_platform",
-            date=current_date
-        )
+    try:
+        # Call the tracking function
+        ai_responses, results = track_responses(ai_platform)
 
-    return {"message": "Query submitted successfully", "search_results": results, "ai_response": ai_responses}
+        # Ensure the number of AI responses matches the number of results
+        if len(ai_responses) != len(results):
+            raise ValueError("Mismatch between AI responses and results")
+
+        # Combine AI responses with corresponding results
+        combined_data = []
+        for ai_response, result in zip(ai_responses, results):
+            product = result.get('product')
+            location = result.get('location')
+            total_count = result.get('total_count')
+
+            combined_data.append({
+                "ai_response": ai_response,
+                "product": product,
+                "location": location,
+                "total_count": total_count,
+                "ai_platform": ai_platform,
+                "date": current_date,
+                "day": current_day,
+            })
+
+        return {
+            "status": "success",
+            "platform": ai_platform,
+            "data": combined_data
+        }
+    except Exception as e:
+        # Handle errors gracefully and return a meaningful message
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 
 @router.get("/responses/")
