@@ -5,7 +5,7 @@ from app.services.storage import store_response
 from app.dependencies import get_db
 from app.models.response import Response
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
-    aggregate_total_by_location, aggregate_total_by_product_and_location
+    aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai
 
 
 router = APIRouter()
@@ -120,3 +120,20 @@ def aggregate_total_by_product_and_location_route(month: str, db: Session = Depe
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         return {"error": str(e)}
+
+@router.get("/score_ai/month")
+async def get_score_ai(month: str, db: Session = Depends(get_db)):
+    """
+    Calculate and return the AI score for a given month.
+
+    Args:
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        float: AI score for the specified month.
+    """
+    try:
+        score = calculate_score_ai(db, month)
+        return {"month": month, "score_ai": score}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")

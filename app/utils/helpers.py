@@ -110,7 +110,7 @@ def get_counts_from_config():
         int: Number of products and locations.
     """
     try:
-        config_path = "../config.yml"
+        config_path = "app/config.yml"
         config = load_and_validate_config(config_path)
 
         # Count locations and products
@@ -212,6 +212,7 @@ def calculate_score_ai(db: Session, month: str):
     """
     # Query to sum the total_count for all products, locations, or combinations in the month
     result = db.query(func.sum(Response.total_count)).filter(Response.date == month).scalar()
-    return result if result else 0  # Return 0 if no records found
-
-
+    n_locations, n_products = get_counts_from_config()
+    n_days_in_month = 30
+    score = int(result / (n_locations * n_products) / n_days_in_month * 100)
+    return score if score else 0  # Return 0 if no records found

@@ -14,6 +14,4 @@ if __name__ == "__main__":
     print(product)
     print(location)
     print(result)
-    n_locations, n_products = get_counts_from_config()
-    n_days_in_month = 30
-    print(score_ai/(n_locations*n_products)/n_days_in_month*100)
+    print(score_ai)
