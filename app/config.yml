@@ -10,3 +10,6 @@ products:
   - home
   - car
   - health
+ai_platforms:
+  - CHATGPT
+  - PERPLEXITY

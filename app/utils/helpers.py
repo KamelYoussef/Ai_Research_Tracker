@@ -115,9 +115,10 @@ def get_counts_from_config(config_path):
         # Count locations and products
         n_locations = len(config['locations'])
         n_products = len(config['products'])
+        n_ai_platforms = len(config['ai_platforms'])
 
         # Return the counts
-        return n_locations, n_products
+        return n_locations, n_products, n_ai_platforms
 
     except Exception as e:
         raise RuntimeError(f"Error retrieving counts from configuration: {str(e)}")
@@ -211,7 +212,38 @@ def calculate_score_ai(db: Session, month: str, config_path):
     """
     # Query to sum the total_count for all products, locations, or combinations in the month
     result = db.query(func.sum(Response.total_count)).filter(Response.date == month).scalar()
-    n_locations, n_products = get_counts_from_config(config_path)
-    n_days_in_month = 30
-    score = result / (n_locations * n_products) / n_days_in_month * 100
+    n_locations, n_products, n_ai_platforms = get_counts_from_config(config_path)
+    score = result / (n_locations * n_products * n_ai_platforms) / days_in_month(month)* 100
     return score if score else 0  # Return 0 if no records found
+
+
+def days_in_month(input_date):
+    """
+    Returns the number of days in a given month based on a "YYYYMM" string format.
+
+    Parameters:
+    input_date (str): Date in the format "YYYYMM" (e.g., "202412" for December 2024)
+
+    Returns:
+    int: Number of days in the month
+    """
+    # Validate input format
+    if len(input_date) != 6 or not input_date.isdigit():
+        raise ValueError("Input must be a string in the format 'YYYYMM'")
+
+    # Extract year and month
+    year = int(input_date[:4])
+    month = int(input_date[4:])
+
+    # Validate month range
+    if month < 1 or month > 12:
+        raise ValueError("Month must be between 01 and 12")
+
+    # List of days in each month
+    days_per_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+    # Check for February in a leap year
+    if month == 2 and (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)):
+        return 29
+
+    return days_per_month[month - 1]
