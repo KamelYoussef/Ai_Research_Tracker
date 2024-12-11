@@ -4,6 +4,7 @@ import requests
 import streamlit as st
 import seaborn as sns
 from datetime import datetime
+import plotly.express as px
 
 # Define the FastAPI server URL
 FASTAPI_URL = "http://localhost:8000"
@@ -77,27 +78,6 @@ def display_table(df, title):
         st.warning(f"No data available to display for {title}.")
 
 
-# Utility: Plot bar chart
-def plot_bar_chart(df, x_label, title):
-    """
-    Plot a bar chart using the provided DataFrame.
-
-    Args:
-        df (pd.DataFrame): DataFrame containing the data.
-        x_label (str): Column name to use as x-axis.
-        title (str): Title for the chart.
-    """
-    if df is not None and not df.empty:
-        st.markdown(f"### {title}")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.barplot(data=df, x=x_label, y="Total Count", ax=ax, color="mediumseagreen")
-        ax.set_xlabel(x_label.capitalize())
-        ax.set_ylabel("Total Count")
-        ax.set_title(title)
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
-
-
 # Dashboard: Display section
 def display_section(endpoint, index_columns, x_label, section_title, month):
     """
@@ -112,7 +92,6 @@ def display_section(endpoint, index_columns, x_label, section_title, month):
     """
     df = process_and_pivot_data(endpoint, index_columns, month)
     display_table(df, f"{section_title} Table")
-    #plot_bar_chart(df, x_label, f"{section_title} Chart")
 
 
 # Dashboard: Main display
@@ -289,7 +268,6 @@ def locations_data(month):
     }
 
 
-
 def days_in_month(input_date):
     """
     Returns the number of days in a given month based on a "YYYYMM" string format.
@@ -320,3 +298,26 @@ def days_in_month(input_date):
         return 29
 
     return days_per_month[month - 1]
+
+
+def plot_pie_chart(data):
+    return px.pie(
+        data, values="Count", names="Category",
+        height=350,
+        color_discrete_sequence=["#1f77b4", "#e377c2"]
+    )
+
+
+def plot_bar_chart(data):
+    return px.bar(
+        data, x="Keyword", y="Presence",
+        height=350
+    )
+
+
+@st.cache_data
+def fetch_and_process_data(month):
+    locations, keywords, models = fetch_param(month)
+    scores = ai_platforms_score(month)
+    locations_data_df = locations_data(month)
+    return locations, keywords, models, scores, locations_data_df

@@ -2,7 +2,7 @@ import streamlit as st
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from fetch_utils import *
+from data.fetch_utils import *
 
 st.title("Dashboard")
 st.sidebar.header("Dashboard Settings")

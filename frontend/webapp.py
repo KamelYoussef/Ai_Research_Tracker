@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-from fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param, locations_data
+from data.fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param, locations_data, \
+    plot_pie_chart, plot_bar_chart, fetch_and_process_data
 
+# Set Streamlit page configuration
 st.set_page_config(
     page_title="Dashboard Tracking",
     layout="wide",
@@ -14,49 +15,40 @@ header_col1, header_col2 = st.columns([2, 1])
 with header_col2:
     month = setup_sidebar()
 
-locations, keywords, models = fetch_param(month)
+locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month)
 
-scores = ai_platforms_score(month)
-locations_data = locations_data(month)
 keywords_presence = {
     "ChatGPT": [100, 80, 90],
     "Gemini": [60, 50, 40],
     "Perplexity": [75, 65, 40],
 }
-# Display Total Score
 
-st.write("""<h2 style='text-align: center;'>AI Score Total = {}</h2>""".format(get_ai_total_score(month)), unsafe_allow_html=True)
+# Display Total Score in a header
+st.markdown(f"<h2 style='text-align: center;'>AI Score Total = {get_ai_total_score(month)}</h2>",
+            unsafe_allow_html=True)
 
-# Layout for models in one row
-col1, col2, col3 = st.columns(3)
-
-columns = [col1, col2, col3]
+# Layout for models in one row with clearer grouping
+columns = st.columns(3)
 for model, score, locations_showed, locations_no_results, keyword_presence, column in zip(
-    models, scores.values(), locations_data["Locations Showed"], locations_data["Locations No Results"], keywords_presence.values(), columns
+        models, scores.values(), locations_data_df["Locations Showed"], locations_data_df["Locations No Results"],
+        keywords_presence.values(), columns
 ):
     with column:
         st.write(f"{model} Score = {score}")
 
+        # Pie chart for Locations Showed vs No Results
         pie_data = pd.DataFrame({
             "Category": ["Locations Showed", "Locations No Results"],
             "Count": [locations_showed, locations_no_results],
         })
-        pie_chart = px.pie(
-            pie_data, values="Count", names="Category",
-            height=350,
-            color_discrete_sequence=["#1f77b4", "#e377c2"]
-        )
-        st.plotly_chart(pie_chart, use_container_width=True, key=f"pie_chart_{model}")  # Unique key for pie chart
+        st.plotly_chart(plot_pie_chart(pie_data), key=f"pie_chart_{model}", use_container_width=True)
 
+        # Bar chart for Keyword Presence
         bar_data = pd.DataFrame({
             "Keyword": keywords,
             "Presence": keyword_presence,
         })
-        bar_chart = px.bar(
-            bar_data, x="Keyword", y="Presence", title="Keyword Presence",
-            height=350
-        )
-        st.plotly_chart(bar_chart, use_container_width=True, key=f"bar_chart_{model}")  # Unique key for bar chart
+        st.plotly_chart(plot_bar_chart(bar_data), key=f"bar_chart_{model}", use_container_width=True)
 
 # Lists for Top Locations and Opportunities
 col4, col5, col6 = st.columns(3)
@@ -67,5 +59,5 @@ with col5:
     st.write("**Areas for Opportunity:**")
     st.write("- Georgetown\n- Ottawa\n- Angus\n- Ziplet")
 with col6:
-    st.write("**Keywords insight:**")
-    st.write("- top keyword\n- low keyword\n")
+    st.write("**Keywords Insight:**")
+    st.write("- Top keyword: AI\n- Low keyword: Blockchain")
