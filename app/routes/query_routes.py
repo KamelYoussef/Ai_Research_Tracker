@@ -121,7 +121,7 @@ def aggregate_total_by_product_and_location_route(month: str, db: Session = Depe
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/score_ai/month")
+@router.get("/score_ai/{month}")
 async def get_score_ai(month: str, db: Session = Depends(get_db)):
     """
     Calculate and return the AI score for a given month.

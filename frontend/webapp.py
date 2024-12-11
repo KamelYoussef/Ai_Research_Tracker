@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from fetch_utils import setup_sidebar
+from fetch_utils import setup_sidebar, get_ai_total_score
 
 st.set_page_config(
     page_title="Dashboard Tracking",
@@ -30,7 +30,8 @@ keywords_presence = {
 keywords = ["Car Insurance", "Home Insurance", "Business Insurance", "Farm Insurance", "Life Insurance"]
 
 # Display Total Score
-st.write("""<h2 style='text-align: center;'>AI Score Total = {}</h2>""".format(total_score), unsafe_allow_html=True)
+
+st.write("""<h2 style='text-align: center;'>AI Score Total = {}</h2>""".format(get_ai_total_score(month)), unsafe_allow_html=True)
 
 # Layout for models in one row
 col1, col2, col3 = st.columns(3)

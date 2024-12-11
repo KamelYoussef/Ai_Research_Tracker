@@ -25,7 +25,7 @@ def fetch_data(endpoint, month):
         url = f"{FASTAPI_URL}/{endpoint}/{month}"
         response = requests.get(url)
         response.raise_for_status()
-        return response.json().get("aggregated_data", [])
+        return response.json()
     except requests.RequestException as e:
         st.error(f"Error fetching data from {endpoint}: {e}")
         return []
@@ -44,7 +44,7 @@ def process_and_pivot_data(endpoint, index_columns, month):
     Returns:
         pd.DataFrame: Pivoted DataFrame with aggregated data or None if empty.
     """
-    data = fetch_data(endpoint, month)
+    data = fetch_data(endpoint, month).get("aggregated_data", [])
     if data:
         df = pd.DataFrame(data)
         df_pivot = df.pivot_table(
@@ -166,7 +166,7 @@ def setup_sidebar():
     ]
 
     # Allow the user to select a year and month
-    col1, col2 = st.columns(2)
+    col1, col2= st.columns([1, 1])
     with col1:
         selected_year = st.selectbox("Select Year", years, index=years.index(str(current_year)))
     with col2:
@@ -176,6 +176,7 @@ def setup_sidebar():
     selected_month = month_names.index(selected_month_name) + 1
     selected_month_str = f"{selected_year}{str(selected_month).zfill(2)}"
 
+    # Return the selected month string and search button status
     return selected_month_str
 
 
@@ -221,3 +222,8 @@ def display_ai_tracking():
         st.markdown("#### Visualizations")
         count_by_location = pd.DataFrame(results).groupby("location")["total_count"].sum()
         st.bar_chart(count_by_location)
+
+
+def get_ai_total_score(month):
+    if fetch_data("score_ai", month):
+        return fetch_data("score_ai", month).get("score_ai", [])
