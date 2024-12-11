@@ -227,3 +227,51 @@ def display_ai_tracking():
 def get_ai_total_score(month):
     if fetch_data("score_ai", month):
         return fetch_data("score_ai", month).get("score_ai", [])
+
+
+def ai_platforms_score(month):
+    df = process_and_pivot_data("aggregate_total_by_product_and_location", ["product", "location", "ai_platform"], month)
+    n_locations, n_products, n_ai_platforms = df["location"].nunique(), df["product"].nunique(), df["ai_platform"].nunique()
+    ai_scores = df.groupby("ai_platform")[["Total Count"]].sum().reset_index()
+    ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / days_in_month(month) * 100).astype(int)
+    return ai_scores.set_index('ai_platform')['Total Count'].to_dict()
+
+
+def fetch_param(month):
+    df = process_and_pivot_data("aggregate_total_by_product_and_location", ["product", "location", "ai_platform"], month)
+    locations = df["location"].unique().tolist()
+    products = df["product"].unique().tolist()
+    ai_platforms = df["ai_platform"].unique().tolist()
+    return locations, products, ai_platforms
+
+
+def days_in_month(input_date):
+    """
+    Returns the number of days in a given month based on a "YYYYMM" string format.
+
+    Parameters:
+    input_date (str): Date in the format "YYYYMM" (e.g., "202412" for December 2024)
+
+    Returns:
+    int: Number of days in the month
+    """
+    # Validate input format
+    if len(input_date) != 6 or not input_date.isdigit():
+        raise ValueError("Input must be a string in the format 'YYYYMM'")
+
+    # Extract year and month
+    year = int(input_date[:4])
+    month = int(input_date[4:])
+
+    # Validate month range
+    if month < 1 or month > 12:
+        raise ValueError("Month must be between 01 and 12")
+
+    # List of days in each month
+    days_per_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+    # Check for February in a leap year
+    if month == 2 and (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)):
+        return 29
+
+    return days_per_month[month - 1]

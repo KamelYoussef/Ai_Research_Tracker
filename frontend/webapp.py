@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from fetch_utils import setup_sidebar, get_ai_total_score
+from fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param
 
 st.set_page_config(
     page_title="Dashboard Tracking",
@@ -13,22 +13,21 @@ st.set_page_config(
 header_col1, header_col2 = st.columns([2, 1])
 with header_col2:
     month = setup_sidebar()
-
 # Data (mock data for the example)
-models = ["ChatGPT", "Gemini", "Perplexity"]
-scores = {"ChatGPT": 84, "Gemini": 69, "Perplexity": 75}
+
+keywords, models = fetch_param(month)[1], fetch_param(month)[2]
+
+scores = ai_platforms_score(month)
 total_score = sum(scores.values()) // len(scores)
 locations_data = {
     "Locations Showed": [9, 6, 8],
     "Locations No Results": [1, 4, 2],
 }
 keywords_presence = {
-    "ChatGPT": [100, 80, 90, 70, 85],
-    "Gemini": [60, 50, 40, 30, 20],
-    "Perplexity": [75, 65, 55, 45, 35],
+    "ChatGPT": [100, 80, 90],
+    "Gemini": [60, 50, 40],
+    "Perplexity": [75, 65, 40],
 }
-keywords = ["Car Insurance", "Home Insurance", "Business Insurance", "Farm Insurance", "Life Insurance"]
-
 # Display Total Score
 
 st.write("""<h2 style='text-align: center;'>AI Score Total = {}</h2>""".format(get_ai_total_score(month)), unsafe_allow_html=True)
@@ -65,21 +64,13 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         st.plotly_chart(bar_chart, use_container_width=True)
 
 # Lists for Top Locations and Opportunities
-col4, col5 = st.columns(2)
+col4, col5, col6 = st.columns(3)
 with col4:
     st.write("**Top-Performing Locations:**")
     st.write("- Red Deer\n- Kelowna\n- Winnipeg\n- Oslo")
 with col5:
     st.write("**Areas for Opportunity:**")
     st.write("- Georgetown\n- Ottawa\n- Angus\n- Ziplet")
-
-# Keyword Overview Table
-st.write("**Keyword Overview**")
-keyword_overview_df = pd.DataFrame({
-    "Keyword": keywords,
-    "% of Times Location Showed in Search": [70, 32, 54, 66, 75],
-})
-st.table(keyword_overview_df)
-
-# Search Bar
-st.text_input("Search Locations")
+with col6:
+    st.write("**Keywords insight:**")
+    st.write("- top keyword\n- low keyword\n")
