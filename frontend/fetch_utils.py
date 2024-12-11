@@ -166,8 +166,11 @@ def setup_sidebar():
     ]
 
     # Allow the user to select a year and month
-    selected_year = st.sidebar.selectbox("Select Year", years, index=years.index(str(current_year)))
-    selected_month_name = st.sidebar.selectbox("Select Month", month_names, index=current_month - 1)
+    col1, col2 = st.columns(2)
+    with col1:
+        selected_year = st.selectbox("Select Year", years, index=years.index(str(current_year)))
+    with col2:
+        selected_month_name = st.selectbox("Select Month", month_names, index=current_month - 1)
 
     # Convert the selected month name to its corresponding number (01-12)
     selected_month = month_names.index(selected_month_name) + 1

@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from fetch_utils import setup_sidebar
 
 st.set_page_config(
     page_title="Dashboard Tracking",
@@ -9,9 +10,9 @@ st.set_page_config(
 )
 
 # Layout for Header
-header_col1, header_col2 = st.columns([3, 1])
+header_col1, header_col2 = st.columns([2, 1])
 with header_col2:
-    st.write("Your AI Results For 10/24 - 10/25")
+    month = setup_sidebar()
 
 # Data (mock data for the example)
 models = ["ChatGPT", "Gemini", "Perplexity"]
@@ -29,7 +30,7 @@ keywords_presence = {
 keywords = ["Car Insurance", "Home Insurance", "Business Insurance", "Farm Insurance", "Life Insurance"]
 
 # Display Total Score
-st.write("""<h2 style='text-align: center;'>AI Score Total: {}</h2>""".format(total_score), unsafe_allow_html=True)
+st.write("""<h2 style='text-align: center;'>AI Score Total = {}</h2>""".format(total_score), unsafe_allow_html=True)
 
 # Layout for models in one row
 col1, col2, col3 = st.columns(3)
@@ -39,7 +40,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
     models, scores.values(), locations_data["Locations Showed"], locations_data["Locations No Results"], keywords_presence.values(), columns
 ):
     with column:
-        st.write(f"{model} (Score: {score})")
+        st.write(f"{model} Score = {score}")
 
         pie_data = pd.DataFrame({
             "Category": ["Locations Showed", "Locations No Results"],
