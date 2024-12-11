@@ -18,7 +18,7 @@ async def submit_query_with_default(ai_platform: str):
 
     try:
         # Call the tracking function
-        ai_responses, results = track_responses(ai_platform)
+        ai_responses, results = track_responses(ai_platform, "app/config.yml")
 
         # Ensure the number of AI responses matches the number of results
         if len(ai_responses) != len(results):
@@ -133,7 +133,7 @@ async def get_score_ai(month: str, db: Session = Depends(get_db)):
         float: AI score for the specified month.
     """
     try:
-        score = calculate_score_ai(db, month)
-        return {"month": month, "score_ai": score}
+        score = calculate_score_ai(db, month, "app/config.yml")
+        return {"month": month, "score_ai": int(score)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")

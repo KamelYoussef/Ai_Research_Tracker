@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from app.models.response import Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+import os
 
 
 def load_config(config_file):
@@ -70,8 +71,7 @@ def process_product_location(product, location, search_phrases, ai_platform):
         }
 
 
-def track_responses(ai_platfrom):
-    config_path = "app/config.yml"
+def track_responses(ai_platfrom, config_path):
     config = load_and_validate_config(config_path)
 
     results = []
@@ -99,7 +99,7 @@ def track_responses(ai_platfrom):
     return ai_responses, results
 
 
-def get_counts_from_config():
+def get_counts_from_config(config_path):
     """
     Get the number of locations and products from the config file.
 
@@ -110,7 +110,6 @@ def get_counts_from_config():
         int: Number of products and locations.
     """
     try:
-        config_path = "app/config.yml"
         config = load_and_validate_config(config_path)
 
         # Count locations and products
@@ -199,7 +198,7 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
             ]
 
 
-def calculate_score_ai(db: Session, month: str):
+def calculate_score_ai(db: Session, month: str, config_path):
     """
     Calculate the score_ai by summing the total_count for a given month.
 
@@ -212,7 +211,7 @@ def calculate_score_ai(db: Session, month: str):
     """
     # Query to sum the total_count for all products, locations, or combinations in the month
     result = db.query(func.sum(Response.total_count)).filter(Response.date == month).scalar()
-    n_locations, n_products = get_counts_from_config()
+    n_locations, n_products = get_counts_from_config(config_path)
     n_days_in_month = 30
-    score = int(result / (n_locations * n_products) / n_days_in_month * 100)
+    score = result / (n_locations * n_products) / n_days_in_month * 100
     return score if score else 0  # Return 0 if no records found
