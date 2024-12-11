@@ -245,6 +245,51 @@ def fetch_param(month):
     return locations, products, ai_platforms
 
 
+def locations_data(month):
+    """
+    Calculate the number of locations that showed results and the number of locations with no results
+    for each AI platform, ensuring the output lists match the total number of locations.
+    If no results, return 0 for missing platforms.
+
+    Parameters:
+    month (str): A string in the format 'YYYYMM' representing the target month.
+
+    Returns:
+    dict: A dictionary with keys "Locations Showed" and "Locations No Results",
+          where values are lists of counts for each AI platform.
+    """
+    # Process the data
+    df = process_and_pivot_data(
+        "aggregate_total_by_location",
+        ["location", "ai_platform"],
+        month
+    )
+
+    # Get the unique ai_platform values
+    ai_platforms = df["ai_platform"].unique()
+
+    # Filter for rows where Total Count is greater than 0 (locations with results)
+    df_showed = df.loc[df["Total Count"] > 0]
+
+    # Count the number of locations for each AI platform that showed results
+    showed_counts = df_showed.groupby("ai_platform")["location"].nunique().to_dict()
+
+    # Count the number of locations for each AI platform that had no results (Total Count <= 0)
+    df_no_results = df.loc[df["Total Count"] <= 0]
+    no_results_counts = df_no_results.groupby("ai_platform")["location"].nunique().to_dict()
+
+    # Use get() to safely retrieve the count for each AI platform, defaulting to 0 if not found
+    locations_showed = [showed_counts.get(platform, 0) for platform in ai_platforms]
+    locations_no_results = [no_results_counts.get(platform, 0) for platform in ai_platforms]
+
+    # Return the results as a dictionary
+    return {
+        "Locations Showed": locations_showed,
+        "Locations No Results": locations_no_results,
+    }
+
+
+
 def days_in_month(input_date):
     """
     Returns the number of days in a given month based on a "YYYYMM" string format.

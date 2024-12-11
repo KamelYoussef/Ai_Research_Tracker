@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param
+from fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param, locations_data
 
 st.set_page_config(
     page_title="Dashboard Tracking",
@@ -13,16 +13,11 @@ st.set_page_config(
 header_col1, header_col2 = st.columns([2, 1])
 with header_col2:
     month = setup_sidebar()
-# Data (mock data for the example)
 
-keywords, models = fetch_param(month)[1], fetch_param(month)[2]
+locations, keywords, models = fetch_param(month)
 
 scores = ai_platforms_score(month)
-total_score = sum(scores.values()) // len(scores)
-locations_data = {
-    "Locations Showed": [9, 6, 8],
-    "Locations No Results": [1, 4, 2],
-}
+locations_data = locations_data(month)
 keywords_presence = {
     "ChatGPT": [100, 80, 90],
     "Gemini": [60, 50, 40],
@@ -51,7 +46,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
             height=350,
             color_discrete_sequence=["#1f77b4", "#e377c2"]
         )
-        st.plotly_chart(pie_chart, use_container_width=True)
+        st.plotly_chart(pie_chart, use_container_width=True, key=f"pie_chart_{model}")  # Unique key for pie chart
 
         bar_data = pd.DataFrame({
             "Keyword": keywords,
@@ -61,7 +56,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
             bar_data, x="Keyword", y="Presence", title="Keyword Presence",
             height=350
         )
-        st.plotly_chart(bar_chart, use_container_width=True)
+        st.plotly_chart(bar_chart, use_container_width=True, key=f"bar_chart_{model}")  # Unique key for bar chart
 
 # Lists for Top Locations and Opportunities
 col4, col5, col6 = st.columns(3)
