@@ -309,10 +309,15 @@ def plot_pie_chart(data):
 
 
 def plot_bar_chart(data):
-    return px.bar(
+    fig = px.bar(
         data, x="Keyword", y="Presence",
         height=350
     )
+    fig.update_layout(
+        yaxis=dict(range=[0, 100])
+    )
+    return fig
+
 
 
 @st.cache_data
