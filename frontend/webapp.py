@@ -23,6 +23,8 @@ keywords_presence = keywords_data(month)
 st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score(month)}</h2>",
             unsafe_allow_html=True)
 
+st.write("---")
+
 # Layout for models in one row with clearer grouping
 columns = st.columns(3)
 for model, score, locations_showed, locations_no_results, keyword_presence, column in zip(
@@ -30,7 +32,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         keywords_presence.values(), columns
 ):
     with column:
-        st.write(f"{model} Score = {score}")
+        st.markdown(f"<h6 style='text-align: center;'>{model} Score = {score}</h2>", unsafe_allow_html=True)
 
         # Pie chart for Locations Showed vs No Results
         pie_data = pd.DataFrame({
@@ -46,6 +48,8 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         })
         st.plotly_chart(plot_bar_chart(bar_data), key=f"bar_chart_{model}", use_container_width=True)
 
+st.write("---")
+
 # Lists for Top Locations and Opportunities
 col4, col5, col6 = st.columns(3)
 with col4:
@@ -59,17 +63,13 @@ with col6:
     top_keyword, low_keyword = top_low_keywords(month)
     st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
 
+st.write("---")
 
 col7, col8 = st.columns(2)
-# Search Locations Functionality
 with col7:
-    locations = ["Red Deer", "Kelowna", "Winnipeg", "Oslo", "Georgetown", "Ottawa", "Angus", "Ziplet"]
-    st.subheader("Search Locations")
-    search_query = st.selectbox("", options=locations, index=0)
+    search_query = st.selectbox("Search Locations", options=locations, index=0)
 
 with col8:
-    st.write("")
-    st.write("")
     st.write("% of times location showed in search")
     data = {"Keyword": [
             "Car Insurance",
