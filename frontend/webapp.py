@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from data.fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param, locations_data, \
-    plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data
+    plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords
 
 # Set Streamlit page configuration
 st.set_page_config(
@@ -20,7 +20,7 @@ locations, keywords, models, scores, locations_data_df = fetch_and_process_data(
 keywords_presence = keywords_data(month)
 
 # Display Total Score in a header
-st.markdown(f"<h2 style='text-align: center;'>AI Score Total = {get_ai_total_score(month)}</h2>",
+st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score(month)}</h2>",
             unsafe_allow_html=True)
 
 # Layout for models in one row with clearer grouping
@@ -49,11 +49,12 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
 # Lists for Top Locations and Opportunities
 col4, col5, col6 = st.columns(3)
 with col4:
-    st.write("**Top-Performing Locations:**")
-    st.write("- Red Deer\n- Kelowna\n- Winnipeg\n- Oslo")
+    st.write("**Top-Performing Locations:** 🚀")
+    st.write("\n".join(f"- {location}" for location in top_locations(month)[:5]))
 with col5:
-    st.write("**Areas for Opportunity:**")
-    st.write("- Georgetown\n- Ottawa\n- Angus\n- Ziplet")
+    st.write("**Areas for Opportunity:** 📈")
+    st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month)[-5:]))))
 with col6:
     st.write("**Keywords Insight:**")
-    st.write("- Top keyword: AI\n- Low keyword: Blockchain")
+    top_keyword, low_keyword = top_low_keywords(month)
+    st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")

@@ -303,7 +303,7 @@ def days_in_month(input_date):
 def plot_pie_chart(data):
     return px.pie(
         data, values="Count", names="Category",
-        height=350,
+        height=350, hole=0.7,
         color_discrete_sequence=["#1f77b4", "#e377c2"]
     )
 
@@ -332,7 +332,7 @@ def keywords_data(month):
     )
 
     ai_platforms = df["ai_platform"].unique()
-    df["Total Count"] = (df["Total Count"] / len(fetch_param(month)[0]) / days_in_month(month) * 100).astype(int)
+    df["Total Count"] = (df["Total Count"] / len(fetch_param(month)[0]) / days_in_month(month) * 100).astype(float).round(2)
     x = df.groupby(["ai_platform", "product"])[["Total Count"]].sum()
 
     keywords_presence = {}
@@ -340,3 +340,23 @@ def keywords_data(month):
         keywords_presence[platform.capitalize()] = x.loc[platform.upper()]["Total Count"].tolist()
 
     return keywords_presence
+
+
+def top_locations(month):
+    df = process_and_pivot_data(
+        "aggregate_total_by_location",
+        ["location", "ai_platform"],
+        month
+    )
+    ranking_df = df.groupby("location")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
+    return ranking_df['location'].tolist()
+
+
+def top_low_keywords(month):
+    df = process_and_pivot_data(
+        "aggregate_total_by_product",
+        ["product", "ai_platform"],
+        month
+    )
+    ranking_df = df.groupby("product")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
+    return ranking_df.iloc[0]["product"], ranking_df.iloc[-1]["product"]
