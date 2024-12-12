@@ -58,3 +58,29 @@ with col6:
     st.write("**Keywords Insight:**")
     top_keyword, low_keyword = top_low_keywords(month)
     st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
+
+
+col7, col8 = st.columns(2)
+# Search Locations Functionality
+with col7:
+    search_query = st.text_input("", placeholder="Search Locations")
+
+with col8:
+    st.write("")
+    st.write("")
+    st.write("% of times location showed in search")
+    data = {"Keyword": [
+            "Car Insurance",
+            "Home Insurance",
+            "Business Insurance",
+            "Farm Insurance",
+            "Life Insurance",
+        ],
+        "ChatGPT": [70, 32, 54, 66, 75],
+        "Gemini": [70, 32, 54, 66, 75],
+        "Perplexity": [70, 32, 54, 66, 75],
+    }
+    df = pd.DataFrame(data)
+
+    st.dataframe(df, hide_index=True, use_container_width=True)
+

@@ -319,7 +319,6 @@ def plot_bar_chart(data):
     return fig
 
 
-
 @st.cache_data
 def fetch_and_process_data(month):
     locations, keywords, models = fetch_param(month)
