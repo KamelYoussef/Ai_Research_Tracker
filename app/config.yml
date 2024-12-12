@@ -1,7 +1,7 @@
 locations:
-  - calgary
-  - toronto
-  - vancouver
+  - Okotoks
+  - Red Deer
+  - Georgetown
 search_phrases:
   - western financial
   - western financial group
@@ -9,7 +9,9 @@ search_phrases:
 products:
   - home
   - car
-  - health
+  - business
+  - farm
+  - life
 ai_platforms:
   - CHATGPT
   - PERPLEXITY

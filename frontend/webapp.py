@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from data.fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param, locations_data, \
-    plot_pie_chart, plot_bar_chart, fetch_and_process_data
+    plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data
 
 # Set Streamlit page configuration
 st.set_page_config(
@@ -17,11 +17,7 @@ with header_col2:
 
 locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month)
 
-keywords_presence = {
-    "ChatGPT": [100, 80, 90],
-    "Gemini": [60, 50, 40],
-    "Perplexity": [75, 65, 40],
-}
+keywords_presence = keywords_data(month)
 
 # Display Total Score in a header
 st.markdown(f"<h2 style='text-align: center;'>AI Score Total = {get_ai_total_score(month)}</h2>",

@@ -321,3 +321,22 @@ def fetch_and_process_data(month):
     scores = ai_platforms_score(month)
     locations_data_df = locations_data(month)
     return locations, keywords, models, scores, locations_data_df
+
+
+def keywords_data(month):
+    # Process the data
+    df = process_and_pivot_data(
+        "aggregate_total_by_product",
+        ["product", "ai_platform"],
+        month
+    )
+
+    ai_platforms = df["ai_platform"].unique()
+    df["Total Count"] = (df["Total Count"] / len(fetch_param(month)[0]) / days_in_month(month) * 100).astype(int)
+    x = df.groupby(["ai_platform", "product"])[["Total Count"]].sum()
+
+    keywords_presence = {}
+    for platform in ai_platforms:
+        keywords_presence[platform.capitalize()] = x.loc[platform.upper()]["Total Count"].tolist()
+
+    return keywords_presence
