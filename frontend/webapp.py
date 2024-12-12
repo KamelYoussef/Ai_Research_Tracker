@@ -63,7 +63,9 @@ with col6:
 col7, col8 = st.columns(2)
 # Search Locations Functionality
 with col7:
-    search_query = st.text_input("", placeholder="Search Locations")
+    locations = ["Red Deer", "Kelowna", "Winnipeg", "Oslo", "Georgetown", "Ottawa", "Angus", "Ziplet"]
+    st.subheader("Search Locations")
+    search_query = st.selectbox("", options=locations, index=0)
 
 with col8:
     st.write("")
