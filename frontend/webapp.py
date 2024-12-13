@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from data.fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param, locations_data, \
-    plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords
+    plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, stats_by_location
 
 # Set Streamlit page configuration
 st.set_page_config(
@@ -65,24 +65,15 @@ with col6:
 
 st.write("---")
 
-col7, col8 = st.columns(2)
+col7, col8, col9 = st.columns([2, 3, 3])
 with col7:
-    search_query = st.selectbox("Search Locations", options=locations, index=0)
+    search_query = st.selectbox("**Search Locations**", options=locations, index=0)
 
 with col8:
-    st.write("% of times location showed in search")
-    data = {"Keyword": [
-            "Car Insurance",
-            "Home Insurance",
-            "Business Insurance",
-            "Farm Insurance",
-            "Life Insurance",
-        ],
-        "ChatGPT": [70, 32, 54, 66, 75],
-        "Gemini": [70, 32, 54, 66, 75],
-        "Perplexity": [70, 32, 54, 66, 75],
-    }
+    st.write(f"% of times {search_query} showed in search")
+    data = stats_by_location(month, search_query)
     df = pd.DataFrame(data)
 
     st.dataframe(df, hide_index=True, use_container_width=True)
+
 

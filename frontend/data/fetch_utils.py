@@ -364,3 +364,21 @@ def top_low_keywords(month):
     )
     ranking_df = df.groupby("product")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
     return ranking_df.iloc[0]["product"], ranking_df.iloc[-1]["product"]
+
+
+def stats_by_location(month, selected_location):
+    df = process_and_pivot_data(
+        "aggregate_total_by_product_and_location",
+        ["product", "location", "ai_platform"],
+        month
+    )
+    filtered_df = df[df["location"] == selected_location]
+    filtered_df["Total Count"] = (filtered_df["Total Count"] / days_in_month(month) * 100).astype(float).round(0)
+    pivot_df = filtered_df.pivot_table(
+        index="product",
+        columns="ai_platform",
+        values="Total Count",
+        fill_value=0
+    ).reset_index()
+    pivot_df["product"] = (pivot_df["product"] + " Insurance").str.capitalize()
+    return pivot_df
