@@ -366,19 +366,71 @@ def top_low_keywords(month):
     return ranking_df.iloc[0]["product"], ranking_df.iloc[-1]["product"]
 
 
-def stats_by_location(month, selected_location):
+def stats_by_location(month: int, selected_location: str) -> pd.DataFrame:
+    """
+    Generate a pivot table showing statistics by product and AI platform for a given location and month.
+
+    Args:
+        month (int): The month for which data is being analyzed (1-12).
+        selected_location (str): The location to filter the data.
+
+    Returns:
+        pd.DataFrame: A pivot table with products as rows, AI platforms as columns, and normalized total counts as values.
+    """
+    # Process and pivot the data
     df = process_and_pivot_data(
         "aggregate_total_by_product_and_location",
         ["product", "location", "ai_platform"],
         month
     )
-    filtered_df = df[df["location"] == selected_location]
-    filtered_df["Total Count"] = (filtered_df["Total Count"] / days_in_month(month) * 100).astype(float).round(0)
+
+    # Validate inputs
+    if selected_location not in df["location"].unique():
+        raise ValueError(f"Invalid location: {selected_location}. Please select a valid location.")
+
+    # Filter the data for the selected location
+    filtered_df = df[df["location"] == selected_location].copy()
+
+    # Normalize and round the "Total Count" column
+    filtered_df.loc[:, "Total Count"] = (
+        (filtered_df["Total Count"] / days_in_month(month) * 100)
+        .astype(float)
+        .round(0)
+    )
+
+    # Pivot the DataFrame
     pivot_df = filtered_df.pivot_table(
         index="product",
         columns="ai_platform",
         values="Total Count",
         fill_value=0
     ).reset_index()
-    pivot_df["product"] = (pivot_df["product"] + " Insurance").str.capitalize()
+
+    # Format product names
+    INSURANCE_SUFFIX = " Insurance"
+    pivot_df["product"] = (pivot_df["product"] + INSURANCE_SUFFIX).str.capitalize()
+
     return pivot_df
+
+
+def download_data(month):
+    df_product = process_and_pivot_data(
+        "aggregate_total_by_product",
+        ["product", "ai_platform"],
+        month
+    )
+    df_location = process_and_pivot_data(
+        "aggregate_total_by_location",
+        ["location", "ai_platform"],
+        month
+    )
+    df_all = process_and_pivot_data(
+        "aggregate_total_by_product_and_location",
+        ["product", "location", "ai_platform"],
+        month)
+    return df_product, df_location, df_all
+
+
+def convert_df(df):
+    """Converts a pandas dataframe to a CSV string."""
+    return df.to_csv(index=False)

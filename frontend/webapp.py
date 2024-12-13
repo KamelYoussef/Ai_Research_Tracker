@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from data.fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param, locations_data, \
-    plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, stats_by_location
+    plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, \
+    stats_by_location, download_data, convert_df
 
 # Set Streamlit page configuration
 st.set_page_config(
@@ -65,7 +66,7 @@ with col6:
 
 st.write("---")
 
-col7, col8, col9 = st.columns([2, 3, 3])
+col7, col8, col9 = st.columns([2, 3, 2])
 with col7:
     search_query = st.selectbox("**Search Locations**", options=locations, index=0)
 
@@ -76,4 +77,28 @@ with col8:
 
     st.dataframe(df, hide_index=True, use_container_width=True)
 
+with col9:
+    st.write("Export data to Execl for analysis")
+    st.download_button(
+        label="Products Data",
+        data=convert_df(download_data(month)[0]),
+        file_name="product_data.csv",
+        mime="text/csv"
+    )
+
+    # Button for downloading df_location
+    st.download_button(
+        label="Locations Data",
+        data=convert_df(download_data(month)[1]),
+        file_name="location_data.csv",
+        mime="text/csv"
+    )
+
+    # Button for downloading df_all
+    st.download_button(
+        label="All Data",
+        data=convert_df(download_data(month)[2]),
+        file_name="all_data.csv",
+        mime="text/csv"
+    )
 
