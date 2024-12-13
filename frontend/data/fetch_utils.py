@@ -11,7 +11,7 @@ FASTAPI_URL = "http://localhost:8000"
 
 
 # Utility: Fetch data from the API
-def fetch_data(endpoint, month):
+def fetch_data(endpoint: str, month: str):
     """
     Fetch data from the FastAPI endpoint.
 
@@ -62,74 +62,7 @@ def process_and_pivot_data(endpoint, index_columns, month):
         return None
 
 
-# Utility: Display table
-def display_table(df, title):
-    """
-    Display data in a table format in Streamlit.
-
-    Args:
-        df (pd.DataFrame): DataFrame to display.
-        title (str): Title for the table.
-    """
-    if df is not None and not df.empty:
-        st.markdown(f"### {title}")
-        st.dataframe(df)
-    else:
-        st.warning(f"No data available to display for {title}.")
-
-
-# Dashboard: Display section
-def display_section(endpoint, index_columns, x_label, section_title, month):
-    """
-    Display a section with a table and a bar chart.
-
-    Args:
-        endpoint (str): API endpoint to query.
-        index_columns (list): Columns to use as index.
-        x_label (str): Column to use for the x-axis in the bar chart.
-        section_title (str): Title for the section.
-        month (str): Month in YYYYMM format.
-    """
-    df = process_and_pivot_data(endpoint, index_columns, month)
-    display_table(df, f"{section_title} Table")
-
-
-# Dashboard: Main display
-def display_dashboard(month):
-    """
-    Display the main dashboard content.
-
-    Args:
-        month (str): Month in YYYYMM format.
-    """
-    st.title(f"Dashboard Tracking for {month}")
-    st.markdown("---")
-
-    # Sections
-    display_section(
-        "aggregate_total_by_product_and_location",
-        ["product", "location", "ai_platform"],
-        "product",
-        "Product x Location Aggregation",
-        month
-    )
-    display_section(
-        "aggregate_total_by_product",
-        ["product", "ai_platform"],
-        "product",
-        "Product Aggregation",
-        month
-    )
-    display_section(
-        "aggregate_total_by_location",
-        ["location", "ai_platform"],
-        "location",
-        "Location Aggregation",
-        month
-    )
-
-
-def setup_sidebar():
+def select_month():
     """Setup sidebar with year and month selection."""
     # Get the current year and month
     current_year = datetime.today().year
@@ -145,7 +78,7 @@ def setup_sidebar():
     ]
 
     # Allow the user to select a year and month
-    col1, col2= st.columns([1, 1])
+    col1, col2 = st.columns([1, 1])
     with col1:
         selected_year = st.selectbox("Select Year", years, index=years.index(str(current_year)))
     with col2:
@@ -209,7 +142,7 @@ def get_ai_total_score(month):
 
 
 def ai_platforms_score(month):
-    df = process_and_pivot_data("aggregate_total_by_product_and_location", ["product", "location", "ai_platform"], month)
+    df = download_data(month)[2]
     n_locations, n_products, n_ai_platforms = df["location"].nunique(), df["product"].nunique(), df["ai_platform"].nunique()
     ai_scores = df.groupby("ai_platform")[["Total Count"]].sum().reset_index()
     ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / days_in_month(month) * 100).astype(int)
@@ -217,7 +150,7 @@ def ai_platforms_score(month):
 
 
 def fetch_param(month):
-    df = process_and_pivot_data("aggregate_total_by_product_and_location", ["product", "location", "ai_platform"], month)
+    df = download_data(month)[2]
     locations = df["location"].unique().tolist()
     products = df["product"].unique().tolist()
     ai_platforms = df["ai_platform"].unique().tolist()
@@ -238,11 +171,7 @@ def locations_data(month):
           where values are lists of counts for each AI platform.
     """
     # Process the data
-    df = process_and_pivot_data(
-        "aggregate_total_by_location",
-        ["location", "ai_platform"],
-        month
-    )
+    df = download_data(month)[1]
 
     # Get the unique ai_platform values
     ai_platforms = df["ai_platform"].unique()
@@ -329,11 +258,7 @@ def fetch_and_process_data(month):
 
 def keywords_data(month):
     # Process the data
-    df = process_and_pivot_data(
-        "aggregate_total_by_product",
-        ["product", "ai_platform"],
-        month
-    )
+    df = download_data(month)[0]
 
     ai_platforms = df["ai_platform"].unique()
     df["Total Count"] = (df["Total Count"] / len(fetch_param(month)[0]) / days_in_month(month) * 100).astype(float).round(2)
@@ -347,21 +272,13 @@ def keywords_data(month):
 
 
 def top_locations(month):
-    df = process_and_pivot_data(
-        "aggregate_total_by_location",
-        ["location", "ai_platform"],
-        month
-    )
+    df = download_data(month)[1]
     ranking_df = df.groupby("location")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
     return ranking_df['location'].tolist()
 
 
 def top_low_keywords(month):
-    df = process_and_pivot_data(
-        "aggregate_total_by_product",
-        ["product", "ai_platform"],
-        month
-    )
+    df = download_data(month)[0]
     ranking_df = df.groupby("product")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
     return ranking_df.iloc[0]["product"], ranking_df.iloc[-1]["product"]
 
@@ -378,11 +295,7 @@ def stats_by_location(month: int, selected_location: str) -> pd.DataFrame:
         pd.DataFrame: A pivot table with products as rows, AI platforms as columns, and normalized total counts as values.
     """
     # Process and pivot the data
-    df = process_and_pivot_data(
-        "aggregate_total_by_product_and_location",
-        ["product", "location", "ai_platform"],
-        month
-    )
+    df = download_data(month)[2]
 
     # Validate inputs
     if selected_location not in df["location"].unique():
@@ -413,6 +326,7 @@ def stats_by_location(month: int, selected_location: str) -> pd.DataFrame:
     return pivot_df
 
 
+@st.cache_data
 def download_data(month):
     df_product = process_and_pivot_data(
         "aggregate_total_by_product",

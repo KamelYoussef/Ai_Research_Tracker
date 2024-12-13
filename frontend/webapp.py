@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from data.fetch_utils import setup_sidebar, get_ai_total_score, ai_platforms_score, fetch_param, locations_data, \
+from data.fetch_utils import select_month, get_ai_total_score, \
     plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, \
     stats_by_location, download_data, convert_df
 
@@ -11,14 +11,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Layout for Header
 header_col1, header_col2 = st.columns([2, 1])
 with header_col2:
-    month = setup_sidebar()
-
-locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month)
-
-keywords_presence = keywords_data(month)
+    # get the month to generate the monthly report
+    month = select_month()
 
 # Display Total Score in a header
 st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score(month)}</h2>",
@@ -26,7 +22,10 @@ st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score
 
 st.write("---")
 
-# Layout for models in one row with clearer grouping
+# Display ai_platforms scores and graphs
+locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month)
+keywords_presence = keywords_data(month)
+
 columns = st.columns(3)
 for model, score, locations_showed, locations_no_results, keyword_presence, column in zip(
         models, scores.values(), locations_data_df["Locations Showed"], locations_data_df["Locations No Results"],
@@ -66,6 +65,7 @@ with col6:
 
 st.write("---")
 
+# Stats by location
 col7, col8, col9 = st.columns([2, 3, 2])
 with col7:
     search_query = st.selectbox("**Search Locations**", options=locations, index=0)
@@ -78,27 +78,17 @@ with col8:
     st.dataframe(df, hide_index=True, use_container_width=True)
 
 with col9:
-    st.write("Export data to Execl for analysis")
-    st.download_button(
-        label="Products Data",
-        data=convert_df(download_data(month)[0]),
-        file_name="product_data.csv",
-        mime="text/csv"
-    )
-
-    # Button for downloading df_location
-    st.download_button(
-        label="Locations Data",
-        data=convert_df(download_data(month)[1]),
-        file_name="location_data.csv",
-        mime="text/csv"
-    )
-
-    # Button for downloading df_all
-    st.download_button(
-        label="All Data",
-        data=convert_df(download_data(month)[2]),
-        file_name="all_data.csv",
-        mime="text/csv"
-    )
+    st.write("**Export data to Excel for analysis**")
+    download_buttons = [
+        {"label": "Products Data", "file_name": "product_data.csv", "data": convert_df(download_data(month)[0])},
+        {"label": "Locations Data", "file_name": "location_data.csv", "data": convert_df(download_data(month)[1])},
+        {"label": "All Data", "file_name": "all_data.csv", "data": convert_df(download_data(month)[2])}
+    ]
+    for button in download_buttons:
+        st.download_button(
+            label=button["label"],
+            data=button["data"],
+            file_name=button["file_name"],
+            mime="text/csv"
+        )
 
