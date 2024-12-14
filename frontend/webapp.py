@@ -20,7 +20,7 @@ with header_col2:
 st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score(month)}</h2>",
             unsafe_allow_html=True)
 
-st.write("---")
+st.divider()
 
 # Display ai_platforms scores and graphs
 locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month)
@@ -48,7 +48,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         })
         st.plotly_chart(plot_bar_chart(bar_data), key=f"bar_chart_{model}", use_container_width=True)
 
-st.write("---")
+st.divider()
 
 # Lists for Top Locations and Opportunities
 col4, col5, col6 = st.columns(3)
@@ -63,7 +63,7 @@ with col6:
     top_keyword, low_keyword = top_low_keywords(month)
     st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
 
-st.write("---")
+st.divider()
 
 # Stats by location
 col7, col8, col9 = st.columns([2, 3, 2])

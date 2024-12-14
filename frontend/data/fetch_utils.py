@@ -62,6 +62,12 @@ def process_and_pivot_data(endpoint, index_columns, month):
         return None
 
 
+def get_date_today():
+    current_year = datetime.today().year
+    current_month = datetime.today().month
+    return f"{current_year}{str(current_month).zfill(2)}"
+
+
 def select_month():
     """Setup sidebar with year and month selection."""
     # Get the current year and month

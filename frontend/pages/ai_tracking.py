@@ -3,18 +3,17 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import *
-
-st.sidebar.header("AI Tracking Settings")
-
-if st.sidebar.button("Run AI Tracking"):
-    display_ai_tracking()
-
-import streamlit as st
 import requests
+
+st.set_page_config(
+    page_title="Query tool",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 
 def fetch_data(search_text, ai_platform, locations, product):
-    # Mock API call - replace this with your actual API logic
+
     api_url = "https://example.com/api/data"
     payload = {
         "search_text": search_text,
@@ -33,41 +32,36 @@ def main():
     st.title("AI Query Tool")
 
     # Non-editable search text
-    search_text = "Ask AI"
-    st.text_input("give me the best {keyword} Insurance companies in {location} ", search_text, disabled=True)
+    search_text = "'give me the best {keyword} Insurance companies in {location}'"
+    st.text_input("Ask AI ", search_text, disabled=True)
 
+    all_locations, all_products, all_ai_platforms = fetch_param(get_date_today())
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        # Toggle for AI platforms
-        all_ai_platforms = ["OpenAI", "Google", "AWS", "Azure", "Anthropic"]
         select_all_platforms = st.checkbox("Select All AI Platforms")
 
         if select_all_platforms:
+            st.multiselect("Select AI Platforms", all_ai_platforms, disabled=True)
             selected_ai_platforms = all_ai_platforms
-            st.write("All AI platforms selected: ", ", ".join(selected_ai_platforms))
         else:
             selected_ai_platforms = st.multiselect("Select AI Platforms", all_ai_platforms)
 
     with col2:
-        # Toggle for locations
-        all_locations = ["North America", "Europe", "Asia", "South America", "Africa", "Australia"]
         select_all_locations = st.checkbox("Select All Locations")
 
         if select_all_locations:
+            st.multiselect("Select Locations", all_locations, disabled=True)
             selected_locations = all_locations
-            st.write("All locations selected: ", ", ".join(selected_locations))
         else:
             selected_locations = st.multiselect("Select Locations", all_locations)
 
     with col3:
-        # Toggle for products
-        all_products = ["Product A", "Product B", "Product C", "Product D"]
         select_all_products = st.checkbox("Select All Products")
 
         if select_all_products:
+            st.multiselect("Select Products", all_products, disabled=True)
             selected_products = all_products
-            st.write("All products selected: ", ", ".join(selected_products))
         else:
             selected_products = st.multiselect("Select Products", all_products)
 
