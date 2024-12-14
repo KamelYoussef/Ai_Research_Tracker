@@ -104,7 +104,7 @@ async def aggregate_total_by_location_route(month: str, db: Session = Depends(ge
 
 
 @router.get("/aggregate_total_by_product_and_location/{month}")
-def aggregate_total_by_product_and_location_route(month: str, db: Session = Depends(get_db)):
+async def aggregate_total_by_product_and_location_route(month: str, db: Session = Depends(get_db)):
     """
     Endpoint to aggregate total_count by product and location for a given month.
 
@@ -120,6 +120,7 @@ def aggregate_total_by_product_and_location_route(month: str, db: Session = Depe
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/score_ai/{month}")
 async def get_score_ai(month: str, db: Session = Depends(get_db)):
