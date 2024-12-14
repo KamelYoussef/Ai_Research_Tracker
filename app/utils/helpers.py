@@ -71,8 +71,23 @@ def process_product_location(product, location, search_phrases, ai_platform):
         }
 
 
-def track_responses(ai_platfrom, config_path):
+def track_responses(ai_platform, config_path, locations=None, products=None):
+    """
+    Tracks responses from the AI platform based on provided or configured locations and products.
+
+    :param ai_platform: The AI platform to query.
+    :param config_path: Path to the configuration file.
+    :param locations: List of locations to process. Optional. Overrides config if provided.
+    :param products: List of products to process. Optional. Overrides config if provided.
+    :return: Tuple of AI responses and results.
+    """
+    # Load configuration for search_phrases
     config = load_and_validate_config(config_path)
+
+    # Use provided locations and products if available, otherwise fallback to config
+    locations = locations if locations is not None else config["locations"]
+    products = products if products is not None else config["products"]
+    search_phrases = config["search_phrases"]
 
     results = []
     ai_responses = []  # List to collect all AI responses
@@ -81,10 +96,10 @@ def track_responses(ai_platfrom, config_path):
     with ThreadPoolExecutor() as executor:
         futures = [
             executor.submit(
-                process_product_location, product, location, config["search_phrases"], ai_platfrom
+                process_product_location, product, location, search_phrases, ai_platform
             )
-            for product in config["products"]
-            for location in config["locations"]
+            for product in products
+            for location in locations
         ]
 
         # Collect results and AI responses as tasks complete

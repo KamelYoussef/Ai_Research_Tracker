@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
 from sqlalchemy.orm import Session
-from app.services.storage import store_response
+from pydantic import BaseModel
 from app.dependencies import get_db
 from app.models.response import Response
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
@@ -11,42 +11,41 @@ from app.utils.helpers import track_responses, get_ai_response, aggregate_total_
 router = APIRouter()
 
 
-@router.get("/submit_query_with_default/{ai_platform}")
-async def submit_query_with_default(ai_platform: str):
+class QueryRequest(BaseModel):
+    ai_platform: str
+    locations: list[str]
+    products: list[str]
+
+
+@router.post("/submit_query_with_ai_platform")
+async def submit_query_with_ai_platform(query: QueryRequest):
+    """
+    Handles a query request with default configurations.
+
+    :param query: QueryRequest object containing ai_platform, locations, and products.
+    :return: Processed AI responses and results.
+    """
     current_date = datetime.now().strftime("%Y%m")
     current_day = datetime.now().strftime("%d")
 
     try:
-        # Call the tracking function
-        ai_responses, results = track_responses(ai_platform, "app/config.yml")
-
-        # Ensure the number of AI responses matches the number of results
-        if len(ai_responses) != len(results):
-            raise ValueError("Mismatch between AI responses and results")
-
-        # Combine AI responses with corresponding results
-        combined_data = []
-        for ai_response, result in zip(ai_responses, results):
-            product = result.get('product')
-            location = result.get('location')
-            total_count = result.get('total_count')
-
-            combined_data.append({
-                "product": product,
-                "location": location,
-                "total_count": total_count,
-                "ai_response": ai_response,
-                "ai_platform": ai_platform,
-            })
+        # Call the tracking function with provided inputs
+        ai_responses, results = track_responses(
+            ai_platform=query.ai_platform,
+            config_path="app/config.yml",
+            locations=query.locations,
+            products=query.products
+        )
 
         return {
-            "status": "success",
-            "platform": ai_platform,
-            "data": combined_data
+            "ai_platform": query.ai_platform,
+            "ai_responses": ai_responses,
+            "results": results
         }
+
     except Exception as e:
-        # Handle errors gracefully and return a meaningful message
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 
 
 @router.get("/responses/")
