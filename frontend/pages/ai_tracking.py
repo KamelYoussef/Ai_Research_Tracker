@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-
+@st.cache_data
 def fetch_data(ai_platform, locations, products):
     api_url = "http://localhost:8000/submit_query_with_ai_platform"
     payload = {
@@ -33,7 +33,7 @@ def main():
     # Fetch parameters
     all_locations, all_products, all_ai_platforms = fetch_param(get_date_today())
 
-    col1, col2 = st.columns([2,1])
+    col1, col2 = st.columns([4,1])
     # Non-editable search text
     with col1:
         search_text = "'give me the best {keyword} Insurance companies in {location}'"
@@ -42,7 +42,7 @@ def main():
         selected_ai_platform = st.selectbox("Select AI Platform", all_ai_platforms)
 
     # Create columns for the selections
-    col3, col4, col5, col6 = st.columns(4)
+    col3, col4, col5, col6 = st.columns([4,2,4,2])
 
     with col4:
         st.write("")
@@ -82,19 +82,25 @@ def main():
                 if "error" in response_data:
                     st.error(response_data["error"])
                 else:
-                    # Display response text
-                    st.subheader("API Response Text")
-                    st.text_area("AI Responses", value=response_data.get("ai_responses", "No text available."), height=200)
-                    st.code(response_data.get("ai_responses", "No text available."), language='text')
+                    # Display AI Responses and Insights together in the same expander
+                    if "ai_responses" in response_data and "results" in response_data:
+                        st.subheader("AI Responses")
 
-                    # Display insights if available
-                    st.subheader("Insights")
-                    insights = response_data.get("results", [])
-                    if insights:
-                        for insight in insights:
-                            st.write(f"- {insight}")
+                        # Iterate over both ai_responses and results (insights) using zip
+                        for ai_response, insight in zip(response_data["ai_responses"], response_data["results"]):
+                            # Extract product and location from the insight
+                            product = insight.get('product', 'Unknown Product')
+                            location = insight.get('location', 'Unknown Location')
+                            total_count = insight.get('total_count', 'N/A')
+
+                            # Use product and location in the expander title
+                            with st.expander(f"Location: {location} | Keyword: {product} | Total Count: {total_count}"):
+
+                                # Display AI response
+                                st.write(ai_response)
+
                     else:
-                        st.write("No insights available.")
+                        st.write("No AI responses or insights available.")
 
 
 if __name__ == "__main__":
