@@ -78,11 +78,11 @@ with col8:
     st.dataframe(df, hide_index=True, use_container_width=True)
 
 with col9:
-    st.write("**Export data to Excel for analysis**")
+    st.write("")
     download_buttons = [
-        {"label": "Products Data", "file_name": "product_data.csv", "data": convert_df(download_data(month)[0])},
-        {"label": "Locations Data", "file_name": "location_data.csv", "data": convert_df(download_data(month)[1])},
-        {"label": "All Data", "file_name": "all_data.csv", "data": convert_df(download_data(month)[2])}
+        #{"label": "Products Data", "file_name": "product_data.csv", "data": convert_df(download_data(month)[0])},
+        #{"label": "Locations Data", "file_name": "location_data.csv", "data": convert_df(download_data(month)[1])},
+        {"label": "Export data to Excel for analysis", "file_name": "all_data.csv", "data": convert_df(download_data(month)[2])}
     ]
     for button in download_buttons:
         st.download_button(

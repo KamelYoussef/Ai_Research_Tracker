@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def fetch_data(ai_platform, locations, products):
     api_url = "http://localhost:8000/submit_query_with_ai_platform"
     payload = {
@@ -29,6 +29,8 @@ def fetch_data(ai_platform, locations, products):
 
 def main():
     st.title("AI Query Tool")
+    if st.sidebar.button("Clear Cache"):
+        st.cache_data.clear()
 
     # Fetch parameters
     all_locations, all_products, all_ai_platforms = fetch_param(get_date_today())
@@ -97,7 +99,8 @@ def main():
                             with st.expander(f"Location: {location} | Keyword: {product} | Total Count: {total_count}"):
 
                                 # Display AI response
-                                st.write(ai_response)
+                                #st.write(ai_response)
+                                st.code(ai_response, language="markdown")
 
                     else:
                         st.write("No AI responses or insights available.")
