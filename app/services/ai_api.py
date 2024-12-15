@@ -1,8 +1,10 @@
 from openai import OpenAI
-from app.config import OPENAI_API_KEY, PERPLEXITY_API_KEY
+from app.config import OPENAI_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY
+import google.generativeai as genai
 
 client_chatgpt = OpenAI(api_key=OPENAI_API_KEY)
 client_perplexity = OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
+client_gemini = genai.configure(api_key=GEMINI_API_KEY)
 
 
 def get_ai_response(prompt, ai_platform):
@@ -31,14 +33,20 @@ def chatgpt(prompt):
                 }
             ]
         )
-        return completion.choices[0].message
+        return completion.choices[0].message.content
     except Exception as e:
         print(f"Error getting response from OpenAI: {e}")
         return None
 
 
 def gemini(prompt):
-    return prompt #to be created
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"Error getting response from OpenAI: {e}")
+        return None
 
 
 def perplexity(prompt):
@@ -53,7 +61,7 @@ def perplexity(prompt):
                 }
             ]
         )
-        return completion.choices[0].message
+        return completion.choices[0].message.content
     except Exception as e:
         print(f"Error getting response from OpenAI: {e}")
         return None

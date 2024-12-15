@@ -51,7 +51,7 @@ def process_product_location(product, location, search_phrases, ai_platform):
     """
     try:
         prompt = f"give me the best {product} insurance companies in {location}"
-        ai_response = get_ai_response(prompt, ai_platform).content
+        ai_response = get_ai_response(prompt, ai_platform)
         match_results = find_words_in_texts(ai_response, search_phrases)
 
         has_matches = int(any(match_results.values()))
