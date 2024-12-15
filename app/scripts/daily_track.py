@@ -44,3 +44,4 @@ if __name__ == "__main__":
     startup()
     daily_track("CHATGPT")
     daily_track("PERPLEXITY")
+    daily_track("GEMINI")

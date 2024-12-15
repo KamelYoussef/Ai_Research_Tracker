@@ -1,17 +1,23 @@
 locations:
   - Okotoks
   - Red Deer
-  - Georgetown
+  - Lethbridge
+  - Yorktown
+  - Weyburn
+  - Bathurst
+  - Winnipeg
+  - Victoria
+  - High River
 search_phrases:
   - western financial
   - western financial group
   - Western Financial Group Inc.
 products:
-  - home
-  - car
-  - business
-  - farm
-  - life
+  - Home
+  - Car
+  - Business
+  - Farm
+  - Life
 ai_platforms:
   - CHATGPT
   - PERPLEXITY

@@ -13,6 +13,11 @@ def find_words_in_texts(text, search_phrases):
         dict: Dictionary with phrases as keys and match indicators as values.
     """
     matches = {}
+
+    # Handle None or invalid text input gracefully
+    if not isinstance(text, str):
+        text = ""
+
     for phrase in search_phrases:
         # Check if the phrase exists in the text
         matches[phrase] = int(bool(
