@@ -14,11 +14,11 @@ def startup():
 def daily_track(ai_platfrom):
     """Function to be executed daily."""
     current_date = datetime.now().strftime("%Y%m")
-    current_day = datetime.now().strftime("%d")
+    current_day = "15"
     db: Session = SessionLocal()
 
     try:
-        ai_responses, results = track_responses(ai_platfrom, "../config.yml")
+        ai_responses, results = track_responses(ai_platfrom, "app/config.yml")
         print(results)
         for result in results:
             product = result.get('product')

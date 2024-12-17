@@ -5,9 +5,15 @@ import streamlit as st
 import seaborn as sns
 from datetime import datetime
 import plotly.express as px
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Define the FastAPI server URL
-FASTAPI_URL = "http://localhost:8000"
+FASTAPI_URL = os.getenv("FASTAPI_URL")
+#FASTAPI_URL = "http://localhost:8000"
 
 
 # Utility: Fetch data from the API

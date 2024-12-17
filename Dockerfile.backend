@@ -1,0 +1,21 @@
+# Use Python base image
+FROM python:3.10.15
+
+# Set working directory in the container
+WORKDIR /app
+
+# Copy only the backend folder and requirements
+COPY ./app /app
+COPY ./requirements.txt /app/
+
+# Set Python path to include the /app directory
+ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose port for FastAPI
+EXPOSE 8000
+
+# Command to run FastAPI (change directory before starting the app)
+CMD ["sh", "-c", "cd .. && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
