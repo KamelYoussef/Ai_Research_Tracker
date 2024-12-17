@@ -4,6 +4,15 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import *
 import requests
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Define the FastAPI server URL
+FASTAPI_URL = os.getenv("FASTAPI_URL")
+#FASTAPI_URL = "http://localhost:8000"
 
 st.set_page_config(
     page_title="Query tool",
@@ -11,9 +20,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+
 @st.cache_data(show_spinner=False)
 def fetch_data(ai_platform, locations, products):
-    api_url = "http://localhost:8000/submit_query_with_ai_platform"
+    api_url = f"{FASTAPI_URL}/submit_query_with_ai_platform"
     payload = {
         "ai_platform": ai_platform,
         "locations": locations,

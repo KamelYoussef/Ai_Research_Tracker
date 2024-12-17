@@ -4,12 +4,14 @@ FROM python:3.10.15
 # Set working directory in the container
 WORKDIR /frontend
 
-# Copy only the frontend folder and requirements
-COPY ./frontend /frontend
-COPY ./requirements.txt /frontend/
+# Copy requirements.txt first to leverage Docker caching
+COPY ./requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the frontend folder after dependencies are installed
+COPY ./frontend /frontend
 
 # Expose port for Streamlit
 EXPOSE 8501

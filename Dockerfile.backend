@@ -4,15 +4,17 @@ FROM python:3.10.15
 # Set working directory in the container
 WORKDIR /app
 
-# Copy only the backend folder and requirements
-COPY ./app /app
-COPY ./requirements.txt /app/
-
-# Set Python path to include the /app directory
-ENV PYTHONPATH=/app:$PYTHONPATH
+# Copy requirements.txt first to leverage Docker caching
+COPY ./requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the backend folder after dependencies are installed
+COPY ./app /app
+
+# Set Python path to include the /app directory
+ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Expose port for FastAPI
 EXPOSE 8000
