@@ -14,7 +14,7 @@ def startup():
 def daily_track(ai_platfrom):
     """Function to be executed daily."""
     current_date = datetime.now().strftime("%Y%m")
-    current_day = "15"
+    current_day = datetime.now().strftime("%d")
     db: Session = SessionLocal()
 
     try:
