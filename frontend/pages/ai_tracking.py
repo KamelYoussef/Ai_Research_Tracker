@@ -14,8 +14,13 @@ load_dotenv()
 FASTAPI_URL = os.getenv("FASTAPI_URL")
 #FASTAPI_URL = "http://localhost:8000"
 
+if 'logged_in' in st.session_state and st.session_state.logged_in:
+    pass
+else:
+    st.switch_page("login.py")
+
 st.set_page_config(
-    page_title="Query tool",
+    page_title="AI Investigator",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -38,9 +43,13 @@ def fetch_data(ai_platform, locations, products):
 
 
 def main():
-    st.title("AI Query Tool")
+
+    if st.sidebar.button("Dashboard"):
+        st.switch_page("pages/webapp.py")
     if st.sidebar.button("Clear Cache"):
         st.cache_data.clear()
+    if st.sidebar.button("Logout"):
+        logout()
 
     # Fetch parameters
     all_locations, all_products, all_ai_platforms = fetch_param(get_date_today())

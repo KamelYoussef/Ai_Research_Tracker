@@ -1,12 +1,21 @@
 import streamlit as st
 import pandas as pd
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, \
     plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, \
-    stats_by_location, download_data, convert_df
+    stats_by_location, download_data, convert_df, logout
+
+
+if 'logged_in' in st.session_state and st.session_state.logged_in:
+    pass
+else:
+    st.switch_page("login.py")
 
 # Set Streamlit page configuration
 st.set_page_config(
-    page_title="Dashboard Tracking",
+    page_title="Dashboard",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -80,9 +89,8 @@ with col8:
 with col9:
     st.write("")
     download_buttons = [
-        #{"label": "Products Data", "file_name": "product_data.csv", "data": convert_df(download_data(month)[0])},
-        #{"label": "Locations Data", "file_name": "location_data.csv", "data": convert_df(download_data(month)[1])},
-        {"label": "Export data to Excel for analysis", "file_name": "all_data.csv", "data": convert_df(download_data(month)[2])}
+        {"label": "Export data to Excel for analysis", "file_name": "all_data.csv",
+         "data": convert_df(download_data(month)[2])}
     ]
     for button in download_buttons:
         st.download_button(
@@ -92,3 +100,11 @@ with col9:
             mime="text/csv"
         )
 
+if st.sidebar.button("AI Investigator"):
+    st.switch_page("pages/ai_tracking.py")
+
+if st.sidebar.button("Clear Cache"):
+    st.cache_data.clear()
+
+if st.sidebar.button("Logout"):
+    logout()

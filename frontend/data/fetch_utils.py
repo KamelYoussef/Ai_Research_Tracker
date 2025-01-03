@@ -360,3 +360,12 @@ def download_data(month):
 def convert_df(df):
     """Converts a pandas dataframe to a CSV string."""
     return df.to_csv(index=False)
+
+
+def logout():
+    del st.session_state["logged_in"]
+    del st.session_state["token"]
+    st.session_state.logged_in = False
+    st.session_state.token = ""
+    st.success("You have logged out!")
+    st.switch_page("login.py")

@@ -1,20 +1,41 @@
-from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.dependencies import get_db
 from app.models.response import Response
+from datetime import datetime, timedelta
+from fastapi.security import OAuth2PasswordBearer
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
-    aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai
+    aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, verify_token
 
 
 router = APIRouter()
+
+# OAuth2 scheme for extracting tokens
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 
 class QueryRequest(BaseModel):
     ai_platform: str
     locations: list[str]
     products: list[str]
+
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    """
+    Extract and verify the current user from the token.
+    """
+    return verify_token(token)
 
 
 @router.post("/submit_query_with_ai_platform")
@@ -137,3 +158,30 @@ async def get_score_ai(month: str, db: Session = Depends(get_db)):
         return {"month": month, "score_ai": int(score)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
+
+
+@router.post("/login", response_model=Token)
+def login(request: LoginRequest):
+    # Replace this with your database logic
+    if request.username != "testuser" or request.password != "testpass":
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    access_token = create_access_token(data={"sub": request.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/protected-route")
+def protected_route(authorization: str = Header(None)):
+    """
+    A protected POST route that requires the token in the Authorization header (no 'Bearer').
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+
+    # Validate the token
+    try:
+        current_user = verify_token(authorization)  # Directly use the token from the header
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return {"message": f"Hello, {current_user}! You have access to this protected route."}
