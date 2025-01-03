@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import sys
 from pathlib import Path
+import plotly.graph_objects as go
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, \
     plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, \
@@ -24,6 +25,15 @@ header_col1, header_col2 = st.columns([2, 1])
 with header_col2:
     # get the month to generate the monthly report
     month = select_month()
+
+header_col3, header_col4 = st.columns([8, 1])
+with header_col4:
+    st.download_button(
+        label="Export data to Excel",
+        data=convert_df(download_data(month)[2]),
+        file_name="all_data.csv",
+        mime="text/csv"
+    )
 
 # Display Total Score in a header
 st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score(month)}</h2>",
@@ -75,30 +85,43 @@ with col6:
 st.divider()
 
 # Stats by location
-col7, col8, col9 = st.columns([2, 3, 2])
+col7, col8 = st.columns([2, 4])
 with col7:
     search_query = st.selectbox("**Search Locations**", options=locations, index=0)
 
-with col8:
     st.write(f"% of times {search_query} showed in search")
     data = stats_by_location(month, search_query)
     df = pd.DataFrame(data)
 
     st.dataframe(df, hide_index=True, use_container_width=True)
 
-with col9:
-    st.write("")
-    download_buttons = [
-        {"label": "Export data to Excel for analysis", "file_name": "all_data.csv",
-         "data": convert_df(download_data(month)[2])}
-    ]
-    for button in download_buttons:
-        st.download_button(
-            label=button["label"],
-            data=button["data"],
-            file_name=button["file_name"],
-            mime="text/csv"
+with col8:
+    with st.container():  # Manage space using a container
+        fig = go.Figure()
+
+        # Add a trace for each platform
+        for platform in df.columns[1:]:  # Exclude 'product' column
+            fig.add_trace(go.Scatterpolar(
+                r=df[platform].values,  # Percentages for this platform
+                theta=df["product"].values,  # Product names as the angular points
+                fill='toself',
+                name=platform  # Legend entry
+            ))
+
+        # Update layout with colors, legend, and sizing
+        fig.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 100]  # Adjust range to fit percentage values
+                )
+            ),
+            width=700,
+            height=420,
         )
+
+        # Display the radar chart
+        st.plotly_chart(fig, use_container_width=True)
 
 if st.sidebar.button("AI Investigator"):
     st.switch_page("pages/ai_tracking.py")
