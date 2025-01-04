@@ -13,8 +13,6 @@ load_dotenv()
 
 # Define the FastAPI server URL
 FASTAPI_URL = os.getenv("FASTAPI_URL")
-#FASTAPI_URL = "http://localhost:8000"
-
 
 # Utility: Fetch data from the API
 def fetch_data(endpoint: str, month: str):
