@@ -1,8 +1,13 @@
 import streamlit as st
 import requests
+import os
+from dotenv import load_dotenv
 
-# FastAPI Backend URL
-FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI URL
+# Load environment variables
+load_dotenv()
+
+# Define the FastAPI server URL
+FASTAPI_URL = os.getenv("FASTAPI_URL")
 
 st.set_page_config(
     page_title="Sign in",
