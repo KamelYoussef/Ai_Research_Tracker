@@ -1,8 +1,7 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import requests
 import streamlit as st
-import seaborn as sns
+import plotly.graph_objects as go
 from datetime import datetime
 import plotly.express as px
 import os
@@ -340,3 +339,38 @@ def logout():
     st.session_state.token = ""
     st.success("You have logged out!")
     st.switch_page("login.py")
+
+
+def create_radar_chart(df):
+    """
+    Creates a radar chart for the given DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame with a 'product' column and numerical columns.
+
+    Returns:
+        plotly.graph_objects.Figure: The radar chart figure.
+    """
+    fig = go.Figure()
+
+    # Add a trace for each platform
+    for platform in df.columns[1:]:  # Exclude 'product' column
+        fig.add_trace(go.Scatterpolar(
+            r=df[platform].values,  # Percentages for this platform
+            theta=df["product"].values,  # Product names as the angular points
+            fill='toself',
+            name=platform  # Legend entry
+        ))
+
+    # Update layout with colors, legend, and sizing
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100]  # Adjust range to fit percentage values
+            )
+        ),
+        width=700,
+        height=420,
+    )
+    return fig
