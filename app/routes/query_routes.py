@@ -29,6 +29,7 @@ class QueryRequest(BaseModel):
     ai_platform: str
     locations: list[str]
     products: list[str]
+    prompt: str
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -55,7 +56,8 @@ async def submit_query_with_ai_platform(query: QueryRequest):
             ai_platform=query.ai_platform,
             config_path="app/config.yml",
             locations=query.locations,
-            products=query.products
+            products=query.products,
+            prompt=query.prompt
         )
 
         return {

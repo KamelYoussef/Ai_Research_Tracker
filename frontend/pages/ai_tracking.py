@@ -12,7 +12,6 @@ load_dotenv()
 
 # Define the FastAPI server URL
 FASTAPI_URL = os.getenv("FASTAPI_URL")
-#FASTAPI_URL = "http://localhost:8000"
 
 if 'logged_in' in st.session_state and st.session_state.logged_in:
     pass
@@ -27,12 +26,13 @@ st.set_page_config(
 
 
 @st.cache_data(show_spinner=False)
-def fetch_data(ai_platform, locations, products):
+def fetch_data(ai_platform, locations, products, prompt):
     api_url = f"{FASTAPI_URL}/submit_query_with_ai_platform"
     payload = {
         "ai_platform": ai_platform,
         "locations": locations,
-        "products": products
+        "products": products,
+        "prompt": prompt
     }
     try:
         response = requests.post(api_url, json=payload)
@@ -57,8 +57,13 @@ def main():
     col1, col2 = st.columns([4,1])
     # Non-editable search text
     with col1:
-        search_text = "'give me the best {keyword} Insurance companies in {location}'"
-        st.text_input("Ask AI ", search_text, disabled=True)
+        prompts = [
+            "Give me the best {keyword} insurance in {location}",
+            "What are the top {keyword} insurance near {location}?",
+            "List the most affordable {keyword} insurance in {location}",
+            "Find the highest-rated {keyword} insurance in {location}"
+        ]
+        selected_prompt = st.radio("Choose your query:", prompts)
     with col2:
         selected_ai_platform = st.selectbox("Select AI Platform", all_ai_platforms)
 
@@ -98,7 +103,7 @@ def main():
         else:
             with st.spinner("Fetching data..."):
                 # Call the fetch_data function
-                response_data = fetch_data(selected_ai_platform, selected_locations, selected_products)
+                response_data = fetch_data(selected_ai_platform, selected_locations, selected_products, selected_prompt)
 
                 if "error" in response_data:
                     st.error(response_data["error"])

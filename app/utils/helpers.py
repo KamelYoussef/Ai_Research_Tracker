@@ -44,7 +44,7 @@ def load_and_validate_config(config_path):
         raise RuntimeError(f"Error loading configuration: {str(e)}")
 
 
-def process_product_location(product, location, search_phrases, ai_platform):
+def process_product_location(product, location, search_phrases, ai_platform, prompt):
     """
     Generate a prompt, get AI response, and find matches in the response.
 
@@ -57,7 +57,8 @@ def process_product_location(product, location, search_phrases, ai_platform):
         dict: Dictionary containing product, location, match details, and AI response.
     """
     try:
-        prompt = f"give me the best {product} insurance companies in {location}"
+        if prompt is None:
+            prompt = f"give me the best {product} insurance in {location}"
         ai_response = get_ai_response(prompt, ai_platform)
         match_results = find_words_in_texts(ai_response, search_phrases)
 
@@ -78,7 +79,7 @@ def process_product_location(product, location, search_phrases, ai_platform):
         }
 
 
-def track_responses(ai_platform, config_path, locations=None, products=None):
+def track_responses(ai_platform, config_path, locations=None, products=None, prompt=None):
     """
     Tracks responses from the AI platform based on provided or configured locations and products.
 
@@ -86,6 +87,7 @@ def track_responses(ai_platform, config_path, locations=None, products=None):
     :param config_path: Path to the configuration file.
     :param locations: List of locations to process. Optional. Overrides config if provided.
     :param products: List of products to process. Optional. Overrides config if provided.
+    :param prompt: Prompt of the search
     :return: Tuple of AI responses and results.
     """
     # Load configuration for search_phrases
@@ -103,7 +105,7 @@ def track_responses(ai_platform, config_path, locations=None, products=None):
     with ThreadPoolExecutor() as executor:
         futures = [
             executor.submit(
-                process_product_location, product, location, search_phrases, ai_platform
+                process_product_location, product, location, search_phrases, ai_platform, prompt
             )
             for product in products
             for location in locations

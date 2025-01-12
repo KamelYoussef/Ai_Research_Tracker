@@ -11,7 +11,7 @@ services:
     depends_on:
       - db
     env_file:
-      - .env
+      - .env.docker
 
   frontend:
     build:
@@ -23,13 +23,13 @@ services:
     depends_on:
       - backend
     env_file:
-      - .env
+      - .env.docker
 
   db:
     image: postgres:14
     container_name: postgres
     env_file:
-      - .env
+      - .env.docker
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
