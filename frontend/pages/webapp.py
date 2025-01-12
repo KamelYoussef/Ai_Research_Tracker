@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, \
     plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, \
-    stats_by_location, download_data, convert_df, logout
+    stats_by_location, download_data, convert_df, logout, process_and_pivot_data
 
 
 if 'logged_in' in st.session_state and st.session_state.logged_in:
@@ -22,6 +22,14 @@ st.set_page_config(
 )
 
 header_col1, header_col2 = st.columns([2, 1])
+with header_col1:
+    competitor_flags = {
+        "Western Financial": "total_count",
+        "Co-operators": "competitor_1",
+        "Westland": "competitor_2",
+        "Square One": "competitor_3",
+    }
+    choice = st.selectbox("Choose an option:", list(competitor_flags.keys()))
 with header_col2:
     # get the month to generate the monthly report
     month = select_month()
@@ -30,7 +38,7 @@ header_col3, header_col4 = st.columns([8, 1])
 with header_col4:
     st.download_button(
         label="Export data",
-        data=convert_df(download_data(month)[2]),
+        data=convert_df(download_data(month, competitor_flags[choice])[2]),
         file_name="all_data.csv",
         mime="text/csv"
     )
@@ -42,8 +50,8 @@ st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score
 st.divider()
 
 # Display ai_platforms scores and graphs
-locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month)
-keywords_presence = keywords_data(month)
+locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month, competitor_flags[choice])
+keywords_presence = keywords_data(month, competitor_flags[choice])
 
 columns = st.columns(3)
 for model, score, locations_showed, locations_no_results, keyword_presence, column in zip(
@@ -73,13 +81,13 @@ st.divider()
 col4, col5, col6 = st.columns(3)
 with col4:
     st.write("**Top-Performing Locations:** 🚀")
-    st.write("\n".join(f"- {location}" for location in top_locations(month)[:5]))
+    st.write("\n".join(f"- {location}" for location in top_locations(month, competitor_flags[choice])[:5]))
 with col5:
     st.write("**Areas for Opportunity:** 📈")
-    st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month)[-5:]))))
+    st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice])[-5:]))))
 with col6:
     st.write("**Keywords Insight:**")
-    top_keyword, low_keyword = top_low_keywords(month)
+    top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice])
     st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
 
 st.divider()
@@ -90,7 +98,7 @@ with col7:
     search_query = st.selectbox("**Search Locations**", options=locations, index=0)
 
     st.write(f"% of times {search_query} showed in search")
-    data = stats_by_location(month, search_query)
+    data = stats_by_location(month, search_query, competitor_flags[choice])
     df = pd.DataFrame(data)
 
     st.dataframe(df, hide_index=True, use_container_width=True)

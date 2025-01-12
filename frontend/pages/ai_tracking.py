@@ -52,7 +52,7 @@ def main():
         logout()
 
     # Fetch parameters
-    all_locations, all_products, all_ai_platforms = fetch_param(get_date_today())
+    all_locations, all_products, all_ai_platforms = fetch_param(get_date_today(), "total_count")
 
     col1, col2 = st.columns([4,1])
     # Non-editable search text

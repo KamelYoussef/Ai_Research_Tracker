@@ -37,7 +37,7 @@ def fetch_data(endpoint: str, month: str):
 
 
 # Utility: Process and pivot data
-def process_and_pivot_data(endpoint, index_columns, month):
+def process_and_pivot_data(endpoint, index_columns, month, competitor_flag):
     """
     Fetch and process data for given index columns.
 
@@ -55,7 +55,7 @@ def process_and_pivot_data(endpoint, index_columns, month):
         df_pivot = df.pivot_table(
             index=index_columns,
             columns="day",
-            values="total_count",
+            values=competitor_flag,
             aggfunc="max",
             fill_value=0
         ).reset_index()
@@ -115,59 +115,28 @@ def fetch_tracking_data(endpoint, ai_platform):
         return {"status": "error", "message": str(e)}
 
 
-def display_ai_tracking():
-    """
-    Display AI tracking results for a specific month.
-    """
-
-    platforms = ["CHATGPT", "PERPLEXITY"]
-    for ai_platform in platforms:
-        with st.spinner(f"Fetching data for {ai_platform}..."):
-            data = fetch_tracking_data("submit_query_with_default", ai_platform)
-
-        if data["status"] != "success":
-            st.error(f"Error fetching data for {ai_platform}: {data.get('message', 'Unknown error')}")
-            continue
-
-        results = data["data"]
-        st.markdown(f"### Results for {ai_platform}")
-
-        if not results:
-            st.warning(f"No results found for {ai_platform}.")
-            continue
-
-        # Display results in a table
-        df = pd.DataFrame(results)
-        st.dataframe(df)
-
-        # Optional: Add visualizations
-        st.markdown("#### Visualizations")
-        count_by_location = pd.DataFrame(results).groupby("location")["total_count"].sum()
-        st.bar_chart(count_by_location)
-
-
 def get_ai_total_score(month):
     if fetch_data("score_ai", month):
         return fetch_data("score_ai", month).get("score_ai", [])
 
 
-def ai_platforms_score(month):
-    df = download_data(month)[2]
+def ai_platforms_score(month, competitor_flag):
+    df = download_data(month, competitor_flag)[2]
     n_locations, n_products, n_ai_platforms = df["location"].nunique(), df["product"].nunique(), df["ai_platform"].nunique()
     ai_scores = df.groupby("ai_platform")[["Total Count"]].sum().reset_index()
     ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / days_in_month(month) * 100).astype(int)
     return ai_scores.set_index('ai_platform')['Total Count'].to_dict()
 
 
-def fetch_param(month):
-    df = download_data(month)[2]
+def fetch_param(month, competitor_flag):
+    df = download_data(month, competitor_flag)[2]
     locations = df["location"].unique().tolist()
     products = df["product"].unique().tolist()
     ai_platforms = df["ai_platform"].unique().tolist()
     return locations, products, ai_platforms
 
 
-def locations_data(month):
+def locations_data(month, competitor_flag):
     """
     Calculate the number of locations that showed results and the number of locations with no results
     for each AI platform, ensuring the output lists match the total number of locations.
@@ -181,7 +150,7 @@ def locations_data(month):
           where values are lists of counts for each AI platform.
     """
     # Process the data
-    df = download_data(month)[1]
+    df = download_data(month, competitor_flag)[1]
 
     # Get the unique ai_platform values
     ai_platforms = df["ai_platform"].unique()
@@ -259,19 +228,19 @@ def plot_bar_chart(data):
 
 
 @st.cache_data
-def fetch_and_process_data(month):
-    locations, keywords, models = fetch_param(month)
-    scores = ai_platforms_score(month)
-    locations_data_df = locations_data(month)
+def fetch_and_process_data(month, competitor_flag):
+    locations, keywords, models = fetch_param(month, competitor_flag)
+    scores = ai_platforms_score(month, competitor_flag)
+    locations_data_df = locations_data(month, competitor_flag)
     return locations, keywords, models, scores, locations_data_df
 
 
-def keywords_data(month):
+def keywords_data(month, competitor_flag):
     # Process the data
-    df = download_data(month)[0]
+    df = download_data(month, competitor_flag)[0]
 
     ai_platforms = df["ai_platform"].unique()
-    df["Total Count"] = (df["Total Count"] / len(fetch_param(month)[0]) / days_in_month(month) * 100).astype(float).round(2)
+    df["Total Count"] = (df["Total Count"] / len(fetch_param(month, competitor_flag)[0]) / days_in_month(month) * 100).astype(float).round(2)
     x = df.groupby(["ai_platform", "product"])[["Total Count"]].sum()
 
     keywords_presence = {}
@@ -281,19 +250,19 @@ def keywords_data(month):
     return keywords_presence
 
 
-def top_locations(month):
-    df = download_data(month)[1]
+def top_locations(month, competitor_flag):
+    df = download_data(month, competitor_flag)[1]
     ranking_df = df.groupby("location")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
     return ranking_df['location'].tolist()
 
 
-def top_low_keywords(month):
-    df = download_data(month)[0]
+def top_low_keywords(month, competitor_flag):
+    df = download_data(month, competitor_flag)[0]
     ranking_df = df.groupby("product")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
     return ranking_df.iloc[0]["product"], ranking_df.iloc[-1]["product"]
 
 
-def stats_by_location(month: int, selected_location: str) -> pd.DataFrame:
+def stats_by_location(month: int, selected_location: str, competitor_flag) -> pd.DataFrame:
     """
     Generate a pivot table showing statistics by product and AI platform for a given location and month.
 
@@ -305,7 +274,7 @@ def stats_by_location(month: int, selected_location: str) -> pd.DataFrame:
         pd.DataFrame: A pivot table with products as rows, AI platforms as columns, and normalized total counts as values.
     """
     # Process and pivot the data
-    df = download_data(month)[2]
+    df = download_data(month, competitor_flag)[2]
 
     # Validate inputs
     if selected_location not in df["location"].unique():
@@ -337,21 +306,25 @@ def stats_by_location(month: int, selected_location: str) -> pd.DataFrame:
 
 
 @st.cache_data
-def download_data(month):
+def download_data(month, competitor_flag):
     df_product = process_and_pivot_data(
         "aggregate_total_by_product",
         ["product", "ai_platform"],
-        month
+        month,
+        competitor_flag
     )
     df_location = process_and_pivot_data(
         "aggregate_total_by_location",
         ["location", "ai_platform"],
-        month
+        month,
+        competitor_flag
     )
     df_all = process_and_pivot_data(
         "aggregate_total_by_product_and_location",
         ["product", "location", "ai_platform"],
-        month)
+        month,
+        competitor_flag
+    )
     return df_product, df_location, df_all
 
 

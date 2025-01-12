@@ -165,18 +165,37 @@ def aggregate_total_by_product(db: Session, month: str):
         List[dict]: Aggregated totals by product.
     """
     results = (
-        db.query(Response.product, func.sum(Response.total_count).label("total_count"), Response.day, Response.ai_platform)
+        db.query(
+            Response.product,
+            func.sum(Response.total_count).label("total_count"),
+            func.sum(Response.competitor_1).label("competitor_1"),
+            func.sum(Response.competitor_2).label("competitor_2"),
+            func.sum(Response.competitor_3).label("competitor_3"),
+            Response.day,
+            Response.ai_platform
+        )
         .filter(Response.date == month)
         .group_by(Response.day, Response.product, Response.ai_platform)
         .all()
     )
     print(results)
-    return [{"product": r[0], "total_count": r[1], "day": r[2], "ai_platform": r[3]} for r in results]
+    return [
+        {
+            "product": r[0],
+            "total_count": r[1],
+            "competitor_1": r[2],
+            "competitor_2": r[3],
+            "competitor_3": r[4],
+            "day": r[5],
+            "ai_platform": r[6]
+        }
+        for r in results
+    ]
 
 
 def aggregate_total_by_location(db: Session, month: str):
     """
-    Aggregate total_count by location for a given month.
+    Aggregate total_count by location for a given month, including competitor data.
 
     Args:
         db (Session): SQLAlchemy session.
@@ -186,17 +205,36 @@ def aggregate_total_by_location(db: Session, month: str):
         List[dict]: Aggregated totals by location.
     """
     results = (
-        db.query(Response.location, func.sum(Response.total_count).label("total_count"), Response.day, Response.ai_platform)
+        db.query(
+            Response.location,
+            func.sum(Response.total_count).label("total_count"),
+            func.sum(Response.competitor_1).label("competitor_1"),
+            func.sum(Response.competitor_2).label("competitor_2"),
+            func.sum(Response.competitor_3).label("competitor_3"),
+            Response.day,
+            Response.ai_platform
+        )
         .filter(Response.date == month)
         .group_by(Response.day, Response.location, Response.ai_platform)
         .all()
     )
-    return [{"location": r[0], "total_count": r[1], "day": r[2], "ai_platform": r[3]} for r in results]
+    return [
+        {
+            "location": r[0],
+            "total_count": r[1],
+            "competitor_1": r[2],
+            "competitor_2": r[3],
+            "competitor_3": r[4],
+            "day": r[5],
+            "ai_platform": r[6],
+        }
+        for r in results
+    ]
 
 
 def aggregate_total_by_product_and_location(db: Session, month: str):
     """
-    Aggregate total_count by product and location for a given month.
+    Aggregate total_count by product and location for a given month, including competitor data.
 
     Args:
         db (Session): SQLAlchemy session.
@@ -210,6 +248,9 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
             Response.product,
             Response.location,
             func.sum(Response.total_count).label("total_count"),
+            func.sum(Response.competitor_1).label("competitor_1"),
+            func.sum(Response.competitor_2).label("competitor_2"),
+            func.sum(Response.competitor_3).label("competitor_3"),
             Response.day,
             Response.ai_platform
         )
@@ -218,14 +259,18 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
         .all()
     )
     return [
-                {"product": r[0],
-                 "location": r[1],
-                 "total_count": r[2],
-                 "day": r[3],
-                 "ai_platform": r[4]
-                 }
-                for r in results
-            ]
+        {
+            "product": r[0],
+            "location": r[1],
+            "total_count": r[2],
+            "competitor_1": r[3],
+            "competitor_2": r[4],
+            "competitor_3": r[5],
+            "day": r[6],
+            "ai_platform": r[7],
+        }
+        for r in results
+    ]
 
 
 def calculate_score_ai(db: Session, month: str, config_path):
