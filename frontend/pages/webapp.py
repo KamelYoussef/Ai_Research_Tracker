@@ -29,7 +29,7 @@ with header_col2:
 header_col3, header_col4 = st.columns([8, 1])
 with header_col4:
     st.download_button(
-        label="Export data to Excel",
+        label="Export data",
         data=convert_df(download_data(month)[2]),
         file_name="all_data.csv",
         mime="text/csv"
@@ -85,7 +85,7 @@ with col6:
 st.divider()
 
 # Stats by location
-col7, col8 = st.columns([2, 4])
+col7, col8 = st.columns([3, 5])
 with col7:
     search_query = st.selectbox("**Search Locations**", options=locations, index=0)
 

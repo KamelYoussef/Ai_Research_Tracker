@@ -59,7 +59,9 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
     try:
         if prompt is None:
             prompt = f"give me the best {product} insurance in {location}"
-        ai_response = get_ai_response(prompt, ai_platform)
+
+        query = prompt.format(keyword=product, location=location)
+        ai_response = get_ai_response(query, ai_platform)
         match_results = find_words_in_texts(ai_response, search_phrases)
         competitors = find_competitors_in_texts(ai_response, competitors)
 
