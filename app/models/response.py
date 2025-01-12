@@ -12,3 +12,6 @@ class Response(Base):
     ai_platform = Column(String, index=True)
     date = Column(String(6), index=True)
     day = Column(String(2), index=True)
+    competitor_1 = Column(Integer)
+    competitor_2 = Column(Integer)
+    competitor_3 = Column(Integer)

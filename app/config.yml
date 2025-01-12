@@ -22,3 +22,7 @@ ai_platforms:
   - CHATGPT
   - PERPLEXITY
   - GEMINI
+competitors:
+  - co-operators
+  - westland
+  - square one

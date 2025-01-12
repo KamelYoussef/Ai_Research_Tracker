@@ -24,6 +24,10 @@ def daily_track(ai_platfrom):
             product = result.get('product')
             location = result.get('location')
             total_count = result.get('total_count')
+            competitors = result.get('competitors')
+            competitor_1 = competitors.get('co-operators')
+            competitor_2 = competitors.get('westland')
+            competitor_3 = competitors.get('square one')
 
             store_response(
                 db=db,
@@ -33,6 +37,9 @@ def daily_track(ai_platfrom):
                 ai_platform=ai_platfrom,
                 date=current_date,
                 day=current_day,
+                competitor_1=competitor_1,
+                competitor_2=competitor_2,
+                competitor_3=competitor_3
             )
     except Exception as e:
         print(f"An error occurred: {e}")

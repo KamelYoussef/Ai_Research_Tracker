@@ -1,6 +1,6 @@
 import yaml
 from app.services.ai_api import get_ai_response
-from app.nlp.extractor import find_words_in_texts
+from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts
 from concurrent.futures import ThreadPoolExecutor
 from app.models.response import Response
 from sqlalchemy.orm import Session
@@ -44,7 +44,7 @@ def load_and_validate_config(config_path):
         raise RuntimeError(f"Error loading configuration: {str(e)}")
 
 
-def process_product_location(product, location, search_phrases, ai_platform, prompt):
+def process_product_location(product, location, search_phrases, ai_platform, prompt, competitors):
     """
     Generate a prompt, get AI response, and find matches in the response.
 
@@ -61,6 +61,7 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             prompt = f"give me the best {product} insurance in {location}"
         ai_response = get_ai_response(prompt, ai_platform)
         match_results = find_words_in_texts(ai_response, search_phrases)
+        competitors = find_competitors_in_texts(ai_response, competitors)
 
         has_matches = int(any(match_results.values()))
         return {
@@ -68,7 +69,8 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             "location": location,
             "ai_response": ai_response,
             "total_count": has_matches,
-            "matches": match_results
+            "matches": match_results,
+            "competitors": competitors
         }
     except Exception as e:
         return {
@@ -97,6 +99,7 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
     locations = locations if locations is not None else config["locations"]
     products = products if products is not None else config["products"]
     search_phrases = config["search_phrases"]
+    competitors = config["competitors"]
 
     results = []
     ai_responses = []  # List to collect all AI responses
@@ -105,7 +108,7 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
     with ThreadPoolExecutor() as executor:
         futures = [
             executor.submit(
-                process_product_location, product, location, search_phrases, ai_platform, prompt
+                process_product_location, product, location, search_phrases, ai_platform, prompt, competitors
             )
             for product in products
             for location in locations
