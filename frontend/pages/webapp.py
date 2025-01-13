@@ -43,7 +43,7 @@ with header_col4:
     )
 
 # Display Total Score in a header
-st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score(month)}</h2>",
+st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score(month, competitor_flags[choice])}</h2>",
             unsafe_allow_html=True)
 
 st.divider()

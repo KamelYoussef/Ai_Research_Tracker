@@ -14,7 +14,7 @@ load_dotenv()
 FASTAPI_URL = os.getenv("FASTAPI_URL")
 
 # Utility: Fetch data from the API
-def fetch_data(endpoint: str, month: str):
+def fetch_data(endpoint: str, month: str, flag_competitor=None):
     """
     Fetch data from the FastAPI endpoint.
 
@@ -26,7 +26,11 @@ def fetch_data(endpoint: str, month: str):
         list: Data from the API response, or an empty list if an error occurs.
     """
     try:
-        url = f"{FASTAPI_URL}/{endpoint}/{month}"
+        if flag_competitor is not None:
+            url = f"{FASTAPI_URL}/{endpoint}/{month}/{flag_competitor}"
+        else:
+            url = f"{FASTAPI_URL}/{endpoint}/{month}"
+
         response = requests.get(url)
         response.raise_for_status()
         return response.json()
@@ -114,16 +118,16 @@ def fetch_tracking_data(endpoint, ai_platform):
         return {"status": "error", "message": str(e)}
 
 
-def get_ai_total_score(month):
-    if fetch_data("score_ai", month):
-        return fetch_data("score_ai", month).get("score_ai", [])
+def get_ai_total_score(month, flag_competitor):
+    if fetch_data("score_ai", month, flag_competitor):
+        return fetch_data("score_ai", month, flag_competitor).get("score_ai", [])
 
 
 def ai_platforms_score(month, competitor_flag):
     df = download_data(month, competitor_flag)[2]
     n_locations, n_products, n_ai_platforms = df["location"].nunique(), df["product"].nunique(), df["ai_platform"].nunique()
     ai_scores = df.groupby("ai_platform")[["Total Count"]].sum().reset_index()
-    ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / days_in_month(month) * 100).astype(int)
+    ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / 4 * 100).astype(int)
     return ai_scores.set_index('ai_platform')['Total Count'].to_dict()
 
 
@@ -239,7 +243,7 @@ def keywords_data(month, competitor_flag):
     df = download_data(month, competitor_flag)[0]
 
     ai_platforms = df["ai_platform"].unique()
-    df["Total Count"] = (df["Total Count"] / len(fetch_param(month, competitor_flag)[0]) / days_in_month(month) * 100).astype(float).round(2)
+    df["Total Count"] = (df["Total Count"] / len(fetch_param(month, competitor_flag)[0]) / 4 * 100).astype(float).round(2)
     x = df.groupby(["ai_platform", "product"])[["Total Count"]].sum()
 
     keywords_presence = {}
@@ -284,7 +288,7 @@ def stats_by_location(month: int, selected_location: str, competitor_flag) -> pd
 
     # Normalize and round the "Total Count" column
     filtered_df.loc[:, "Total Count"] = (
-        (filtered_df["Total Count"] / days_in_month(month) * 100)
+        (filtered_df["Total Count"] / 4 * 100)
         .astype(float)
         .round(0)
     )

@@ -144,8 +144,8 @@ async def aggregate_total_by_product_and_location_route(month: str, db: Session 
         return {"error": str(e)}
 
 
-@router.get("/score_ai/{month}")
-async def get_score_ai(month: str, db: Session = Depends(get_db)):
+@router.get("/score_ai/{month}/{flag_competitor}")
+async def get_score_ai(month: str, flag_competitor, db: Session = Depends(get_db)):
     """
     Calculate and return the AI score for a given month.
 
@@ -156,7 +156,7 @@ async def get_score_ai(month: str, db: Session = Depends(get_db)):
         float: AI score for the specified month.
     """
     try:
-        score = calculate_score_ai(db, month, "app/config.yml")
+        score = calculate_score_ai(db, month, "app/config.yml", flag_competitor)
         return {"month": month, "score_ai": int(score)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
