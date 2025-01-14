@@ -128,11 +128,11 @@ def gemini_with_search(prompt, google_api_key=GOOGLE_API_KEY, google_cx=GOOGLE_C
             prompt = prompt.replace(phrase, "").replace("  ", " ").strip()
 
         # Perform a Google search
-        search_results = perform_search(prompt, google_api_key, google_cx)
-
+        search_results = perform_search(f"{prompt} Canada", google_api_key, google_cx)
+        print(search_results)
         # Combine the prompt and search results
         combined_prompt = (
-            f"User Query: I'm doing benchmark study from the search results list me {prompt}\n\n"
+            f"User Query: I'm doing benchmark study from the search results list me the name of insurances\n\n"
             f"Real-Time Search Results:\n{search_results}\n\n"
             f"Based on the query and the search results, provide an answer for a client living in canada:"
         )
@@ -146,6 +146,6 @@ def gemini_with_search(prompt, google_api_key=GOOGLE_API_KEY, google_cx=GOOGLE_C
         return None
 
 
-#user_query = "give me the best home insurance in red deer"
-#response = gemini_with_search(user_query, google_api_key, google_cx)
-#print(response)
+user_query = "give me the best car insurance in victoria"
+response = gemini_with_search(user_query, google_api_key, google_cx)
+print(response)
