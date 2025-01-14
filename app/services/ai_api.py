@@ -145,7 +145,7 @@ def gemini_with_search(prompt, google_api_key=GOOGLE_API_KEY, google_cx=GOOGLE_C
         print(f"Error generating response: {e}")
         return None
 
-
-user_query = "give me the best car insurance in victoria"
-response = gemini_with_search(user_query, google_api_key, google_cx)
-print(response)
+#test
+#user_query = "give me the best car insurance in victoria"
+#response = gemini_with_search(user_query, google_api_key, google_cx)
+#print(response)

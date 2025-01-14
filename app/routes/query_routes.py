@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.dependencies import get_db
 from app.models.response import Response
+from app.models.user import User
 from datetime import datetime
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
     aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
-    validate_token
+    validate_token, verify_password
 
 
 router = APIRouter()
@@ -174,12 +175,16 @@ async def get_score_ai(
 
 
 @router.post("/login", response_model=Token)
-def login(request: LoginRequest):
-    # Replace this with your database logic
-    if request.username != "testuser" or request.password != "testpass":
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+    # Query the user from the database
+    user = db.query(User).filter(User.username == request.username).first()
+
+    # Check if user exists and password is correct
+    if not user or not verify_password(request.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = create_access_token(data={"sub": request.username})
+    # Create the access token
+    access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
 

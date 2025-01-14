@@ -10,7 +10,7 @@ from jose import jwt
 from fastapi import HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends
-import os
+from passlib.context import CryptContext
 
 SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
 ALGORITHM = "HS256"
@@ -22,6 +22,7 @@ def load_config(config_file):
     with open(config_file, 'r') as file:
         config = yaml.safe_load(file)
     return config
+
 
 def load_and_validate_config(config_path):
     """
@@ -329,3 +330,14 @@ def validate_token(credentials: HTTPAuthorizationCredentials = Depends(security)
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
