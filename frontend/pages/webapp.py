@@ -3,11 +3,13 @@ import pandas as pd
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from data.fetch_utils import select_month, get_ai_total_score, \
-    plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, \
-    stats_by_location, download_data, convert_df, logout, process_and_pivot_data, create_radar_chart, validate_token
+from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
+    validate_token
+from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart
+from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
+    fetch_and_process_data
 
-
+# Check the login state
 if 'logged_in' in st.session_state and validate_token():
     pass
 else:
@@ -21,6 +23,7 @@ st.set_page_config(
 )
 
 header_col1, header_col2, header_col3 = st.columns([1, 4, 2])
+# Choose company or one of the competitors
 with header_col1:
     competitor_flags = {
         "Western Financial": "total_count",
@@ -29,10 +32,12 @@ with header_col1:
         "Square One": "competitor_3",
     }
     choice = st.selectbox(" ", list(competitor_flags.keys()))
+
 with header_col3:
     # get the month to generate the monthly report
     month = select_month()
 
+# Download button for raw data
 header_col3, header_col4 = st.columns([1, 8])
 with header_col3:
     st.download_button(
@@ -101,9 +106,8 @@ with col7:
 
     total_sum = df.select_dtypes(include='number').sum().sum()
     total_count = df.select_dtypes(include='number').count().sum()
-    total_average = int(total_sum / total_count)
 
-    st.write(f"AI score : {total_average}")
+    st.write(f"AI score : {int(total_sum / total_count)}")
     st.write(f"% of times {search_query} showed in search")
     st.dataframe(df, hide_index=True, use_container_width=True)
 
@@ -113,6 +117,7 @@ with col8:
         radar_chart = create_radar_chart(df)
         st.plotly_chart(radar_chart, use_container_width=True)
 
+# Side bar buttons
 if st.sidebar.button("AI Investigator"):
     st.switch_page("pages/ai_tracking.py")
 

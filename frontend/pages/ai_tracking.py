@@ -2,16 +2,8 @@ import streamlit as st
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from data.fetch_utils import *
-import requests
-import os
-from dotenv import load_dotenv
+from data.fetch_utils import logout, fetch_param, get_date_today, fetch_response
 
-# Load environment variables
-load_dotenv()
-
-# Define the FastAPI server URL
-FASTAPI_URL = os.getenv("FASTAPI_URL")
 
 if 'logged_in' in st.session_state and st.session_state.logged_in:
     pass
@@ -25,28 +17,8 @@ st.set_page_config(
 )
 
 
-@st.cache_data(show_spinner=False)
-def fetch_data(ai_platform, locations, products, prompt):
-    api_url = f"{FASTAPI_URL}/submit_query_with_ai_platform"
-    payload = {
-        "ai_platform": ai_platform,
-        "locations": locations,
-        "products": products,
-        "prompt": prompt
-    }
-    try:
-        headers = {
-            "Authorization": f"Bearer {st.session_state.get('token')}"
-        }
-        response = requests.post(api_url, headers=headers, json=payload)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Failed to fetch data: {e}"}
-
-
 def main():
-
+    # Side bar buttons
     if st.sidebar.button("Dashboard"):
         st.switch_page("pages/webapp.py")
     if st.sidebar.button("Clear Cache"):
@@ -58,7 +30,6 @@ def main():
     all_locations, all_products, all_ai_platforms = fetch_param(get_date_today(), "total_count")
 
     col1, col2 = st.columns([4,1])
-    # Non-editable search text
     with col1:
         prompts = [
             "Give me the best {keyword} insurance in {location}",
@@ -70,9 +41,7 @@ def main():
     with col2:
         selected_ai_platform = st.selectbox("Select AI Platform", all_ai_platforms)
 
-    # Create columns for the selections
     col3, col4, col5, col6 = st.columns([4,2,4,2])
-
     with col4:
         st.write("")
         st.write("")
@@ -106,7 +75,7 @@ def main():
         else:
             with st.spinner("Fetching data..."):
                 # Call the fetch_data function
-                response_data = fetch_data(selected_ai_platform, selected_locations, selected_products, selected_prompt)
+                response_data = fetch_response(selected_ai_platform, selected_locations, selected_products, selected_prompt)
 
                 if "error" in response_data:
                     st.error(response_data["error"])
