@@ -5,10 +5,10 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, \
     plot_pie_chart, plot_bar_chart, fetch_and_process_data, keywords_data, top_locations, top_low_keywords, \
-    stats_by_location, download_data, convert_df, logout, process_and_pivot_data, create_radar_chart
+    stats_by_location, download_data, convert_df, logout, process_and_pivot_data, create_radar_chart, validate_token
 
 
-if 'logged_in' in st.session_state and st.session_state.logged_in:
+if 'logged_in' in st.session_state and validate_token():
     pass
 else:
     st.switch_page("login.py")
@@ -20,7 +20,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-header_col1, header_col2, header_col3 = st.columns([1, 2, 1])
+header_col1, header_col2, header_col3 = st.columns([1, 4, 2])
 with header_col1:
     competitor_flags = {
         "Western Financial": "total_count",
@@ -28,13 +28,13 @@ with header_col1:
         "Westland": "competitor_2",
         "Square One": "competitor_3",
     }
-    choice = st.selectbox("Choose an option:", list(competitor_flags.keys()))
+    choice = st.selectbox(" ", list(competitor_flags.keys()))
 with header_col3:
     # get the month to generate the monthly report
     month = select_month()
 
-header_col3, header_col4 = st.columns([8, 1])
-with header_col4:
+header_col3, header_col4 = st.columns([1, 8])
+with header_col3:
     st.download_button(
         label="Export data",
         data=convert_df(download_data(month, competitor_flags[choice])[2]),

@@ -1,18 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.dependencies import get_db
 from app.models.response import Response
-from datetime import datetime, timedelta
-from fastapi.security import OAuth2PasswordBearer
+from datetime import datetime
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
-    aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, verify_token
+    aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
+    validate_token
 
 
 router = APIRouter()
-
-# OAuth2 scheme for extracting tokens
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+security = HTTPBearer()
 
 
 class LoginRequest(BaseModel):
@@ -32,15 +31,8 @@ class QueryRequest(BaseModel):
     prompt: str
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    """
-    Extract and verify the current user from the token.
-    """
-    return verify_token(token)
-
-
 @router.post("/submit_query_with_ai_platform")
-async def submit_query_with_ai_platform(query: QueryRequest):
+async def submit_query_with_ai_platform(query: QueryRequest, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Handles a query request with default configurations.
 
@@ -51,6 +43,7 @@ async def submit_query_with_ai_platform(query: QueryRequest):
     current_day = datetime.now().strftime("%d")
 
     try:
+        validate_token(credentials)
         # Call the tracking function with provided inputs
         ai_responses, results = track_responses(
             ai_platform=query.ai_platform,
@@ -88,7 +81,7 @@ async def submit_query(prompt, ai_platform):
 
 
 @router.get("/aggregate_total_by_product/{month}")
-async def aggregate_total_by_product_route(month: str, db: Session = Depends(get_db)):
+async def aggregate_total_by_product_route(month: str, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Aggregate total_count by product for a given month.
 
@@ -100,6 +93,7 @@ async def aggregate_total_by_product_route(month: str, db: Session = Depends(get
         List[dict]: Aggregated totals by product.
     """
     try:
+        validate_token(credentials)
         # Call the helper function to aggregate data
         aggregated_data = aggregate_total_by_product(db=db, month=month)
         return {"aggregated_data": aggregated_data}
@@ -108,7 +102,7 @@ async def aggregate_total_by_product_route(month: str, db: Session = Depends(get
 
 
 @router.get("/aggregate_total_by_location/{month}")
-async def aggregate_total_by_location_route(month: str, db: Session = Depends(get_db)):
+async def aggregate_total_by_location_route(month: str, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Get the aggregated total_count by location for a given month.
 
@@ -119,6 +113,7 @@ async def aggregate_total_by_location_route(month: str, db: Session = Depends(ge
         JSON: Aggregated totals by location.
     """
     try:
+        validate_token(credentials)
         aggregated_data = aggregate_total_by_location(db, month)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
@@ -126,7 +121,7 @@ async def aggregate_total_by_location_route(month: str, db: Session = Depends(ge
 
 
 @router.get("/aggregate_total_by_product_and_location/{month}")
-async def aggregate_total_by_product_and_location_route(month: str, db: Session = Depends(get_db)):
+async def aggregate_total_by_product_and_location_route(month: str, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Endpoint to aggregate total_count by product and location for a given month.
 
@@ -138,6 +133,7 @@ async def aggregate_total_by_product_and_location_route(month: str, db: Session 
         dict: Aggregated totals by product and location.
     """
     try:
+        validate_token(credentials)
         aggregated_data = aggregate_total_by_product_and_location(db, month)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
@@ -145,19 +141,34 @@ async def aggregate_total_by_product_and_location_route(month: str, db: Session 
 
 
 @router.get("/score_ai/{month}/{flag_competitor}")
-async def get_score_ai(month: str, flag_competitor, db: Session = Depends(get_db)):
+async def get_score_ai(
+        month: str,
+        flag_competitor: str,
+        db: Session = Depends(get_db),
+        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+):
     """
-    Calculate and return the AI score for a given month.
+    Calculate and return the AI score for a given month, with token validation.
 
     Args:
         month (str): Month in YYYYMM format.
+        flag_competitor (str): Flag representing the competitor.
+        db (Session): Database session dependency.
 
     Returns:
-        float: AI score for the specified month.
+        dict: The month and corresponding AI score.
     """
     try:
+        # Validate the token using the validate_token function
+        validate_token(credentials)
+
+        # If token is valid, calculate the AI score
         score = calculate_score_ai(db, month, "app/config.yml", flag_competitor)
+
         return {"month": month, "score_ai": int(score)}
+
+    except HTTPException as e:
+        raise e  # If token is invalid, HTTPException will be raised in validate_token()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
 
@@ -172,18 +183,9 @@ def login(request: LoginRequest):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/protected-route")
-def protected_route(authorization: str = Header(None)):
+@router.get("/validate_token")
+async def validate_token_route(payload: dict = Depends(validate_token)):
     """
-    A protected POST route that requires the token in the Authorization header (no 'Bearer').
+    Route to validate a token.
     """
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Authorization header missing")
-
-    # Validate the token
-    try:
-        current_user = verify_token(authorization)  # Directly use the token from the header
-    except Exception as e:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return {"message": f"Hello, {current_user}! You have access to this protected route."}
+    return {"message": "Token is valid", "payload": payload}

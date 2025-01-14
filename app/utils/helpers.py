@@ -6,13 +6,16 @@ from app.models.response import Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
-from jose import JWTError, jwt
+from jose import jwt
 from fastapi import HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends
 import os
 
-SECRET_KEY = "your_secret_key"
+SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+security = HTTPBearer()
 
 
 def load_config(config_file):
@@ -305,21 +308,22 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return encoded_jwt
 
 
-def verify_token(token: str):
+def validate_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
-    Decode and validate the JWT token.
+    Validates the provided JWT token.
     """
+    token = credentials.credentials  # Extract the token from the header
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        return username
-    except JWTError:
+        # Decode and validate the token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return payload  # Return token payload if valid
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",

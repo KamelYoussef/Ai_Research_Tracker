@@ -31,7 +31,10 @@ def fetch_data(endpoint: str, month: str, flag_competitor=None):
         else:
             url = f"{FASTAPI_URL}/{endpoint}/{month}"
 
-        response = requests.get(url)
+        headers = {
+            "Authorization": f"Bearer {st.session_state.get('token')}"
+        }
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
@@ -65,7 +68,8 @@ def process_and_pivot_data(endpoint, index_columns, month, competitor_flag):
         df_pivot["Total Count"] = df_pivot.iloc[:, len(index_columns):].sum(axis=1)
         return df_pivot
     else:
-        st.error(f"No data available for {month}.")
+        st.error(f"No data available.")
+        st.stop()
         return None
 
 
@@ -378,3 +382,61 @@ def create_radar_chart(df):
         height=420,
     )
     return fig
+
+
+def validate_token():
+    """Validates if the stored token is still valid."""
+    token = st.session_state.get("token")
+    if not token:
+        return False
+
+    try:
+        # Send a token validation request to FastAPI
+        response = requests.get(
+            f"{FASTAPI_URL}/validate_token",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
+
+
+def login():
+    """Handles the login functionality."""
+    st.header("Sign in to AI Tracker")
+    with st.form("login_form", clear_on_submit=True):
+        # Username input field
+        username = st.text_input("Username")
+
+        # Password input field (hidden)
+        password = st.text_input("Password", type="password")
+
+        # Submit button
+        login_button = st.form_submit_button("Login", use_container_width=True)
+
+        if login_button:
+            with st.spinner("Logging in..."):
+                try:
+                    # Send login request to FastAPI
+                    response = requests.post(
+                        f"{FASTAPI_URL}/login",
+                        json={"username": username, "password": password},
+                    )
+                    response.raise_for_status()  # Raise an error for non-2xx status codes
+
+                    # Successful login
+                    token = response.json()["access_token"]
+                    st.session_state.token = token  # Store token in session
+                    st.session_state.logged_in = True  # Set login flag
+                    st.success("Login successful!")
+
+                    # Redirect to the main page
+                    st.switch_page("pages/webapp.py")
+                    st.rerun()
+
+                except requests.exceptions.RequestException as e:
+                    # Handle request exceptions
+                    st.error(f"An error occurred: {e}")
+                except KeyError:
+                    # Handle missing token in response
+                    st.error("Invalid response from server. Please try again.")

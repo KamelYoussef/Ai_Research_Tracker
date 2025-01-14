@@ -35,7 +35,10 @@ def fetch_data(ai_platform, locations, products, prompt):
         "prompt": prompt
     }
     try:
-        response = requests.post(api_url, json=payload)
+        headers = {
+            "Authorization": f"Bearer {st.session_state.get('token')}"
+        }
+        response = requests.post(api_url, headers=headers, json=payload)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
