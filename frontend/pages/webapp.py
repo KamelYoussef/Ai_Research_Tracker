@@ -117,7 +117,7 @@ with col8:
         radar_chart = create_radar_chart(df)
         st.plotly_chart(radar_chart, use_container_width=True)
 
-# Side bar buttons
+# Sidebar buttons
 if st.sidebar.button("AI Investigator"):
     st.switch_page("pages/ai_tracking.py")
 
@@ -126,3 +126,6 @@ if st.sidebar.button("Clear Cache"):
 
 if st.sidebar.button("Logout"):
     logout()
+
+if st.sidebar.button("Settings"):
+    st.switch_page("pages/user_management.py")

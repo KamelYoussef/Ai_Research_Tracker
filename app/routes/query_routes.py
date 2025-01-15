@@ -8,7 +8,7 @@ from datetime import datetime
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
     aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
-    validate_token, verify_password
+    validate_token, verify_password, admin_required, hash_password
 
 
 router = APIRouter()
@@ -30,6 +30,12 @@ class QueryRequest(BaseModel):
     locations: list[str]
     products: list[str]
     prompt: str
+
+
+class UserCreateRequest(BaseModel):
+    username: str
+    password: str
+    role: str = "user"
 
 
 @router.post("/submit_query_with_ai_platform")
@@ -184,7 +190,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Create the access token
-    access_token = create_access_token(data={"sub": user.username})
+    access_token = create_access_token(data={"sub": user.username, "role": user.role})
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -194,3 +200,42 @@ async def validate_token_route(payload: dict = Depends(validate_token)):
     Route to validate a token.
     """
     return {"message": "Token is valid", "payload": payload}
+
+
+@router.post("/add_user")
+def add_user(request: UserCreateRequest, db: Session = Depends(get_db),
+             _: dict = Depends(admin_required)):
+    """
+        Add a new user to the database.
+        Only accessible by users with the 'admin' role.
+    """
+    # Check if the user already exists
+    existing_user = db.query(User).filter(User.username == request.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    # Create the new user
+    new_user = User(username=request.username, password_hash=hash_password(request.password), role=request.role)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {"message": "User created successfully", "user": new_user.username}
+
+
+@router.delete("/delete_user")
+def delete_user(username: str, db: Session = Depends(get_db), _: dict = Depends(admin_required)):
+    """
+    Delete a user from the database.
+    Only accessible by users with the 'admin' role.
+    """
+    # Check if the user exists
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Delete the user
+    db.delete(user)
+    db.commit()
+
+    return {"message": f"User '{username}' deleted successfully"}

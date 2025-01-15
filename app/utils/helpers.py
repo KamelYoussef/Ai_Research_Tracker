@@ -316,7 +316,7 @@ def validate_token(credentials: HTTPAuthorizationCredentials = Depends(security)
     token = credentials.credentials  # Extract the token from the header
     try:
         # Decode and validate the token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         return payload  # Return token payload if valid
     except jwt.ExpiredSignatureError:
         raise HTTPException(
@@ -341,3 +341,15 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def admin_required(payload: dict = Depends(validate_token)):
+    """
+    Only allows users with the 'admin' role to proceed.
+    """
+    if payload.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action",
+        )
+    return payload
