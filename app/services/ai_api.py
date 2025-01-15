@@ -28,7 +28,7 @@ def chatgpt(prompt):
         completion = client_chatgpt.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "system", "content": "You are a helpful assistant for people in canada"},
                 {
                     "role": "user",
                     "content": prompt
@@ -56,7 +56,7 @@ def perplexity(prompt):
         completion = client_perplexity.chat.completions.create(
             model="llama-3.1-sonar-large-128k-online",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "system", "content": "You are a helpful assistant for people in canada."},
                 {
                     "role": "user",
                     "content": prompt
@@ -122,6 +122,7 @@ def gemini_with_search(prompt, google_api_key=GOOGLE_API_KEY, google_cx=GOOGLE_C
             "give me the best",
             "What are the top",
             "List the most affordable",
+            "give me the well-known names of",
             "Find the highest-rated"
         ]
         for phrase in replacements:
@@ -129,7 +130,6 @@ def gemini_with_search(prompt, google_api_key=GOOGLE_API_KEY, google_cx=GOOGLE_C
 
         # Perform a Google search
         search_results = perform_search(f"{prompt} Canada", google_api_key, google_cx)
-        print(search_results)
         # Combine the prompt and search results
         combined_prompt = (
             f"User Query: I'm doing benchmark study from the search results list me the name of insurances\n\n"

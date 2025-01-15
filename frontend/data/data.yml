@@ -1,8 +1,8 @@
 prompts:
-  - "Give me the best {keyword} insurance in {location}"
-  - "What are the top {keyword} insurance near {location}?"
-  - "List the most affordable {keyword} insurance in {location}"
-  - "Find the highest-rated {keyword} insurance in {location}"
+  - "Give me the well-known names of {product} insurances in {location}"
+  - "Give me the best {keyword} insurances in {location}"
+  - "What are the top {keyword} insurances near {location}?"
+  - "List the most affordable {keyword} insurances in {location}"
 locations:
   - Alix
   - Annapolis Royal
