@@ -1,13 +1,3 @@
-locations:
-  - Okotoks
-  - Red Deer
-  - Lethbridge
-  - Yorktown
-  - Weyburn
-  - Bathurst
-  - Winnipeg
-  - Victoria
-  - High River
 search_phrases:
   - western financial
   - western financial group
@@ -26,3 +16,50 @@ competitors:
   - co-operators
   - westland
   - square one
+locations:
+  - 100 Mile House
+  - Bay Centre (Victoria)
+  - Beverly Corners (Duncan)
+  - Broadmead (Victoria)
+  - Brooks
+  - Cochrane
+  - Dawson Creek
+  - Drumheller
+  - Fernie
+  - Fort St John
+  - Mill Bay (Victoria)
+  - Okotoks
+  - Olds
+  - WyDo-Kenaston Blvd
+  - Schomberg
+  - Smithers
+  - Sooke
+  - Taber
+  - Terrace
+  - Cranbrook
+  - Brandon & Souris
+  - Grande Prairie
+  - High River
+  - Kelowna
+  - Lloydminster
+  - Medicine Hat
+  - ON RHO Richmond Hill Head Office
+  - Prince George
+  - Red Deer
+  - Shelbourne (Victoria)
+  - Spruce Grove
+  - Tillicum (Victoria)
+  - Westshore (Victoria)
+  - Winnipeg
+  - Pembroke
+  - Vernon
+  - Edmonton
+  - Camrose
+  - Semiahmoo - Surrey
+  - Campbell River
+  - Langley
+  - Bolton
+  - Prince Albert
+  - North Battleford
+  - Nova Scotia Huestis location
+  - Kitchener

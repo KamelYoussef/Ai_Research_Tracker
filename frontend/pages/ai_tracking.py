@@ -1,4 +1,5 @@
 import streamlit as st
+import yaml
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -37,16 +38,14 @@ def main():
         logout()
 
     # Fetch parameters
-    all_locations, all_products, all_ai_platforms = fetch_param(get_date_today(), "total_count")
+    with open('frontend/data/data.yml', 'r') as file:
+        data = yaml.safe_load(file)
+    all_locations = data['locations']
+    _, all_products, all_ai_platforms = fetch_param(get_date_today(), "total_count")
 
     col1, col2 = st.columns([4,2])
     with col1:
-        prompts = [
-            "Give me the best {keyword} insurance in {location}",
-            "What are the top {keyword} insurance near {location}?",
-            "List the most affordable {keyword} insurance in {location}",
-            "Find the highest-rated {keyword} insurance in {location}"
-        ]
+        prompts = data['prompts']
         selected_prompt = st.radio("Choose your query:", prompts)
     with col2:
         ai_platforms_choice = st.multiselect("Select AI Platform", all_ai_platforms)

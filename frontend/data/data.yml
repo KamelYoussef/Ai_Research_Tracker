@@ -1,0 +1,290 @@
+prompts:
+  - "Give me the best {keyword} insurance in {location}"
+  - "What are the top {keyword} insurance near {location}?"
+  - "List the most affordable {keyword} insurance in {location}"
+  - "Find the highest-rated {keyword} insurance in {location}"
+locations:
+  - Alix
+  - Annapolis Royal
+  - Assiniboia
+  - Barrhead
+  - Bashaw
+  - Bassano
+  - Bathurst
+  - Beaverlodge
+  - Bedford
+  - Bolton
+  - Bow Island
+  - Brandon
+  - Bridgetown
+  - Brooks
+  - Burns Lake
+  - Campbell River
+  - Campbellton
+  - Camrose
+  - Charlottetown
+  - Chase
+  - Church Point
+  - Claresholm
+  - Clive
+  - Cochrane
+  - Cold Lake
+  - Coleman
+  - Coquitlam
+  - Coronation
+  - Cranbrook
+  - Creston
+  - Dartmouth
+  - Dawson Creek
+  - Digby County
+  - Drumheller
+  - Duncan
+  - Edmonton
+  - Edmundston
+  - Edson
+  - Elkford
+  - Estevan
+  - Fairview
+  - Fernie
+  - Fort Nelson
+  - Fort St. John
+  - Fraser Lake
+  - Fredericton
+  - Fruitvale
+  - Gilbert Plains
+  - Glenavon
+  - Golden
+  - Grand Manan
+  - Grande Cache
+  - Grande Prairie
+  - Grimshaw
+  - Gull Lake
+  - Hanna
+  - High River
+  - Houston
+  - Kaslo
+  - Kelowna
+  - Kimberley
+  - King City
+  - Kitchener
+  - Lac La Biche
+  - Lacombe
+  - Langley
+  - Leduc
+  - LeRoy
+  - Lethbridge
+  - Lloydminster
+  - Mayerthorpe
+  - Medicine Hat
+  - Melfort
+  - Mill Bay
+  - Minto
+  - Miramichi
+  - Moncton
+  - Nanaimo
+  - Nanton
+  - Nipawin
+  - North Battleford
+  - North Sydney
+  - Okotoks
+  - Olds
+  - One Hundred Mile House
+  - Oromocto
+  - Parry Sound
+  - Peace River
+  - Pembroke
+  - Pender Island
+  - Petawawa
+  - Petitcodiac
+  - Prince Albert
+  - Prince George
+  - Red Deer
+  - Richmond
+  - Roblin
+  - Rosetown
+  - Rothesay
+  - Saanichton
+  - Saint John
+  - Salmo
+  - Schomberg
+  - Shaunavon
+  - Sidney
+  - Smithers
+  - Sooke
+  - Souris
+  - Sparwood
+  - Spruce Grove
+  - Strathmore
+  - Surrey
+  - Swift Current
+  - Taber
+  - Terrace
+  - Thompson
+  - Tracadie-Sheila
+  - Turner Valley
+  - Vancouver
+  - Vanderhoof
+  - Vegreville
+  - Vermilion
+  - Vernon
+  - Victoria
+  - Vulcan
+  - Wainwright
+  - Watrous
+  - West Kelowna
+  - Weyburn
+  - White Fox
+  - Williams Lake
+  - Willow Bunch
+  - Winfield
+  - Winnipeg
+  - Wolseley
+  - Woodstock
+  - Yarmouth
+  - Yorkton
+Brands:
+  Western:
+    - Alix
+    - Assiniboia
+    - Barrhead
+    - Bashaw
+    - Bassano
+    - Beaverlodge
+    - Bolton
+    - Bow Island
+    - Brandon
+    - Brooks
+    - Burns Lake
+    - Campbell River
+    - Camrose
+    - Chase
+    - Claresholm
+    - Clive
+    - Cochrane
+    - Cold Lake
+    - Coleman
+    - Coronation
+    - Cranbrook
+    - Creston
+    - Dawson Creek
+    - Drumheller
+    - Edmonton
+    - Edson
+    - Elkford
+    - Estevan
+    - Fairview
+    - Fernie
+    - Fort Nelson
+    - Fort St. John
+    - Fraser Lake
+    - Fruitvale
+    - Gilbert Plains
+    - Glenavon
+    - Golden
+    - Grande Cache
+    - Grande Prairie
+    - Grimshaw
+    - Gull Lake
+    - Hanna
+    - High River
+    - Houston
+    - Kaslo
+    - Kelowna
+    - Kimberley
+    - King City
+    - Kitchener
+    - Lac La Biche
+    - Lacombe
+    - Leduc
+    - LeRoy
+    - Lethbridge
+    - Lloydminster
+    - Mayerthorpe
+    - Medicine Hat
+    - Melfort
+    - Nanaimo
+    - Nanton
+    - Nipawin
+    - North Battleford
+    - Okotoks
+    - Olds
+    - One Hundred Mile House
+    - Parry Sound
+    - Peace River
+    - Pembroke
+    - Pender Island
+    - Petawawa
+    - Prince Albert
+    - Prince George
+    - Red Deer
+    - Roblin
+    - Rosetown
+    - Salmo
+    - Schomberg
+    - Shaunavon
+    - Smithers
+    - Souris
+    - Sparwood
+    - Spruce Grove
+    - Strathmore
+    - Swift Current
+    - Taber
+    - Terrace
+    - Thompson
+    - Turner Valley
+    - Vanderhoof
+    - Vegreville
+    - Vermilion
+    - Vernon
+    - Victoria
+    - Vulcan
+    - Wainwright
+    - Watrous
+    - West Kelowna
+    - Weyburn
+    - White Fox
+    - Williams Lake
+    - Willow Bunch
+    - Winfield
+    - Winnipeg
+    - Wolseley
+    - Yorkton
+  Huestis:
+    - Annapolis Royal
+    - Bathurst
+    - Bedford
+    - Bridgetown
+    - Campbellton
+    - Charlottetown
+    - Church Point
+    - Dartmouth
+    - Digby County
+    - Edmundston
+    - Fredericton
+    - Grand Manan
+    - Minto
+    - Miramichi
+    - Moncton
+    - North Sydney
+    - Oromocto
+    - Petitcodiac
+    - Rothesay
+    - Saint John
+    - Tracadie-Sheila
+    - Woodstock
+    - Yarmouth
+  Coast:
+    - Coquitlam
+    - Duncan
+    - Langley
+    - Mill Bay
+    - Nanaimo
+    - Richmond
+    - Saanichton
+    - Sidney
+    - Sooke
+    - Surrey
+    - Vancouver
+    - Victoria
+  Wyatt:
+    - Winnipeg
