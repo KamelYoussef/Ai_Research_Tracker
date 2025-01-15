@@ -16,9 +16,19 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+font_css = """
+<style>
+   button[data-baseweb="tab"] {
+   font-size: 24px;
+   margin: 0;
+   width: 100%;
+   }
+</style>
+"""
+st.write(font_css, unsafe_allow_html=True)
 
 def main():
-    # Side bar buttons
+    # Sidebar buttons
     if st.sidebar.button("Dashboard"):
         st.switch_page("pages/webapp.py")
     if st.sidebar.button("Clear Cache"):
@@ -29,7 +39,7 @@ def main():
     # Fetch parameters
     all_locations, all_products, all_ai_platforms = fetch_param(get_date_today(), "total_count")
 
-    col1, col2 = st.columns([4,1])
+    col1, col2 = st.columns([4,2])
     with col1:
         prompts = [
             "Give me the best {keyword} insurance in {location}",
@@ -39,7 +49,7 @@ def main():
         ]
         selected_prompt = st.radio("Choose your query:", prompts)
     with col2:
-        selected_ai_platform = st.selectbox("Select AI Platform", all_ai_platforms)
+        ai_platforms_choice = st.multiselect("Select AI Platform", all_ai_platforms)
 
     col3, col4, col5, col6 = st.columns([4,2,4,2])
     with col4:
@@ -64,42 +74,51 @@ def main():
         else:
             selected_products = st.multiselect("Select Products", all_products)
 
-    # Fetch data button
     if st.button("Fetch Data"):
         if not selected_locations:
             st.error("Please select at least one location.")
-        elif not selected_ai_platform:
-            st.error("Please select an AI platform.")
         elif not selected_products:
             st.error("Please select at least one product.")
+        elif not ai_platforms_choice:
+            st.error("Please select at least one AI platform.")
         else:
             with st.spinner("Fetching data..."):
-                # Call the fetch_data function
-                response_data = fetch_response(selected_ai_platform, selected_locations, selected_products, selected_prompt)
+                # Fetch data for selected AI platforms
+                response_data = [
+                    fetch_response(platform, selected_locations, selected_products, selected_prompt)
+                    for platform in ai_platforms_choice
+                ]
 
-                if "error" in response_data:
-                    st.error(response_data["error"])
+                # Check if any response contains an error
+                if any("error" in response for response in response_data):
+                    st.error("An error occurred while fetching data.")
                 else:
-                    # Display AI Responses and Insights together in the same expander
-                    if "ai_responses" in response_data and "results" in response_data:
-                        st.subheader("AI Responses")
+                    # Create tabs for each AI platform
+                    tabs = st.tabs(ai_platforms_choice)
 
-                        # Iterate over both ai_responses and results (insights) using zip
-                        for ai_response, insight in zip(response_data["ai_responses"], response_data["results"]):
-                            # Extract product and location from the insight
-                            product = insight.get('product', 'Unknown Product')
-                            location = insight.get('location', 'Unknown Location')
-                            total_count = insight.get('total_count', 'N/A')
+                    # Iterate through the tabs and display the corresponding responses
+                    for tab, platform in zip(tabs, ai_platforms_choice):
+                        with tab:
+                            # Filter responses for the current platform
+                            filtered_responses = [
+                                response for response in response_data
+                                if response.get("ai_platform") == platform
+                            ]
 
-                            # Use product and location in the expander title
-                            with st.expander(f"Location: {location} | Keyword: {product} | Total Count: {total_count}"):
+                            if filtered_responses:
+                                for ai_response, insight in zip(filtered_responses[0]["ai_responses"],
+                                                                filtered_responses[0]["results"]):
+                                    product = insight.get("product", "Unknown Product")
+                                    location = insight.get("location", "Unknown Location")
+                                    total_count = insight.get("total_count", "N/A")
 
-                                # Display AI response
-                                #st.write(ai_response)
-                                st.code(ai_response, language="markdown")
-
-                    else:
-                        st.write("No AI responses or insights available.")
+                                    # Use an expander to display details
+                                    with st.expander(
+                                            f"{location} | {product} | Appearance: {bool(total_count)}"
+                                    ):
+                                        st.write(ai_response)
+                            else:
+                                st.warning(f"No responses available.")
 
 
 if __name__ == "__main__":

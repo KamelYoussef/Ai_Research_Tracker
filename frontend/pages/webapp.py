@@ -22,7 +22,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-header_col1, header_col2, header_col3 = st.columns([1, 4, 2])
+header_col1, header_col2, header_col3 = st.columns([2, 4, 2])
 # Choose company or one of the competitors
 with header_col1:
     competitor_flags = {
