@@ -54,7 +54,7 @@ def gemini(prompt):
 def perplexity(prompt):
     try:
         completion = client_perplexity.chat.completions.create(
-            model="llama-3.1-sonar-large-128k-online",
+            model="sonar",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant for people in canada."},
                 {
