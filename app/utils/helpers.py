@@ -11,7 +11,10 @@ from fastapi import HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends
 from passlib.context import CryptContext
+import time
+from threading import Semaphore
 
+semaphore = Semaphore(50)  # Limit to 50 concurrent threads
 SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -87,6 +90,23 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
         }
 
 
+def process_product_location_with_delay(product, location, search_phrases, ai_platform, prompt, competitors):
+    # Wait until we are allowed to acquire the semaphore (this will throttle the rate)
+    semaphore.acquire()
+
+    try:
+        # Your existing logic to process the product-location pair
+        result = process_product_location(product, location, search_phrases, ai_platform, prompt, competitors)
+
+        # If you want to rate-limit each individual request (e.g., by 1 second)
+        time.sleep(6)  # Adjust sleep time as necessary
+
+        return result
+    finally:
+        # Release the semaphore to allow other threads to execute
+        semaphore.release()
+
+
 def track_responses(ai_platform, config_path, locations=None, products=None, prompt=None):
     """
     Tracks responses from the AI platform based on provided or configured locations and products.
@@ -114,7 +134,7 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
     with ThreadPoolExecutor() as executor:
         futures = [
             executor.submit(
-                process_product_location, product, location, search_phrases, ai_platform, prompt, competitors
+                process_product_location_with_delay, product, location, search_phrases, ai_platform, prompt, competitors
             )
             for product in products
             for location in locations
