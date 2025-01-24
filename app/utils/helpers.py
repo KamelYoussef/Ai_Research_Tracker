@@ -99,7 +99,7 @@ def process_product_location_with_delay(product, location, search_phrases, ai_pl
         result = process_product_location(product, location, search_phrases, ai_platform, prompt, competitors)
 
         # If you want to rate-limit each individual request (e.g., by 1 second)
-        time.sleep(6)  # Adjust sleep time as necessary
+        time.sleep(60)  # Adjust sleep time as necessary
 
         return result
     finally:

@@ -4,6 +4,7 @@ from app.database import SessionLocal
 from app.services.storage import store_response
 from app.utils.helpers import track_responses
 from app.database import Base, engine
+import time
 
 
 def startup():
@@ -49,6 +50,16 @@ def daily_track(ai_platfrom):
 
 if __name__ == "__main__":
     startup()
+    start_time = time.time()
+
     daily_track("CHATGPT")
+    chat_time = time.time() - start_time
+    print(f"Time taken to execute chatgpt: {chat_time:.2f} seconds")
+
     daily_track("PERPLEXITY")
+    perplexity_time = time.time() + chat_time
+    print(f"Time taken to execute perplexity: {perplexity_time:.2f} seconds")
+
     daily_track("GEMINI")
+    gemini_time = time.time() - start_time
+    print(f"Time taken to execute perplexity: {gemini_time:.2f} seconds")
