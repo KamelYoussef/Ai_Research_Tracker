@@ -38,7 +38,7 @@ def main():
         logout()
 
     # Fetch parameters
-    with open('frontend/data/data.yml', 'r') as file:
+    with open(str(Path(__file__).resolve().parent.parent)+'/data/data.yml', 'r') as file:
         data = yaml.safe_load(file)
     all_locations = data['locations']
     _, all_products, all_ai_platforms = fetch_param(get_date_today(), "total_count")
