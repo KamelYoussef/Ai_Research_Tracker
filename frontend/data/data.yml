@@ -1,8 +1,7 @@
 prompts:
-  - "Give me the well-known names of {keyword} insurances in {location}"
-  - "Give me the best {keyword} insurances in {location}"
-  - "What are the top {keyword} insurances near {location}?"
-  - "List the most affordable {keyword} insurances in {location}"
+  - "What are some top rated {keyword} insurance companies in {location}"
+  - "What are some good {keyword} insurance brokers in {location}"
+  - "Best {keyword} insurance brokers in {location}"
 locations:
   - Alix
   - Assiniboia
