@@ -107,7 +107,7 @@ def process_product_location_with_delay(product, location, search_phrases, ai_pl
         semaphore.release()
 
 
-def track_responses(ai_platform, config_path, locations=None, products=None, prompt=None):
+def track_responses(ai_platform, config_path, locations=None, products=None, prompt=None, script=None):
     """
     Tracks responses from the AI platform based on provided or configured locations and products.
 
@@ -115,7 +115,8 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
     :param config_path: Path to the configuration file.
     :param locations: List of locations to process. Optional. Overrides config if provided.
     :param products: List of products to process. Optional. Overrides config if provided.
-    :param prompt: Prompt of the search
+    :param prompt: Prompt of the search.
+    :param script: If provided, use `process_product_location` instead of `process_product_location_with_delay`.
     :return: Tuple of AI responses and results.
     """
     # Load configuration for search_phrases
@@ -127,6 +128,9 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
     search_phrases = config["search_phrases"]
     competitors = config["competitors"]
 
+    # Determine the function to use
+    processing_function = process_product_location if script is not None else process_product_location_with_delay
+
     results = []
     ai_responses = []  # List to collect all AI responses
 
@@ -134,7 +138,7 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
     with ThreadPoolExecutor() as executor:
         futures = [
             executor.submit(
-                process_product_location_with_delay, product, location, search_phrases, ai_platform, prompt, competitors
+                processing_function, product, location, search_phrases, ai_platform, prompt, competitors
             )
             for product in products
             for location in locations
@@ -142,14 +146,17 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
 
         # Collect results and AI responses as tasks complete
         for future in futures:
-            result = future.result()
-            result_data = {key: value for key, value in result.items() if key != 'ai_response'}
-            results.append(result_data)
-            if result.get("ai_response"):
-                ai_responses.append(
-                    f"{result['ai_response']}\n"
-                )
+            try:
+                result = future.result()
+                result_data = {key: value for key, value in result.items() if key != 'ai_response'}
+                results.append(result_data)
+                if result.get("ai_response"):
+                    ai_responses.append(f"{result['ai_response']}\n")
+            except Exception as e:
+                print(f"Error processing task: {e}")
+
     return ai_responses, results
+
 
 
 def get_counts_from_config(config_path):
