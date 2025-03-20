@@ -73,13 +73,21 @@ def process_and_pivot_data(endpoint, index_columns, month, competitor_flag):
 
 
 def select_month():
-    """Setup sidebar with year and month selection."""
+    """Setup sidebar with year and month selection (default to one month ago)."""
     # Get the current year and month
     current_year = datetime.today().year
     current_month = datetime.today().month
 
+    # Calculate previous month and adjust year if needed
+    if current_month == 1:
+        default_year = current_year - 1
+        default_month = 12
+    else:
+        default_year = current_year
+        default_month = current_month - 1
+
     # Create a list of years
-    years = [str(year) for year in range(current_year, 2020 - 1, -1)]
+    years = [str(year) for year in range(current_year, 2024 - 1, -1)]
 
     # List of months as full names
     month_names = [
@@ -87,25 +95,38 @@ def select_month():
         "July", "August", "September", "October", "November", "December"
     ]
 
+    # Convert default month number to its name
+    default_month_name = month_names[default_month - 1]
+
     # Allow the user to select a year and month
     col1, col2 = st.columns([1, 1])
     with col1:
-        selected_year = st.selectbox("Select Year", years, index=years.index(str(current_year)))
+        selected_year = st.selectbox("Select Year", years, index=years.index(str(default_year)))
     with col2:
-        selected_month_name = st.selectbox("Select Month", month_names, index=current_month - 1)
+        selected_month_name = st.selectbox("Select Month", month_names, index=month_names.index(default_month_name))
 
     # Convert the selected month name to its corresponding number (01-12)
     selected_month = month_names.index(selected_month_name) + 1
     selected_month_str = f"{selected_year}{str(selected_month).zfill(2)}"
 
-    # Return the selected month string and search button status
+    # Return the selected month string
     return selected_month_str
 
 
 def get_date_today():
+    """Returns the year and month of the previous month in 'YYYYMM' format."""
     current_year = datetime.today().year
     current_month = datetime.today().month
-    return f"{current_year}{str(current_month).zfill(2)}"
+
+    # Compute the previous month and adjust the year if needed
+    if current_month == 1:
+        prev_year = current_year - 1
+        prev_month = 12
+    else:
+        prev_year = current_year
+        prev_month = current_month - 1
+
+    return f"{prev_year}{str(prev_month).zfill(2)}"
 
 
 def get_ai_total_score(month, flag_competitor):

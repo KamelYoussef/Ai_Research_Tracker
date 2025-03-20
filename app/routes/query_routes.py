@@ -57,7 +57,8 @@ async def submit_query_with_ai_platform(query: QueryRequest, credentials: HTTPAu
             config_path="app/config.yml",
             locations=query.locations,
             products=query.products,
-            prompt=query.prompt
+            prompt=query.prompt,
+            script=False
         )
 
         return {
