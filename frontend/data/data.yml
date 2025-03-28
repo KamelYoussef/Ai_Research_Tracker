@@ -2,6 +2,16 @@ prompts:
   - "What are some top rated {keyword} insurance companies in {location}"
   - "What are some good {keyword} insurance brokers in {location}"
   - "Best {keyword} insurance brokers in {location}"
+products:
+  - Home
+  - Car
+  - Business
+  - Farm
+  - Life
+ai_platforms:
+  - CHATGPT
+  - PERPLEXITY
+  - GEMINI
 locations:
   - Alix
   - Assiniboia
