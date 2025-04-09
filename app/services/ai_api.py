@@ -26,7 +26,7 @@ def get_ai_response(prompt, ai_platform):
 def chatgpt(prompt):
     try:
         completion = client_chatgpt.chat.completions.create(
-            model="gpt-4o-search-preview",
+            model="gpt-4o-mini-search-preview",
             web_search_options={
                 "user_location": {
                     "type": "approximate",
