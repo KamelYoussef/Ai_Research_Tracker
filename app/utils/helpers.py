@@ -68,7 +68,7 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             prompt = f"where can I get a {product} insurance quote in {location}"
 
         query = prompt.format(keyword=product, location=location)
-        ai_response = get_ai_response(query, ai_platform)
+        ai_response = get_ai_response(query+" CANADA", ai_platform)
         match_results = find_words_in_texts(ai_response, search_phrases)
         competitors = find_competitors_in_texts(ai_response, competitors)
 
