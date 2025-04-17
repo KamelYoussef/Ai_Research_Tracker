@@ -29,7 +29,7 @@ with header_col1:
         "Western Financial": "total_count",
         "Co-operators": "competitor_1",
         "Westland": "competitor_2",
-        "Square One": "competitor_3",
+        "Brokerlink": "competitor_3",
     }
     choice = st.selectbox(" ", list(competitor_flags.keys()))
 
