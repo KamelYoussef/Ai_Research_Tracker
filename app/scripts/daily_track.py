@@ -28,7 +28,7 @@ def daily_track(ai_platfrom):
             competitors = result.get('competitors')
             competitor_1 = competitors.get('co-operators')
             competitor_2 = competitors.get('westland')
-            competitor_3 = competitors.get('square one')
+            competitor_3 = competitors.get('brokerlink')
 
             store_response(
                 db=db,
