@@ -44,25 +44,15 @@ def main():
     all_products = data['products']
     all_ai_platforms = data['ai_platforms']
 
-    col1, col2 = st.columns([4,2])
-    with col1:
-        prompts = data['prompts']
-        selected_prompt = st.radio("Choose your query:", prompts)
-    with col2:
-        ai_platforms_choice = st.multiselect("Select AI Platform", all_ai_platforms)
-
-    col3, col4, col5, col6 = st.columns([4,2,4,2])
+    prompts = data['prompts']
+    selected_prompt = st.radio("Choose your query:", prompts)
+    st.divider()
+    col3, col4, col5, col6, col7, col8 = st.columns([4,0.1,4,2,4,2])
     with col4:
         st.write("")
         st.write("")
-        select_all_locations = st.checkbox("Select All Locations")
     with col3:
-        if select_all_locations:
-            st.multiselect("Select Locations", all_locations, disabled=True)
-            selected_locations = all_locations
-        else:
-            selected_locations = st.multiselect("Select Locations", all_locations)
-
+        selected_locations = st.multiselect("Select Locations", all_locations)
     with col6:
         st.write("")
         st.write("")
@@ -74,7 +64,19 @@ def main():
         else:
             selected_products = st.multiselect("Select Products", all_products)
 
-    if st.button("Fetch Data"):
+    with col8:
+        st.write("")
+        st.write("")
+        select_all_ai_platforms = st.checkbox("Select All AI Platforms")
+    with col7:
+        if select_all_ai_platforms:
+            st.multiselect("Select AI Platforms", all_ai_platforms, disabled=True)
+            ai_platforms_choice = all_ai_platforms
+        else:
+            ai_platforms_choice = st.multiselect("Select AI Platform", all_ai_platforms)
+
+
+    if st.button("Run research"):
         if not selected_locations:
             st.error("Please select at least one location.")
         elif not selected_products:
