@@ -1,6 +1,6 @@
 import yaml
 from app.services.ai_api import get_ai_response
-from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts
+from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts, ranking
 from concurrent.futures import ThreadPoolExecutor
 from app.models.response import Response
 from sqlalchemy.orm import Session
@@ -69,6 +69,7 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
 
         query = prompt.format(keyword=product, location=location)
         ai_response = get_ai_response(query+" CANADA", ai_platform)
+        rank = ranking(ai_response, search_phrases)
         match_results = find_words_in_texts(ai_response, search_phrases)
         competitors = find_competitors_in_texts(ai_response, competitors)
 
@@ -79,7 +80,8 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             "ai_response": ai_response,
             "total_count": has_matches,
             "matches": match_results,
-            "competitors": competitors
+            "competitors": competitors,
+            "rank": rank
         }
     except Exception as e:
         return {

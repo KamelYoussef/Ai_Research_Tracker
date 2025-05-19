@@ -113,10 +113,11 @@ def main():
                                     product = insight.get("product", "Unknown Product")
                                     location = insight.get("location", "Unknown Location")
                                     total_count = insight.get("total_count", "N/A")
+                                    rank = rank if (rank := insight.get("rank")) is not None else "N/A"
 
                                     # Use an expander to display details
                                     with st.expander(
-                                            f"{location} | {product} | Appearance: {bool(total_count)}"
+                                            f"{location} | {product} | Appearance: {bool(total_count)} | Position : {rank}"
                                     ):
                                         st.write(ai_response)
                             else:

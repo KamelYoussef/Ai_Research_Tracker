@@ -29,6 +29,7 @@ def daily_track(ai_platfrom):
             competitor_1 = competitors.get('co-operators')
             competitor_2 = competitors.get('westland')
             competitor_3 = competitors.get('brokerlink')
+            rank = result.get('rank')
 
             store_response(
                 db=db,
@@ -40,7 +41,8 @@ def daily_track(ai_platfrom):
                 day=current_day,
                 competitor_1=competitor_1,
                 competitor_2=competitor_2,
-                competitor_3=competitor_3
+                competitor_3=competitor_3,
+                rank=rank
             )
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -62,5 +64,5 @@ if __name__ == "__main__":
     print(f"Time taken to execute perplexity: {perplexity_time:.2f} seconds")
 
     daily_track("GEMINI")
-    gemini_time = time.time() - start_time
-    print(f"Time taken to execute perplexity: {gemini_time:.2f} seconds")
+    gemini_time = time.time() - start_time - perplexity_time - chat_time
+    print(f"Time taken to execute gemini: {gemini_time:.2f} seconds")
