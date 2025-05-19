@@ -38,8 +38,8 @@ with header_col3:
     month = select_month()
 
 # Download button for raw data
-header_col3, header_col4 = st.columns([1, 8])
-with header_col3:
+header_col4, header_col5 = st.columns([8,1])
+with header_col5:
     st.download_button(
         label="Export data",
         data=convert_df(download_data(month, competitor_flags[choice])[2]),
@@ -48,7 +48,8 @@ with header_col3:
     )
 
 # Display Total Score in a header
-st.markdown(f"<h2 style='text-align: center;'>✨ AI Score = {get_ai_total_score(month, competitor_flags[choice])}</h2>",
+st.markdown(f"<h5 style='text-align: center;'>Visibility score </h5>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='text-align: center; margin-top: -30px;'>{get_ai_total_score(month, competitor_flags[choice])} %</h1>",
             unsafe_allow_html=True)
 
 st.divider()
@@ -63,8 +64,10 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         keywords_presence.values(), columns
 ):
     with column:
-        st.markdown(f"<h6 style='text-align: center;'>{model} Score = {score}</h2>", unsafe_allow_html=True)
-
+        st.markdown(f"<h5 style='text-align: left;'>{model}</h5>", unsafe_allow_html=True)
+        st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
+                    f"Visibility score : {score} % "
+                    f"</h6>", unsafe_allow_html=True)
         # Pie chart for Locations Showed vs No Results
         pie_data = pd.DataFrame({
             "Category": ["Locations Showed", "Locations No Results"],
@@ -107,8 +110,8 @@ with col7:
     total_sum = df.select_dtypes(include='number').sum().sum()
     total_count = df.select_dtypes(include='number').count().sum()
 
-    st.write(f"AI score : {int(total_sum / total_count)}")
-    st.write(f"% of times {search_query} showed in search")
+    st.write(f"Visibility score : {round(float(total_sum / total_count),1)} %")
+    st.write(f"{search_query}'s visibility score across AI platforms")
     st.dataframe(df, hide_index=True, use_container_width=True)
 
 with col8:

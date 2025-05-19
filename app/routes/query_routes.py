@@ -173,7 +173,7 @@ async def get_score_ai(
         # If token is valid, calculate the AI score
         score = calculate_score_ai(db, month, "app/config.yml", flag_competitor)
 
-        return {"month": month, "score_ai": int(score)}
+        return {"month": month, "score_ai": round(float(score), 1)}
 
     except HTTPException as e:
         raise e  # If token is invalid, HTTPException will be raised in validate_token()
