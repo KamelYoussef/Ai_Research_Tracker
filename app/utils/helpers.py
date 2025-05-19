@@ -382,3 +382,18 @@ def admin_required(payload: dict = Depends(validate_token)):
             detail="You do not have permission to perform this action",
         )
     return payload
+
+
+def calculate_rank(db: Session, month: str):
+    """
+    Calculate the average rank for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        avg_rank : Average rank for the given month, or None if no data is found.
+    """
+    avg_rank = db.query(func.avg(Response.rank)).filter(Response.date == month).scalar()
+    return avg_rank  # Returns None if no records are found

@@ -250,3 +250,14 @@ def fetch_response(ai_platform, locations, products, prompt):
         return response.json()
     except requests.exceptions.RequestException as e:
         return {"error": f"Failed to fetch data: {e}"}
+
+
+def get_avg_rank(month, flag_competitor):
+    if flag_competitor == "total_count":
+        if fetch_data("rank", month):
+            if fetch_data("rank", month).get("rank", []) is not None:
+                return round(float(fetch_data("rank", month).get("rank", [])),1)
+            else:
+                return "N/A"
+    else:
+        return "N/A"

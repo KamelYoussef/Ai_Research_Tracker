@@ -8,7 +8,7 @@ from datetime import datetime
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
     aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
-    validate_token, verify_password, admin_required, hash_password
+    validate_token, verify_password, admin_required, hash_password, calculate_rank
 
 
 router = APIRouter()
@@ -240,3 +240,24 @@ def delete_user(username: str, db: Session = Depends(get_db), _: dict = Depends(
     db.commit()
 
     return {"message": f"User '{username}' deleted successfully"}
+
+
+@router.get("/rank/{month}")
+async def get_rank(
+        month: str,
+        db: Session = Depends(get_db),
+        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+):
+    try:
+        # Validate the token using the validate_token function
+        validate_token(credentials)
+
+        # If token is valid, calculate the AI score
+        position = calculate_rank(db, month)
+
+        return {"month": month, "rank": position}
+
+    except HTTPException as e:
+        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")

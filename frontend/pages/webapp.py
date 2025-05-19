@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
-    validate_token
+    validate_token, get_avg_rank
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data
@@ -44,14 +44,25 @@ with header_col5:
         label="Export data",
         data=convert_df(download_data(month, competitor_flags[choice])[2]),
         file_name="all_data.csv",
-        mime="text/csv"
+        mime="text/csv",
+        use_container_width=True
     )
 
-# Display Total Score in a header
-st.markdown(f"<h5 style='text-align: center;'>Visibility score </h5>", unsafe_allow_html=True)
-st.markdown(f"<h1 style='text-align: center; margin-top: -30px;'>{get_ai_total_score(month, competitor_flags[choice])} %</h1>",
-            unsafe_allow_html=True)
-
+col1, col2, col3 = st.columns([2,2,4])
+with col1:
+    # Display Total Score in a header
+    st.markdown(f"<h5 style='text-align: left;'>Visibility score </h5>", unsafe_allow_html=True)
+    st.markdown(
+        f"<h1 style='text-align: left; margin-top: -30px;'>"
+        f"{get_ai_total_score(month, competitor_flags[choice])} %"
+        f"</h1>",
+        unsafe_allow_html=True)
+with col2:
+    st.markdown(f"<h5 style='text-align: left;'>Average ranking </h5>", unsafe_allow_html=True)
+    st.markdown(
+        f"<h1 style='text-align: left; margin-top: -30px;'>"
+        f"{get_avg_rank(month, competitor_flags[choice])}</h1>",
+        unsafe_allow_html=True)
 st.divider()
 
 # Display ai_platforms scores and graphs
