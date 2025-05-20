@@ -261,3 +261,14 @@ def get_avg_rank(month, flag_competitor):
                 return "N/A"
     else:
         return "N/A"
+
+
+def get_avg_rank_by_platform(month, ai_platform, flag_competitor):
+    if flag_competitor == "total_count":
+        if fetch_data("rank", month, ai_platform):
+            if fetch_data("rank", month, ai_platform).get("rank", []) is not None:
+                return round(float(fetch_data("rank", month).get("rank", [])),1)
+            else:
+                return "N/A"
+    else:
+        return "N/A"

@@ -397,3 +397,19 @@ def calculate_rank(db: Session, month: str):
     """
     avg_rank = db.query(func.avg(Response.rank)).filter(Response.date == month).scalar()
     return avg_rank  # Returns None if no records are found
+
+
+def calculate_rank_by_platform(db: Session, month: str, ai_platform: str):
+    """
+    Calculate the average rank for a specific AI platform and month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        platform (str): The name of the AI platform.
+        month (str): The month in 'YYYYMM' format.
+
+    Returns:
+        avg_rank: The average rank, or None if no data is found.
+    """
+    avg_rank = db.query(func.avg(Response.rank)).filter(Response.ai_platform == ai_platform, Response.date == month).scalar()
+    return avg_rank

@@ -73,7 +73,7 @@ def main():
             st.multiselect("Select AI Platforms", all_ai_platforms, disabled=True)
             ai_platforms_choice = all_ai_platforms
         else:
-            ai_platforms_choice = st.multiselect("Select AI Platform", all_ai_platforms)
+            ai_platforms_choice = st.multiselect("Select AI Platforms", all_ai_platforms)
 
 
     if st.button("Run research"):

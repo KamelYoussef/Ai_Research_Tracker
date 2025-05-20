@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
-    validate_token, get_avg_rank
+    validate_token, get_avg_rank, get_avg_rank_by_platform
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data
@@ -48,7 +48,7 @@ with header_col5:
         use_container_width=True
     )
 
-col1, col2, col3 = st.columns([2,2,4])
+col1, col2, col3 = st.columns(3)
 with col1:
     # Display Total Score in a header
     st.markdown(f"<h5 style='text-align: left;'>Visibility score </h5>", unsafe_allow_html=True)
@@ -75,10 +75,14 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         keywords_presence.values(), columns
 ):
     with column:
-        st.markdown(f"<h5 style='text-align: left;'>{model}</h5>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='text-align: left;'>{model}</h4>", unsafe_allow_html=True)
         st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
                     f"Visibility score : {score} % "
                     f"</h6>", unsafe_allow_html=True)
+        st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
+                    f"Average ranking : {get_avg_rank_by_platform(month, model, competitor_flags[choice])} "
+                    f"</h6>", unsafe_allow_html=True)
+
         # Pie chart for Locations Showed vs No Results
         pie_data = pd.DataFrame({
             "Category": ["Locations Showed", "Locations No Results"],
