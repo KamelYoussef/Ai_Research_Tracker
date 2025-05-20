@@ -4,8 +4,8 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
-    validate_token, get_avg_rank, get_avg_rank_by_platform
-from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart
+    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year
+from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data
 
@@ -48,7 +48,7 @@ with header_col5:
         use_container_width=True
     )
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 with col1:
     # Display Total Score in a header
     st.markdown(f"<h5 style='text-align: left;'>Visibility score </h5>", unsafe_allow_html=True)
@@ -57,12 +57,16 @@ with col1:
         f"{get_ai_total_score(month, competitor_flags[choice])} %"
         f"</h1>",
         unsafe_allow_html=True)
+
+    plot_ai_scores_chart(get_ai_scores_full_year(month, competitor_flags[choice]))
+
 with col2:
     st.markdown(f"<h5 style='text-align: left;'>Average position </h5>", unsafe_allow_html=True)
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
         f"{get_avg_rank(month, competitor_flags[choice])}</h1>",
         unsafe_allow_html=True)
+
 st.divider()
 
 # Display ai_platforms scores and graphs

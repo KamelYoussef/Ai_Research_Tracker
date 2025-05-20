@@ -1,6 +1,7 @@
 import plotly.express as px
 import plotly.graph_objects as go
-
+import altair as alt
+import streamlit as st
 
 def plot_pie_chart(data):
     return px.pie(
@@ -54,3 +55,18 @@ def create_radar_chart(df):
         height=420,
     )
     return fig
+
+
+def plot_ai_scores_chart(data):
+    df = data.reset_index()
+    df.columns = ["Month", "Visibility score"]
+    month_order = df["Month"].tolist()
+
+    chart = alt.Chart(df).mark_line(point=True).encode(
+        x=alt.X('Month:N', sort=month_order, axis=alt.Axis(title='')),
+        y=alt.Y('Visibility score:Q', scale=alt.Scale(domain=[0, 100]),axis=alt.Axis(title=''))
+    ).properties(
+        height=250
+    )
+
+    st.altair_chart(chart, use_container_width=True)

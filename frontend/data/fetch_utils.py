@@ -4,6 +4,8 @@ import streamlit as st
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import logging
+from dateutil.relativedelta import relativedelta
 
 # Load environment variables
 load_dotenv()
@@ -37,7 +39,7 @@ def fetch_data(endpoint: str, month: str, flag_competitor=None):
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
-        st.error(f"Error fetching data from {endpoint}: {e}")
+        logging.error(f"Error fetching data from {endpoint}: {e}")
         return []
 
 
@@ -132,6 +134,8 @@ def get_date_today():
 def get_ai_total_score(month, flag_competitor):
     if fetch_data("score_ai", month, flag_competitor):
         return fetch_data("score_ai", month, flag_competitor).get("score_ai", [])
+    else:
+        return "N/A"
 
 
 def fetch_param(month, competitor_flag):
@@ -272,3 +276,28 @@ def get_avg_rank_by_platform(month, ai_platform, flag_competitor):
                 return "N/A"
     else:
         return "N/A"
+
+
+def get_ai_scores_full_year(from_month, flag_competitor):
+    year = int(str(from_month)[:4])
+    month = int(str(from_month)[4:6])
+    end_date = datetime(year, month, 1)
+
+    data = []
+
+    # Last 12 months: from (end_date - 11 months) to end_date
+    for i in range(12):
+        current_date = end_date - relativedelta(months=11 - i)
+        yyyymm = int(current_date.strftime("%Y%m"))
+        score = get_ai_total_score(yyyymm, flag_competitor)
+
+        data.append({
+            "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
+            "score": 0 if score == "N/A" else score
+        })
+
+    df = pd.DataFrame(data)
+    df.set_index("month", inplace=True)
+    return df
+
+
