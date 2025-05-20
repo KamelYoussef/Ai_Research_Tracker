@@ -7,7 +7,7 @@ def ai_platforms_score(month, competitor_flag):
     df = download_data(month, competitor_flag)[2]
     n_locations, n_products, n_ai_platforms = df["location"].nunique(), df["product"].nunique(), df["ai_platform"].nunique()
     ai_scores = df.groupby("ai_platform")[["Total Count"]].sum().reset_index()
-    ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / 4 * 100).astype(int)
+    ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / 4 * 100).round(1)
     return ai_scores.set_index('ai_platform')['Total Count'].to_dict()
 
 

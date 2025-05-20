@@ -58,7 +58,7 @@ with col1:
         f"</h1>",
         unsafe_allow_html=True)
 with col2:
-    st.markdown(f"<h5 style='text-align: left;'>Average ranking </h5>", unsafe_allow_html=True)
+    st.markdown(f"<h5 style='text-align: left;'>Average position </h5>", unsafe_allow_html=True)
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
         f"{get_avg_rank(month, competitor_flags[choice])}</h1>",
@@ -80,7 +80,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
                     f"Visibility score : {score} % "
                     f"</h6>", unsafe_allow_html=True)
         st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Average ranking : {get_avg_rank_by_platform(month, model, competitor_flags[choice])} "
+                    f"Average position : {get_avg_rank_by_platform(month, model, competitor_flags[choice])} "
                     f"</h6>", unsafe_allow_html=True)
 
         # Pie chart for Locations Showed vs No Results
@@ -105,7 +105,7 @@ with col4:
     st.write("**Top-Performing Locations:** 🚀")
     st.write("\n".join(f"- {location}" for location in top_locations(month, competitor_flags[choice])[:5]))
 with col5:
-    st.write("**Areas for Opportunity:** 📈")
+    st.write("**Areas for Opportunity:** 🎯")
     st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice])[-5:]))))
 with col6:
     st.write("**Keywords Insight:**")
