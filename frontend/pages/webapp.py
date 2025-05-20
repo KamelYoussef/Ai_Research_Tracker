@@ -4,11 +4,11 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
-    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year
-from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart
+    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year
+from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data
-
+import altair as alt
 # Check the login state
 if 'logged_in' in st.session_state and validate_token():
     pass
@@ -66,6 +66,7 @@ with col2:
         f"<h1 style='text-align: left; margin-top: -30px;'>"
         f"{get_avg_rank(month, competitor_flags[choice])}</h1>",
         unsafe_allow_html=True)
+    plot_rank_chart(get_ranks_full_year(month, competitor_flags[choice]))
 
 st.divider()
 

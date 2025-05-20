@@ -70,3 +70,18 @@ def plot_ai_scores_chart(data):
     )
 
     st.altair_chart(chart, use_container_width=True)
+
+
+def plot_rank_chart(data):
+    df = data.reset_index()
+    df.columns = ["month", "rank"]
+    month_order = df["month"].tolist()
+
+    chart = alt.Chart(df).mark_line(point=True).encode(
+        x=alt.X("month:N", sort=month_order, axis=alt.Axis(title='')),
+        y=alt.Y("rank:Q", axis=alt.Axis(title=''), scale=alt.Scale(domain=[df["rank"].max(), 0])),
+    ).properties(
+        height=250
+    )
+
+    st.altair_chart(chart, use_container_width=True)

@@ -301,3 +301,25 @@ def get_ai_scores_full_year(from_month, flag_competitor):
     return df
 
 
+def get_ranks_full_year(from_month, flag_competitor):
+    year = int(str(from_month)[:4])
+    month = int(str(from_month)[4:6])
+    end_date = datetime(year, month, 1)
+
+    data = []
+
+    # Last 12 months: from (end_date - 11 months) to end_date
+    for i in range(12):
+        current_date = end_date - relativedelta(months=11 - i)
+        yyyymm = int(current_date.strftime("%Y%m"))
+        score = get_avg_rank(yyyymm, flag_competitor)
+
+        data.append({
+            "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
+            "rank": 0 if score == "N/A" else score
+        })
+
+    df = pd.DataFrame(data)
+    df.set_index("month", inplace=True)
+    return df
+
