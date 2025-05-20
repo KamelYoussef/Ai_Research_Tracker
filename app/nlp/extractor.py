@@ -75,7 +75,6 @@ def extract_organizations_gemini(text):
 
 def ranking(text, search_phrases):
     organizations_lower = [org.lower() for org in extract_organizations_gemini(text)]
-    print(organizations_lower)
     aliases_lower = [alias.lower() for alias in search_phrases]
     for i, org in enumerate(organizations_lower):
         for alias in aliases_lower:

@@ -77,14 +77,15 @@ def perplexity(prompt):
         completion = client_perplexity.chat.completions.create(
             model="sonar",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant for people in canada."},
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "system", "content": "You are a helpful assistant for people in Canada."},
+                {"role": "user", "content": prompt}
             ]
         )
-        return completion.choices[0].message.content
+
+        answer = completion.choices[0].message.content
+        citations = completion.citations
+        sources = "\n\nSources:\n\n" + "\n\n".join(citations)
+        return answer + sources
+
     except Exception as e:
-        print(f"Error getting response from Perplexity: {e}")
-        return None
+        return f"Error: {e}"
