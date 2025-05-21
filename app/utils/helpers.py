@@ -309,20 +309,26 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
 
 def calculate_score_ai(db: Session, month: str, config_path, flag_competitor):
     """
-    Calculate the score_ai by summing the total_count for a given month.
+    Calculate the AI score by summing the total_count for a given month.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
+        config_path (str): Path to the configuration file.
+        flag_competitor (str): Flag representing the competitor.
 
     Returns:
-        int: Total sum of total_count for the given month.
+        float: Calculated AI score.
     """
     # Query to sum the total_count for all products, locations, or combinations in the month
-    result = db.query(func.sum(getattr(Response, flag_competitor))).filter(Response.date == month).scalar()
+    result = db.query(func.coalesce(func.sum(getattr(Response, flag_competitor)), 0)) \
+               .filter(Response.date == month) \
+               .scalar()
+
     n_locations, n_products, n_ai_platforms = get_counts_from_config(config_path)
-    score = result / (n_locations * n_products * n_ai_platforms) / 4 * 100 # 4 is for 4 weeks in the month
-    return score if score else 0  # Return 0 if no records found
+    score = result / (n_locations * n_products * n_ai_platforms) / 4 * 100  # 4 is for 4 weeks in the month
+
+    return score if score else 0
 
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
