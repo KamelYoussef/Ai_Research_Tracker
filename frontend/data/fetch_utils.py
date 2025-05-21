@@ -323,3 +323,9 @@ def get_ranks_full_year(from_month, flag_competitor):
     df.set_index("month", inplace=True)
     return df
 
+
+def format_month(yyyymm):
+    yyyymm_str = str(yyyymm)
+    date = datetime.strptime(yyyymm_str, "%Y%m")
+    return date.strftime("%B %Y")
+

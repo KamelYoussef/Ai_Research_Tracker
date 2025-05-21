@@ -28,6 +28,7 @@ font_css = """
 """
 st.write(font_css, unsafe_allow_html=True)
 
+
 def main():
     # Sidebar buttons
     if st.sidebar.button("Dashboard"):
@@ -44,9 +45,14 @@ def main():
     all_products = data['products']
     all_ai_platforms = data['ai_platforms']
 
+    st.markdown(f"<h3 style='text-align: left;'>Compare AI Platform Responses</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h7 style='text-align: left;'>Quickly see how different AI platforms answer your query — and compare \
+    their results side by side.</h7>",
+                unsafe_allow_html=True)
+    st.divider()
     prompts = data['prompts']
     selected_prompt = st.radio("Choose your query:", prompts)
-    st.divider()
+
     col3, col4, col5, col6, col7, col8 = st.columns([4,0.1,4,2,4,2])
     with col4:
         st.write("")

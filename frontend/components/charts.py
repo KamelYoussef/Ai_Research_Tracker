@@ -6,7 +6,7 @@ import streamlit as st
 def plot_pie_chart(data):
     return px.pie(
         data, values="Count", names="Category",
-        height=350, hole=0.7,
+        height=300, hole=0.7,
         color_discrete_sequence=["#1f77b4", "#e377c2"]
     )
 

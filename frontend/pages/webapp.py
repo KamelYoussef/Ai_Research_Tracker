@@ -4,11 +4,12 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
-    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year
+    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data
 from components.header import render_tooltip_heading
+
 # Check the login state
 if 'logged_in' in st.session_state and validate_token():
     pass
@@ -38,7 +39,12 @@ with header_col3:
     month = select_month()
 
 # Download button for raw data
-header_col4, header_col5 = st.columns([8,1])
+header_col4, _, header_col5 = st.columns([7,2.5,1.5])
+with header_col4:
+    st.markdown(
+        f"<h3 style='text-align: left;'>Overview - {format_month(month)}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h7 style='text-align: left;'> Here’s a quick summary of your brand’s performance this month across \
+    all three AI platforms, multiple locations, and five keywords showing how often it appeared and where it ranked. </h7>", unsafe_allow_html=True)
 with header_col5:
     st.download_button(
         label="Export data",
@@ -51,7 +57,9 @@ with header_col5:
 col1, col2 = st.columns(2)
 with col1:
     # Display Total Score in a header
-    render_tooltip_heading("Visibility score", "How often your brand appeared in all AI responses this month. [Based on 1,680 prompts run weekly (4× per month), totaling 6,720 prompts across all locations and keywords].")
+    render_tooltip_heading("Visibility score", "How often your brand appeared in AI-generated responses this month \
+    across 3 AI platforms. \n [Based on 1,680 prompts run weekly (4 runs per month), totaling 6,720 prompts across all \
+    locations and keywords].")
 
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
@@ -62,7 +70,8 @@ with col1:
     plot_ai_scores_chart(get_ai_scores_full_year(month, competitor_flags[choice]))
 
 with col2:
-    render_tooltip_heading("Average position", "Average position where your brand appeared in all AI responses this month. [Based on 1,680 prompts run weekly (4× per month), totaling 6,720 prompts across all locations and keywords].")
+    render_tooltip_heading("Average position", "Average position where your brand appeared in AI-generated responses this\
+    month. \nInstances where your brand was not mentioned are excluded from the average.")
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
         f"{get_avg_rank(month, competitor_flags[choice])}</h1>",
@@ -70,6 +79,8 @@ with col2:
     plot_rank_chart(get_ranks_full_year(month, competitor_flags[choice]))
 
 st.divider()
+
+st.markdown(f"<h3 style='text-align: left;'>Analysis by Platform</h3>", unsafe_allow_html=True)
 
 # Display ai_platforms scores and graphs
 locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month, competitor_flags[choice])
@@ -89,13 +100,6 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
                     f"Average position : {get_avg_rank_by_platform(month, model, competitor_flags[choice])} "
                     f"</h6>", unsafe_allow_html=True)
 
-        # Pie chart for Locations Showed vs No Results
-        pie_data = pd.DataFrame({
-            "Category": ["Locations Showed", "Locations No Results"],
-            "Count": [locations_showed, locations_no_results],
-        })
-        st.plotly_chart(plot_pie_chart(pie_data), key=f"pie_chart_{model}", use_container_width=True)
-
         # Bar chart for Keyword Presence
         bar_data = pd.DataFrame({
             "Keyword": keywords,
@@ -103,18 +107,37 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         })
         st.plotly_chart(plot_bar_chart(bar_data), key=f"bar_chart_{model}", use_container_width=True)
 
+        # Pie chart for Locations Showed vs No Results
+        pie_data = pd.DataFrame({
+            "Category": ["Locations Showed", "Locations No Results"],
+            "Count": [locations_showed, locations_no_results],
+        })
+        st.plotly_chart(plot_pie_chart(pie_data), key=f"pie_chart_{model}", use_container_width=True)
+
+with st.expander("How to interpret this pie chart ? ℹ️"):
+    st.markdown("""
+    This chart presents data **aggregated by location**, showing how many locations your brand appeared in across AI-generated responses this month.
+
+    It summarizes visibility using **6,720 prompts total**, which come from running **1,680 prompts weekly (4 runs per month)** across multiple keywords and locations.
+
+    - **“Locations Showed”**: The brand showed up **at least once** in AI results for that location — even if only for one keyword in one prompt.
+    - **“Locations Not Showed”**: The brand **did not appear even once** for any keyword in that location across all prompts for the month.
+
+    ⚠️ **Locations in “Not Showed” should be flagged.** These represent areas with **zero brand visibility** in AI-generated answers — a potential risk that may require further investigation or action.
+    """)
+
 st.divider()
 
 # Lists for Top Locations and Opportunities
 col4, col5, col6 = st.columns(3)
 with col4:
-    st.write("**Top-Performing Locations:** 🚀")
+    st.markdown(f"<h4 style='text-align: left;'>Top-Performing Locations: 🚀</h4>", unsafe_allow_html=True)
     st.write("\n".join(f"- {location}" for location in top_locations(month, competitor_flags[choice])[:5]))
 with col5:
-    st.write("**Areas for Opportunity:** 🎯")
+    st.markdown(f"<h4 style='text-align: left;'>Areas for Opportunity: 🎯</h4>", unsafe_allow_html=True)
     st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice])[-5:]))))
 with col6:
-    st.write("**Keywords Insight:**")
+    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight:</h4>", unsafe_allow_html=True)
     top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice])
     st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
 
@@ -131,7 +154,9 @@ with col7:
     total_sum = df.select_dtypes(include='number').sum().sum()
     total_count = df.select_dtypes(include='number').count().sum()
 
-    st.write(f"Visibility score : {round(float(total_sum / total_count),1)} %")
+    st.markdown(f"<h6 style='text-align: left;'>"
+                f"Visibility score : {round(float(total_sum / total_count),1)} % "
+                f"</h6>", unsafe_allow_html=True)
     st.write(f"{search_query}'s visibility score across AI platforms")
     st.dataframe(df, hide_index=True, use_container_width=True)
 
