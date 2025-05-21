@@ -83,9 +83,9 @@ async def fetch_responses(db: Session = Depends(get_db)):
 
 @router.post("/submit_query/")
 async def submit_query(prompt, ai_platform):
-    ai_response = get_ai_response(prompt, ai_platform=ai_platform)
+    ai_response, sources = get_ai_response(prompt, ai_platform=ai_platform)
 
-    return {"message": "Query submitted successfully", "response": ai_response}
+    return {"message": "Query submitted successfully", "response": ai_response, "sources": sources}
 
 
 @router.get("/aggregate_total_by_product/{month}")

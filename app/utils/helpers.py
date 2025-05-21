@@ -68,7 +68,7 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             prompt = f"where can I get a {product} insurance quote in {location}"
 
         query = prompt.format(keyword=product, location=location)
-        ai_response = get_ai_response(query+" CANADA", ai_platform)
+        ai_response, sources = get_ai_response(query+" CANADA", ai_platform)
         rank = ranking(ai_response, search_phrases)
         match_results = find_words_in_texts(ai_response, search_phrases)
         competitors = find_competitors_in_texts(ai_response, competitors)
@@ -81,7 +81,8 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             "total_count": has_matches,
             "matches": match_results,
             "competitors": competitors,
-            "rank": rank
+            "rank": rank,
+            "sources": sources
         }
     except Exception as e:
         return {
@@ -413,3 +414,4 @@ def calculate_rank_by_platform(db: Session, month: str, ai_platform: str):
     """
     avg_rank = db.query(func.avg(Response.rank)).filter(Response.ai_platform == ai_platform, Response.date == month).scalar()
     return avg_rank
+
