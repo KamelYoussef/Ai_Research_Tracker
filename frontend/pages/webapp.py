@@ -8,7 +8,7 @@ from data.fetch_utils import select_month, get_ai_total_score, download_data, lo
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data
-import altair as alt
+from components.header import render_tooltip_heading
 # Check the login state
 if 'logged_in' in st.session_state and validate_token():
     pass
@@ -51,7 +51,8 @@ with header_col5:
 col1, col2 = st.columns(2)
 with col1:
     # Display Total Score in a header
-    st.markdown(f"<h5 style='text-align: left;'>Visibility score </h5>", unsafe_allow_html=True)
+    render_tooltip_heading("Visibility score", "How often your brand appeared in all AI responses this month. [Based on 1,680 prompts run weekly (4× per month), totaling 6,720 prompts across all locations and keywords].")
+
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
         f"{get_ai_total_score(month, competitor_flags[choice])} %"
@@ -61,7 +62,7 @@ with col1:
     plot_ai_scores_chart(get_ai_scores_full_year(month, competitor_flags[choice]))
 
 with col2:
-    st.markdown(f"<h5 style='text-align: left;'>Average position </h5>", unsafe_allow_html=True)
+    render_tooltip_heading("Average position", "Average position where your brand appeared in all AI responses this month. [Based on 1,680 prompts run weekly (4× per month), totaling 6,720 prompts across all locations and keywords].")
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
         f"{get_avg_rank(month, competitor_flags[choice])}</h1>",
@@ -98,7 +99,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         # Bar chart for Keyword Presence
         bar_data = pd.DataFrame({
             "Keyword": keywords,
-            "Presence": keyword_presence,
+            "Visibility score": keyword_presence,
         })
         st.plotly_chart(plot_bar_chart(bar_data), key=f"bar_chart_{model}", use_container_width=True)
 
