@@ -48,12 +48,14 @@ def daily_track(ai_platfrom):
                 competitor_3=competitor_3,
                 rank=rank
             )
+        # Keep only the top 20 sources
+        top_sources = dict(source_counter.most_common(20))
         store_sources(
             db=db,
             ai_platform=ai_platfrom,
             date=current_date,
             day=current_day,
-            sources=dict(source_counter)
+            sources=top_sources
         )
     except Exception as e:
         print(f"An error occurred: {e}")
