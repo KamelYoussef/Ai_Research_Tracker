@@ -28,6 +28,7 @@ font_css = """
 """
 st.write(font_css, unsafe_allow_html=True)
 
+
 def main():
     # Sidebar buttons
     if st.sidebar.button("Dashboard"):
@@ -44,9 +45,14 @@ def main():
     all_products = data['products']
     all_ai_platforms = data['ai_platforms']
 
+    st.markdown(f"<h3 style='text-align: left;'>Compare AI Platform Responses</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h7 style='text-align: left;'>Quickly see how different AI platforms answer your query — and compare \
+    their results side by side.</h7>",
+                unsafe_allow_html=True)
+    st.divider()
     prompts = data['prompts']
     selected_prompt = st.radio("Choose your query:", prompts)
-    st.divider()
+
     col3, col4, col5, col6, col7, col8 = st.columns([4,0.1,4,2,4,2])
     with col4:
         st.write("")
@@ -73,7 +79,7 @@ def main():
             st.multiselect("Select AI Platforms", all_ai_platforms, disabled=True)
             ai_platforms_choice = all_ai_platforms
         else:
-            ai_platforms_choice = st.multiselect("Select AI Platform", all_ai_platforms)
+            ai_platforms_choice = st.multiselect("Select AI Platforms", all_ai_platforms)
 
 
     if st.button("Run research"):
@@ -113,12 +119,17 @@ def main():
                                     product = insight.get("product", "Unknown Product")
                                     location = insight.get("location", "Unknown Location")
                                     total_count = insight.get("total_count", "N/A")
+                                    rank = rank if (rank := insight.get("rank")) is not None else "N/A"
+                                    sources = insight.get("sources", "")
 
                                     # Use an expander to display details
                                     with st.expander(
-                                            f"{location} | {product} | Appearance: {bool(total_count)}"
+                                            f"{location} | {product} | Appearance: {bool(total_count)} | Position : {rank}"
                                     ):
                                         st.write(ai_response)
+                                        if sources:
+                                            st.markdown('**Sources:**')
+                                            st.markdown('\n\n'.join(sources))
                             else:
                                 st.warning(f"No responses available.")
 

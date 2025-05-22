@@ -1,8 +1,9 @@
 import yaml
 from app.services.ai_api import get_ai_response
-from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts
+from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts, ranking
 from concurrent.futures import ThreadPoolExecutor
 from app.models.response import Response
+from app.models.sources import Sources
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -13,6 +14,7 @@ from fastapi import Depends
 from passlib.context import CryptContext
 import time
 from threading import Semaphore
+from collections import Counter
 
 semaphore = Semaphore(50)  # Limit to 50 concurrent threads
 SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
@@ -68,7 +70,8 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             prompt = f"where can I get a {product} insurance quote in {location}"
 
         query = prompt.format(keyword=product, location=location)
-        ai_response = get_ai_response(query+" CANADA", ai_platform)
+        ai_response, sources = get_ai_response(query+" CANADA", ai_platform)
+        rank = ranking(ai_response, search_phrases)
         match_results = find_words_in_texts(ai_response, search_phrases)
         competitors = find_competitors_in_texts(ai_response, competitors)
 
@@ -79,7 +82,9 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             "ai_response": ai_response,
             "total_count": has_matches,
             "matches": match_results,
-            "competitors": competitors
+            "competitors": competitors,
+            "rank": rank,
+            "sources": sources
         }
     except Exception as e:
         return {
@@ -306,20 +311,26 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
 
 def calculate_score_ai(db: Session, month: str, config_path, flag_competitor):
     """
-    Calculate the score_ai by summing the total_count for a given month.
+    Calculate the AI score by summing the total_count for a given month.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
+        config_path (str): Path to the configuration file.
+        flag_competitor (str): Flag representing the competitor.
 
     Returns:
-        int: Total sum of total_count for the given month.
+        float: Calculated AI score.
     """
     # Query to sum the total_count for all products, locations, or combinations in the month
-    result = db.query(func.sum(getattr(Response, flag_competitor))).filter(Response.date == month).scalar()
+    result = db.query(func.coalesce(func.sum(getattr(Response, flag_competitor)), 0)) \
+               .filter(Response.date == month) \
+               .scalar()
+
     n_locations, n_products, n_ai_platforms = get_counts_from_config(config_path)
-    score = result / (n_locations * n_products * n_ai_platforms) / 4 * 100 # 4 is for 4 weeks in the month
-    return score if score else 0  # Return 0 if no records found
+    score = result / (n_locations * n_products * n_ai_platforms) / 4 * 100  # 4 is for 4 weeks in the month
+
+    return score if score else 0
 
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
@@ -380,3 +391,61 @@ def admin_required(payload: dict = Depends(validate_token)):
             detail="You do not have permission to perform this action",
         )
     return payload
+
+
+def calculate_rank(db: Session, month: str):
+    """
+    Calculate the average rank for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        avg_rank : Average rank for the given month, or None if no data is found.
+    """
+    avg_rank = db.query(func.avg(Response.rank)).filter(Response.date == month).scalar()
+    return avg_rank  # Returns None if no records are found
+
+
+def calculate_rank_by_platform(db: Session, month: str, ai_platform: str):
+    """
+    Calculate the average rank for a specific AI platform and month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        platform (str): The name of the AI platform.
+        month (str): The month in 'YYYYMM' format.
+
+    Returns:
+        avg_rank: The average rank, or None if no data is found.
+    """
+    avg_rank = db.query(func.avg(Response.rank)).filter(Response.ai_platform == ai_platform, Response.date == month).scalar()
+    return avg_rank
+
+
+def get_aggregated_sources(db: Session, ai_platform: str, month: str) -> dict:
+    """
+    Retrieve and aggregate the 'sources' dictionaries from all matching rows.
+
+    Args:
+        db: SQLAlchemy Session
+        ai_platform: The AI platform name
+        date: The date string (e.g., "202505")
+
+    Returns:
+        A single dictionary with domain names as keys and summed counts as values.
+    """
+    results = db.query(Sources.sources).filter(
+        Sources.ai_platform == ai_platform,
+        Sources.date == month
+    ).all()
+
+    total_sources = Counter()
+
+    for row in results:
+        if row.sources:
+            total_sources.update(row.sources)
+
+    return dict(sorted(total_sources.items(), key=lambda x: x[1], reverse=True))
+

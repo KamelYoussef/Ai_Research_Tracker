@@ -2,6 +2,7 @@ from openai import OpenAI
 from app.config import OPENAI_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY
 from google import genai
 from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
+from urllib.parse import urlparse
 
 
 client_chatgpt = OpenAI(api_key=OPENAI_API_KEY)
@@ -44,7 +45,10 @@ def chatgpt(prompt):
                 }
             ]
         )
-        return completion.choices[0].message.content
+        annotations = completion.choices[0].message.annotations
+        sources = extract_base_domains([annotation.url_citation.url for annotation in annotations if annotation.type == 'url_citation'])
+        print(sources)
+        return completion.choices[0].message.content, sources
     except Exception as e:
         print(f"Error getting response from OpenAI: {e}")
         return None
@@ -65,7 +69,8 @@ def gemini(prompt):
             )
         )
         response_text = ''.join(part.text for part in responses.candidates[0].content.parts)
-        return response_text
+        sources = [chunk.web.title for chunk in responses.candidates[0].grounding_metadata.grounding_chunks]
+        return response_text, sources
 
     except Exception as e:
         print(f"Error getting response from Gemini: {e}")
@@ -77,14 +82,35 @@ def perplexity(prompt):
         completion = client_perplexity.chat.completions.create(
             model="sonar",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant for people in canada."},
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "system", "content": "You are a helpful assistant for people in Canada."},
+                {"role": "user", "content": prompt}
             ]
         )
-        return completion.choices[0].message.content
+
+        answer = completion.choices[0].message.content
+        citations = completion.citations
+        sources = extract_base_domains(citations)
+        return answer, sources
+
     except Exception as e:
-        print(f"Error getting response from Perplexity: {e}")
-        return None
+        return f"Error: {e}"
+
+
+def extract_base_domains(urls):
+    """
+    Extracts base domains from a list of URLs by removing 'www.' and subdomains.
+
+    Parameters:
+    - urls (list): List of URL strings.
+
+    Returns:
+    - list: List of base domains.
+    """
+    base_domains = []
+    for url in urls:
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc.lower()
+        if domain.startswith('www.'):
+            domain = domain[4:]
+        base_domains.append(domain)
+    return base_domains

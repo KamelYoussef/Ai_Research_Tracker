@@ -1,18 +1,19 @@
 import plotly.express as px
 import plotly.graph_objects as go
-
+import altair as alt
+import streamlit as st
 
 def plot_pie_chart(data):
     return px.pie(
         data, values="Count", names="Category",
-        height=350, hole=0.7,
+        height=300, hole=0.7,
         color_discrete_sequence=["#1f77b4", "#e377c2"]
     )
 
 
 def plot_bar_chart(data):
     fig = px.bar(
-        data, x="Keyword", y="Presence",
+        data, x="Keyword", y="Visibility score",
         height=350
     )
     fig.update_layout(
@@ -54,3 +55,33 @@ def create_radar_chart(df):
         height=420,
     )
     return fig
+
+
+def plot_ai_scores_chart(data):
+    df = data.reset_index()
+    df.columns = ["Month", "Visibility score"]
+    month_order = df["Month"].tolist()
+
+    chart = alt.Chart(df).mark_line(point=True).encode(
+        x=alt.X('Month:N', sort=month_order, axis=alt.Axis(title='')),
+        y=alt.Y('Visibility score:Q', scale=alt.Scale(domain=[0, 100]),axis=alt.Axis(title=''))
+    ).properties(
+        height=250
+    )
+
+    st.altair_chart(chart, use_container_width=True)
+
+
+def plot_rank_chart(data):
+    df = data.reset_index()
+    df.columns = ["month", "rank"]
+    month_order = df["month"].tolist()
+
+    chart = alt.Chart(df).mark_line(point=True).encode(
+        x=alt.X("month:N", sort=month_order, axis=alt.Axis(title='')),
+        y=alt.Y("rank:Q", axis=alt.Axis(title=''), scale=alt.Scale(domain=[df["rank"].max(), 0])),
+    ).properties(
+        height=250
+    )
+
+    st.altair_chart(chart, use_container_width=True)

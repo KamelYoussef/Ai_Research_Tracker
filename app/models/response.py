@@ -15,3 +15,4 @@ class Response(Base):
     competitor_1 = Column(Integer)
     competitor_2 = Column(Integer)
     competitor_3 = Column(Integer)
+    rank = Column(Integer)

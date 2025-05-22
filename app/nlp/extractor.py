@@ -1,4 +1,9 @@
 import re
+import json
+from google import genai
+from app.config import GEMINI_API_KEY
+
+client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
 
 def find_words_in_texts(text, search_phrases):
@@ -51,3 +56,31 @@ def find_competitors_in_texts(text, competitors):
         ))
 
     return matches
+
+
+def extract_organizations_gemini(text):
+    response = client_gemini.models.generate_content(
+        model="gemini-1.5-flash",
+        contents=f"Extract only insurances providers organization names in order of appearance from the following text and return them as a JSON array:\n\n{text}\n\n")
+
+    raw = response.text.strip()
+    cleaned = re.sub(r"^```json|^```|```$", "", raw, flags=re.MULTILINE).strip()
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        print("❌ Failed to parse response as JSON. Raw output:")
+        print(cleaned)
+        return []
+
+
+def ranking(text, search_phrases):
+    organizations_lower = [org.lower() for org in extract_organizations_gemini(text)]
+    aliases_lower = [alias.lower() for alias in search_phrases]
+    for i, org in enumerate(organizations_lower):
+        for alias in aliases_lower:
+            if alias in org:
+                rank = i + 1
+                return rank
+    return None
+
+

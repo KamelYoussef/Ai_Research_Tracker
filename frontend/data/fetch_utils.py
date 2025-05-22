@@ -4,6 +4,8 @@ import streamlit as st
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import logging
+from dateutil.relativedelta import relativedelta
 
 # Load environment variables
 load_dotenv()
@@ -37,7 +39,7 @@ def fetch_data(endpoint: str, month: str, flag_competitor=None):
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
-        st.error(f"Error fetching data from {endpoint}: {e}")
+        logging.error(f"Error fetching data from {endpoint}: {e}")
         return []
 
 
@@ -132,6 +134,8 @@ def get_date_today():
 def get_ai_total_score(month, flag_competitor):
     if fetch_data("score_ai", month, flag_competitor):
         return fetch_data("score_ai", month, flag_competitor).get("score_ai", [])
+    else:
+        return "N/A"
 
 
 def fetch_param(month, competitor_flag):
@@ -250,3 +254,98 @@ def fetch_response(ai_platform, locations, products, prompt):
         return response.json()
     except requests.exceptions.RequestException as e:
         return {"error": f"Failed to fetch data: {e}"}
+
+
+def get_avg_rank(month, flag_competitor):
+    if flag_competitor == "total_count":
+        if fetch_data("rank", month):
+            if fetch_data("rank", month).get("rank", []) is not None:
+                return round(float(fetch_data("rank", month).get("rank", [])),1)
+            else:
+                return "N/A"
+    else:
+        return "N/A"
+
+
+def get_avg_rank_by_platform(month, ai_platform, flag_competitor):
+    if flag_competitor == "total_count":
+        if fetch_data("rank", month, ai_platform):
+            if fetch_data("rank", month, ai_platform).get("rank", []) is not None:
+                return round(float(fetch_data("rank", month,ai_platform).get("rank", [])),1)
+            else:
+                return "N/A"
+    else:
+        return "N/A"
+
+
+def get_ai_scores_full_year(from_month, flag_competitor):
+    year = int(str(from_month)[:4])
+    month = int(str(from_month)[4:6])
+    end_date = datetime(year, month, 1)
+
+    data = []
+
+    # Last 12 months: from (end_date - 11 months) to end_date
+    for i in range(12):
+        current_date = end_date - relativedelta(months=11 - i)
+        yyyymm = int(current_date.strftime("%Y%m"))
+        score = get_ai_total_score(yyyymm, flag_competitor)
+
+        data.append({
+            "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
+            "score": 0 if score == "N/A" else score
+        })
+
+    df = pd.DataFrame(data)
+    df.set_index("month", inplace=True)
+    return df
+
+
+def get_ranks_full_year(from_month, flag_competitor):
+    year = int(str(from_month)[:4])
+    month = int(str(from_month)[4:6])
+    end_date = datetime(year, month, 1)
+
+    data = []
+
+    # Last 12 months: from (end_date - 11 months) to end_date
+    for i in range(12):
+        current_date = end_date - relativedelta(months=11 - i)
+        yyyymm = int(current_date.strftime("%Y%m"))
+        score = get_avg_rank(yyyymm, flag_competitor)
+
+        data.append({
+            "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
+            "rank": 0 if score == "N/A" else score
+        })
+
+    df = pd.DataFrame(data)
+    df.set_index("month", inplace=True)
+    return df
+
+
+def format_month(yyyymm):
+    yyyymm_str = str(yyyymm)
+    date = datetime.strptime(yyyymm_str, "%Y%m")
+    return date.strftime("%B %Y")
+
+
+def get_sources(month, ai_platform):
+    if fetch_data("sources", month, ai_platform):
+        return fetch_data("sources", month, ai_platform).get("sources", [])
+    else:
+        return "N/A"
+
+
+def dict_to_text(source_dict: dict) -> str:
+    """
+    Convert a source count dictionary into a human-readable text block.
+
+    Args:
+        source_dict: Dictionary of {domain: count}
+
+    Returns:
+        A string with each source on a new line like: "domain" – X mentions
+    """
+    lines = [f'"{source}" – {count} mention{"s" if count != 1 else ""}' for source, count in source_dict.items()]
+    return "\n\n".join(lines)
