@@ -3,6 +3,7 @@ from app.services.ai_api import get_ai_response
 from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts, ranking
 from concurrent.futures import ThreadPoolExecutor
 from app.models.response import Response
+from app.models.sources import Sources
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -13,6 +14,7 @@ from fastapi import Depends
 from passlib.context import CryptContext
 import time
 from threading import Semaphore
+from collections import Counter
 
 semaphore = Semaphore(50)  # Limit to 50 concurrent threads
 SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
@@ -420,4 +422,30 @@ def calculate_rank_by_platform(db: Session, month: str, ai_platform: str):
     """
     avg_rank = db.query(func.avg(Response.rank)).filter(Response.ai_platform == ai_platform, Response.date == month).scalar()
     return avg_rank
+
+
+def get_aggregated_sources(db: Session, ai_platform: str, month: str) -> dict:
+    """
+    Retrieve and aggregate the 'sources' dictionaries from all matching rows.
+
+    Args:
+        db: SQLAlchemy Session
+        ai_platform: The AI platform name
+        date: The date string (e.g., "202505")
+
+    Returns:
+        A single dictionary with domain names as keys and summed counts as values.
+    """
+    results = db.query(Sources.sources).filter(
+        Sources.ai_platform == ai_platform,
+        Sources.date == month
+    ).all()
+
+    total_sources = Counter()
+
+    for row in results:
+        if row.sources:
+            total_sources.update(row.sources)
+
+    return dict(sorted(total_sources.items(), key=lambda x: x[1], reverse=True))
 

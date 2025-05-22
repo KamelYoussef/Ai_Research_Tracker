@@ -4,7 +4,8 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
-    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month
+    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month,\
+    get_sources, dict_to_text
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data
@@ -22,6 +23,17 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+font_css = """
+<style>
+   button[data-baseweb="tab"] {
+   font-size: 24px;
+   margin: 0;
+   width: 100%;
+   }
+</style>
+"""
+st.write(font_css, unsafe_allow_html=True)
 
 header_col1, header_col2, header_col3 = st.columns([2, 4, 2])
 # Choose company or one of the competitors
@@ -165,6 +177,16 @@ with col8:
         # Create and display the radar chart
         radar_chart = create_radar_chart(df)
         st.plotly_chart(radar_chart, use_container_width=True)
+
+st.divider()
+
+st.markdown(f"<h3 style='text-align: left;'>Citations</h3>", unsafe_allow_html=True)
+st.markdown(f"<h7 style='text-align: left;'> These are sources used by the AI platforms in their responses this month.</h7>", unsafe_allow_html=True)
+
+tabs = st.tabs(models)
+for tab, model in zip(tabs, models):
+    with tab:
+        st.write(dict_to_text(get_sources(month, model)))
 
 # Sidebar buttons
 if st.sidebar.button("AI Investigator"):

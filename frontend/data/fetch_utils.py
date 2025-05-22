@@ -271,7 +271,7 @@ def get_avg_rank_by_platform(month, ai_platform, flag_competitor):
     if flag_competitor == "total_count":
         if fetch_data("rank", month, ai_platform):
             if fetch_data("rank", month, ai_platform).get("rank", []) is not None:
-                return round(float(fetch_data("rank", month).get("rank", [])),1)
+                return round(float(fetch_data("rank", month,ai_platform).get("rank", [])),1)
             else:
                 return "N/A"
     else:
@@ -329,3 +329,23 @@ def format_month(yyyymm):
     date = datetime.strptime(yyyymm_str, "%Y%m")
     return date.strftime("%B %Y")
 
+
+def get_sources(month, ai_platform):
+    if fetch_data("sources", month, ai_platform):
+        return fetch_data("sources", month, ai_platform).get("sources", [])
+    else:
+        return "N/A"
+
+
+def dict_to_text(source_dict: dict) -> str:
+    """
+    Convert a source count dictionary into a human-readable text block.
+
+    Args:
+        source_dict: Dictionary of {domain: count}
+
+    Returns:
+        A string with each source on a new line like: "domain" – X mentions
+    """
+    lines = [f'"{source}" – {count} mention{"s" if count != 1 else ""}' for source, count in source_dict.items()]
+    return "\n\n".join(lines)

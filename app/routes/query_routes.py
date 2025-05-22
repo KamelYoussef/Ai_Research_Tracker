@@ -8,7 +8,8 @@ from datetime import datetime
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
     aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
-    validate_token, verify_password, admin_required, hash_password, calculate_rank, calculate_rank_by_platform
+    validate_token, verify_password, admin_required, hash_password, calculate_rank, calculate_rank_by_platform, \
+    get_aggregated_sources
 
 
 router = APIRouter()
@@ -277,6 +278,39 @@ async def get_rank_by_platform(
         # If token is valid, calculate the AI score
         position = calculate_rank_by_platform(db, month, ai_platform)
         return {"month": month, "rank": position, "ai_platform": ai_platform}
+
+    except HTTPException as e:
+        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
+
+
+@router.get("/sources/{month}/{ai_platform}")
+async def get_sources(
+        month: str,
+        ai_platform: str,
+        db: Session = Depends(get_db),
+        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+):
+    """
+    Return the sources for a given month, with token validation.
+
+    Args:
+        month (str): Month in YYYYMM format.
+        flag_competitor (str): Flag representing the competitor.
+        db (Session): Database session dependency.
+
+    Returns:
+        dict: The month and corresponding AI score.
+    """
+    try:
+        # Validate the token using the validate_token function
+        validate_token(credentials)
+
+        # If token is valid, calculate the AI score
+        sources = get_aggregated_sources(db, ai_platform, month)
+
+        return {"month": month, "ai_platform": ai_platform, "sources": sources}
 
     except HTTPException as e:
         raise e  # If token is invalid, HTTPException will be raised in validate_token()
