@@ -20,7 +20,7 @@ def daily_track(ai_platfrom):
     db: Session = SessionLocal()
 
     try:
-        ai_responses, results = track_responses(ai_platfrom, "../config.yml")
+        ai_responses, results = track_responses(ai_platfrom, "app/config.yml")
         print(results)
         source_counter = Counter()
         for result in results:
