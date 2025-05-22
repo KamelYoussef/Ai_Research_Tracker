@@ -1,4 +1,5 @@
 from app.models.response import Response
+from app.models.sources import Sources
 from sqlalchemy.orm import Session
 
 
@@ -38,3 +39,35 @@ def store_response(db: Session, product: str, location: str, total_count: int, a
     db.refresh(response)  # Get the updated data (including the generated id)
 
     return response  # Return the stored response object
+
+
+def store_sources(
+    db: Session,
+    ai_platform: str,
+    date: str,
+    day: str,
+    sources: dict
+):
+    """
+    Store the sources dict as a new row in the database.
+
+    Args:
+        db: SQLAlchemy Session
+        ai_platform: AI platform name
+        date: date string, e.g. "202505"
+        day: day string, e.g. "22"
+        sources: dictionary of source URLs and counts
+
+    Returns:
+        The inserted Sources object
+    """
+    source_record = Sources(
+        ai_platform=ai_platform,
+        date=date,
+        day=day,
+        sources=sources
+    )
+    db.add(source_record)
+    db.commit()
+    db.refresh(source_record)
+    return source_record
