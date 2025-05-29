@@ -58,22 +58,22 @@ def main():
         st.write("")
         st.write("")
     with col3:
-        selected_locations = st.multiselect("Select Locations", all_locations)
+        selected_locations = st.multiselect("Select locations", all_locations)
     with col6:
         st.write("")
         st.write("")
-        select_all_products = st.checkbox("Select All Products")
+        select_all_products = st.checkbox("Select all keywords")
     with col5:
         if select_all_products:
-            st.multiselect("Select Products", all_products, disabled=True)
+            st.multiselect("Select keywords", all_products, disabled=True)
             selected_products = all_products
         else:
-            selected_products = st.multiselect("Select Products", all_products)
+            selected_products = st.multiselect("Select keywords", all_products)
 
     with col8:
         st.write("")
         st.write("")
-        select_all_ai_platforms = st.checkbox("Select All AI Platforms")
+        select_all_ai_platforms = st.checkbox("Select all AI Platforms")
     with col7:
         if select_all_ai_platforms:
             st.multiselect("Select AI Platforms", all_ai_platforms, disabled=True)
