@@ -132,3 +132,27 @@ def stats_by_location(month: int, selected_location: str, competitor_flag) -> pd
 def convert_df(df):
     """Converts a pandas dataframe to a CSV string."""
     return df.to_csv(index=False)
+
+
+def get_location_scores(month, locations, competitor_flag):
+    scores = []
+
+    for loc in locations:
+        # Call your function to get data for this location
+        data = stats_by_location(month, loc, competitor_flag)
+
+        # Convert data to DataFrame
+        df = pd.DataFrame(data)
+
+        # Calculate total sum and count of numeric values
+        total_sum = df.select_dtypes(include='number').sum().sum()
+        total_count = df.select_dtypes(include='number').count().sum()
+
+        # Calculate average score safely
+        avg_score = round(float(total_sum / total_count), 1) if total_count > 0 else 0
+
+        # Collect result
+        scores.append({"location": loc, "score": avg_score})
+
+    # Return DataFrame with location and score
+    return pd.DataFrame(scores)

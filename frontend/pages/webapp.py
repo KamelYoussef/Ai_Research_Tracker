@@ -6,9 +6,10 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
     validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month,\
     get_sources, dict_to_text
-from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart
+from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart, \
+    display_map_with_score_colors
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
-    fetch_and_process_data
+    fetch_and_process_data, get_location_scores
 from components.header import render_tooltip_heading
 
 # Check the login state
@@ -90,13 +91,38 @@ with col2:
         unsafe_allow_html=True)
     plot_rank_chart(get_ranks_full_year(month, competitor_flags[choice]))
 
-st.divider()
-
-st.markdown(f"<h3 style='text-align: left;'>Analysis by Platform</h3>", unsafe_allow_html=True)
+st.markdown(f"<h3 style='text-align: left;'>Visibility score by location</h3>", unsafe_allow_html=True)
 
 # Display ai_platforms scores and graphs
 locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month, competitor_flags[choice])
 keywords_presence = keywords_data(month, competitor_flags[choice])
+
+display_map_with_score_colors(get_location_scores(month, locations, competitor_flags[choice]))
+st.markdown("""
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 30px; height: 20px; background-color: rgb(0, 100, 255);"></div> Low Score
+        <div style="width: 30px; height: 20px; background-color: rgb(255, 0, 0);"></div> High Score
+    </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+# Lists for Top Locations and Opportunities
+col4, col5, col6 = st.columns(3)
+with col4:
+    st.markdown(f"<h4 style='text-align: left;'>Top-Performing Locations: 🚀</h4>", unsafe_allow_html=True)
+    st.write("\n".join(f"- {location}" for location in top_locations(month, competitor_flags[choice])[:5]))
+with col5:
+    st.markdown(f"<h4 style='text-align: left;'>Areas for Opportunity: 🎯</h4>", unsafe_allow_html=True)
+    st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice])[-5:]))))
+with col6:
+    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight:</h4>", unsafe_allow_html=True)
+    top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice])
+    st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
+
+st.divider()
+
+st.markdown(f"<h3 style='text-align: left;'>Analysis by Platform</h3>", unsafe_allow_html=True)
 
 columns = st.columns(3)
 for model, score, locations_showed, locations_no_results, keyword_presence, column in zip(
@@ -137,21 +163,6 @@ with st.expander("How to interpret this pie chart ? ℹ️"):
 
     ⚠️ **Locations in “Not Showed” should be flagged.** These represent areas with **zero brand visibility** in AI-generated answers — a potential risk that may require further investigation or action.
     """)
-
-st.divider()
-
-# Lists for Top Locations and Opportunities
-col4, col5, col6 = st.columns(3)
-with col4:
-    st.markdown(f"<h4 style='text-align: left;'>Top-Performing Locations: 🚀</h4>", unsafe_allow_html=True)
-    st.write("\n".join(f"- {location}" for location in top_locations(month, competitor_flags[choice])[:5]))
-with col5:
-    st.markdown(f"<h4 style='text-align: left;'>Areas for Opportunity: 🎯</h4>", unsafe_allow_html=True)
-    st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice])[-5:]))))
-with col6:
-    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight:</h4>", unsafe_allow_html=True)
-    top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice])
-    st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
 
 st.divider()
 
