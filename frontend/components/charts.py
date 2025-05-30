@@ -2,6 +2,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import altair as alt
 import streamlit as st
+import pydeck as pdk
+import pandas as pd
+import json
 
 def plot_pie_chart(data):
     return px.pie(
@@ -85,3 +88,56 @@ def plot_rank_chart(data):
     )
 
     st.altair_chart(chart, use_container_width=True)
+
+
+def display_map_with_score_colors(df_scores):
+
+    # Load location data
+    with open("data/geo.json") as f:
+        locations = json.load(f)
+    df_locations = pd.DataFrame(locations)
+
+    # Merge with scores
+    df = df_locations.merge(df_scores, on="location", how="left")
+    df['score'] = df['score'].fillna(0)
+
+    # Map to RGB color: blue (low) → red (high)
+    def score_to_color(s):
+        r = int(s * 255 / 100)
+        g = int((1 - s / 100) * 100)
+        b = int((1 - s / 100) * 255)
+        return [r, g, b, 200]  # Last is alpha
+
+    df['color'] = df['score'].apply(score_to_color)
+
+    # Center view
+    center_lat = (df['latitude'].min() + df['latitude'].max()) / 2
+    center_lon = (df['longitude'].min() + df['longitude'].max()) / 2
+
+    # Define view state
+    view_state = pdk.ViewState(
+        latitude=center_lat,
+        longitude=center_lon,
+        zoom=3.6,
+        pitch=0
+    )
+
+    # Define layer
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=df,
+        get_position='[longitude, latitude]',
+        get_color='color',
+        get_radius=30000,
+        pickable=True
+    )
+
+    # Show map
+    st.pydeck_chart(pdk.Deck(
+        layers=[layer],
+        initial_view_state=view_state,
+        tooltip={"text": "{location}\nScore: {score}"},
+        map_style="mapbox://styles/mapbox/light-v9"
+    ))
+
+
