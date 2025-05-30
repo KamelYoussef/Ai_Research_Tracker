@@ -1,6 +1,6 @@
 import yaml
 from app.services.ai_api import get_ai_response
-from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts, ranking
+from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts, ranking, get_sentiment_score
 from concurrent.futures import ThreadPoolExecutor
 from app.models.response import Response
 from app.models.sources import Sources
@@ -72,6 +72,7 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
         query = prompt.format(keyword=product, location=location)
         ai_response, sources = get_ai_response(query+" CANADA", ai_platform)
         rank = ranking(ai_response, search_phrases)
+        sentiment = get_sentiment_score(ai_response, search_phrases)
         match_results = find_words_in_texts(ai_response, search_phrases)
         competitors = find_competitors_in_texts(ai_response, competitors)
 
@@ -84,6 +85,7 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             "matches": match_results,
             "competitors": competitors,
             "rank": rank,
+            "sentiment":sentiment,
             "sources": sources
         }
     except Exception as e:
@@ -161,7 +163,6 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
                 print(f"Error processing task: {e}")
 
     return ai_responses, results
-
 
 
 def get_counts_from_config(config_path):

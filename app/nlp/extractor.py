@@ -84,3 +84,33 @@ def ranking(text, search_phrases):
     return None
 
 
+def extract_sentiment(text):
+    response = client_gemini.models.generate_content(
+        model="gemini-1.5-flash",
+        contents=f"Extract only the names of insurance provider organizations and their associated sentiment scores \
+        from the text below. Return the results as a JSON array. Each object in the array should have two keys:\
+    'organization': the full name of the insurance provider 'sentiment_score': a numeric score between -1 and 1 \
+    indicating the overall sentiment toward the organization (where -1 is very negative, 0 is neutral, and 1 is very\
+     positive) \n Do not include any extra text or explanations — only return the JSON array.:\n\n{text}\n\n")
+
+    raw = response.text.strip()
+    cleaned = re.sub(r"^```json|^```|```$", "", raw, flags=re.MULTILINE).strip()
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        print("❌ Failed to parse response as JSON. Raw output:")
+        print(cleaned)
+        return []
+
+
+def get_sentiment_score(data, search_phrases):
+    text = extract_sentiment(data)
+    search_phrases_lower = [phrase.lower() for phrase in search_phrases]
+
+    for entry in text:
+        org_name_lower = entry['organization'].lower()
+        for alias in search_phrases_lower:
+            if alias in org_name_lower:
+                return entry['sentiment_score']
+
+    return None

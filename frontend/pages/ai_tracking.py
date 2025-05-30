@@ -120,11 +120,13 @@ def main():
                                     location = insight.get("location", "Unknown Location")
                                     total_count = insight.get("total_count", "N/A")
                                     rank = rank if (rank := insight.get("rank")) is not None else "N/A"
+                                    sentiment = sentiment if (sentiment := insight.get("sentiment")) is not None else "N/A"
                                     sources = insight.get("sources", "")
 
                                     # Use an expander to display details
                                     with st.expander(
-                                            f"{location} | {product} | Appearance: {bool(total_count)} | Position : {rank}"
+                                            f"{location} | {product} | Appearance: {bool(total_count)} | \
+                                            Position : {rank} | Sentiment : {sentiment}"
                                     ):
                                         st.write(ai_response)
                                         if sources:
