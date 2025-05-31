@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
     validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month,\
-    get_sources, dict_to_text, get_avg_sentiment, get_sentiments_full_year
+    get_sources, dict_to_text, get_avg_sentiment, get_sentiments_full_year, get_avg_sentiment_by_platform
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart, \
     display_map_with_score_colors, plot_sentiment_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
@@ -159,6 +159,9 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
                     f"</h6>", unsafe_allow_html=True)
         st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
                     f"Average position : {get_avg_rank_by_platform(month, model, competitor_flags[choice])} "
+                    f"</h6>", unsafe_allow_html=True)
+        st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
+                    f"Average position : {get_avg_sentiment_by_platform(month, model, competitor_flags[choice])} "
                     f"</h6>", unsafe_allow_html=True)
 
         # Bar chart for Keyword Presence

@@ -383,3 +383,14 @@ def get_sentiments_full_year(from_month, flag_competitor):
     df = pd.DataFrame(data)
     df.set_index("month", inplace=True)
     return df
+
+
+def get_avg_sentiment_by_platform(month, ai_platform, flag_competitor):
+    if flag_competitor == "total_count":
+        if fetch_data("sentiment", month, ai_platform):
+            if fetch_data("sentiment", month, ai_platform).get("sentiment", []) is not None:
+                return round(float(fetch_data("sentiment", month,ai_platform).get("sentiment", [])),1)
+            else:
+                return "N/A"
+    else:
+        return "N/A"
