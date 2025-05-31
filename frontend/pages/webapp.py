@@ -161,7 +161,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
                     f"Average position : {get_avg_rank_by_platform(month, model, competitor_flags[choice])} "
                     f"</h6>", unsafe_allow_html=True)
         st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Average position : {get_avg_sentiment_by_platform(month, model, competitor_flags[choice])} "
+                    f"Average sentiment : {get_avg_sentiment_by_platform(month, model, competitor_flags[choice])} "
                     f"</h6>", unsafe_allow_html=True)
 
         # Bar chart for Keyword Presence
