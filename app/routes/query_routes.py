@@ -9,7 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
     aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
     validate_token, verify_password, admin_required, hash_password, calculate_rank, calculate_rank_by_platform, \
-    get_aggregated_sources
+    get_aggregated_sources, calculate_sentiment
 
 
 router = APIRouter()
@@ -316,3 +316,24 @@ async def get_sources(
         raise e  # If token is invalid, HTTPException will be raised in validate_token()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
+
+
+@router.get("/sentiment/{month}")
+async def get_sentiment(
+        month: str,
+        db: Session = Depends(get_db),
+        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+):
+    try:
+        # Validate the token using the validate_token function
+        validate_token(credentials)
+
+        # If token is valid, calculate the AI score
+        sentiment = calculate_sentiment(db, month)
+
+        return {"month": month, "sentiment": sentiment}
+
+    except HTTPException as e:
+        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating sentiment: {str(e)}")

@@ -349,3 +349,37 @@ def dict_to_text(source_dict: dict) -> str:
     """
     lines = [f'"{source}" – {count} mention{"s" if count != 1 else ""}' for source, count in source_dict.items()]
     return "\n\n".join(lines)
+
+
+def get_avg_sentiment(month, flag_competitor):
+    if flag_competitor == "total_count":
+        if fetch_data("sentiment", month):
+            if fetch_data("sentiment", month).get("sentiment", []) is not None:
+                return round(float(fetch_data("sentiment", month).get("sentiment", [])),1)
+            else:
+                return "N/A"
+    else:
+        return "N/A"
+
+
+def get_sentiments_full_year(from_month, flag_competitor):
+    year = int(str(from_month)[:4])
+    month = int(str(from_month)[4:6])
+    end_date = datetime(year, month, 1)
+
+    data = []
+
+    # Last 12 months: from (end_date - 11 months) to end_date
+    for i in range(12):
+        current_date = end_date - relativedelta(months=11 - i)
+        yyyymm = int(current_date.strftime("%Y%m"))
+        sentiment = get_avg_sentiment(yyyymm, flag_competitor)
+
+        data.append({
+            "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
+            "sentiment": 0 if sentiment == "N/A" else sentiment
+        })
+
+    df = pd.DataFrame(data)
+    df.set_index("month", inplace=True)
+    return df

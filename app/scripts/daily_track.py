@@ -32,6 +32,7 @@ def daily_track(ai_platfrom):
             competitor_2 = competitors.get('westland')
             competitor_3 = competitors.get('brokerlink')
             rank = result.get('rank')
+            sentiment = result.get('sentiment')
             sources = result.get('sources', [])
             source_counter.update(sources)
 
@@ -46,7 +47,8 @@ def daily_track(ai_platfrom):
                 competitor_1=competitor_1,
                 competitor_2=competitor_2,
                 competitor_3=competitor_3,
-                rank=rank
+                rank=rank,
+                sentiment=sentiment
             )
         # Keep only the top 20 sources
         top_sources = dict(source_counter.most_common(20))

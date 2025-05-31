@@ -5,9 +5,9 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
     validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month,\
-    get_sources, dict_to_text
+    get_sources, dict_to_text, get_avg_sentiment, get_sentiments_full_year
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart, \
-    display_map_with_score_colors
+    display_map_with_score_colors, plot_sentiment_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data, get_location_scores
 from components.header import render_tooltip_heading
@@ -67,7 +67,7 @@ with header_col5:
         use_container_width=True
     )
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col1:
     # Display Total Score in a header
     render_tooltip_heading("Visibility score", "How often your brand appeared in AI-generated responses this month \
@@ -90,6 +90,29 @@ with col2:
         f"{get_avg_rank(month, competitor_flags[choice])}</h1>",
         unsafe_allow_html=True)
     plot_rank_chart(get_ranks_full_year(month, competitor_flags[choice]))
+
+with col3:
+    render_tooltip_heading("Average sentiment", "Average sentiment (scale: -1 to 1) based on AI-generated responses \
+    this month. Responses that did not mention your brand are excluded from the calculation.")
+    avg_sentiment = get_avg_sentiment(month, competitor_flags[choice])
+    if avg_sentiment != "N/A":
+        if avg_sentiment >= 0.6: sentiment_label = "Very Positive 😀"
+        elif avg_sentiment >= 0.25: sentiment_label = "Positive 🙂"
+        elif avg_sentiment <= -0.6: sentiment_label = "Very Negative 😡"
+        elif avg_sentiment <= -0.25: sentiment_label = "Negative 😕"
+        else: sentiment_label = "Neutral 😐"
+    else : sentiment_label ="N/A"
+    st.markdown(
+        f"""
+            <div style="display: inline-flex; align-items: center; margin-top: -30px;">
+                <h1 style="margin: 0;">{avg_sentiment}</h1>
+                <span style="font-size: 15px; margin-left: -15px;white-space: nowrap;">({sentiment_label})</span>
+            </div>
+            """,
+        unsafe_allow_html=True
+    )
+
+    plot_sentiment_chart(get_sentiments_full_year(month, competitor_flags[choice]))
 
 st.markdown(f"<h3 style='text-align: left;'>Visibility score by location</h3>", unsafe_allow_html=True)
 

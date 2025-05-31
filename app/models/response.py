@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float
 from app.database import Base
 
 
@@ -16,3 +16,4 @@ class Response(Base):
     competitor_2 = Column(Integer)
     competitor_3 = Column(Integer)
     rank = Column(Integer)
+    sentiment = Column(Float)

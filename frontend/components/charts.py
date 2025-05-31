@@ -69,7 +69,7 @@ def plot_ai_scores_chart(data):
         x=alt.X('Month:N', sort=month_order, axis=alt.Axis(title='')),
         y=alt.Y('Visibility score:Q', scale=alt.Scale(domain=[0, 100]),axis=alt.Axis(title=''))
     ).properties(
-        height=250
+        height=200
     )
 
     st.altair_chart(chart, use_container_width=True)
@@ -84,7 +84,7 @@ def plot_rank_chart(data):
         x=alt.X("month:N", sort=month_order, axis=alt.Axis(title='')),
         y=alt.Y("rank:Q", axis=alt.Axis(title=''), scale=alt.Scale(domain=[df["rank"].max(), 0])),
     ).properties(
-        height=250
+        height=200
     )
 
     st.altair_chart(chart, use_container_width=True)
@@ -141,3 +141,16 @@ def display_map_with_score_colors(df_scores):
     ))
 
 
+def plot_sentiment_chart(data):
+    df = data.reset_index()
+    df.columns = ["month", "sentiment"]
+    month_order = df["month"].tolist()
+
+    chart = alt.Chart(df).mark_line(point=True).encode(
+        x=alt.X('month:N', sort=month_order, axis=alt.Axis(title='')),
+        y=alt.Y('sentiment:Q', scale=alt.Scale(domain=[-1,1]),axis=alt.Axis(title=''))
+    ).properties(
+        height=200
+    )
+
+    st.altair_chart(chart, use_container_width=True)

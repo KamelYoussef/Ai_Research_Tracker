@@ -450,3 +450,17 @@ def get_aggregated_sources(db: Session, ai_platform: str, month: str) -> dict:
 
     return dict(sorted(total_sources.items(), key=lambda x: x[1], reverse=True))
 
+
+def calculate_sentiment(db: Session, month: str):
+    """
+    Calculate the average rank for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        avg_rank : Average rank for the given month, or None if no data is found.
+    """
+    avg_sentiment = db.query(func.avg(Response.sentiment)).filter(Response.date == month).scalar()
+    return avg_sentiment  # Returns None if no records are found
