@@ -47,7 +47,6 @@ def chatgpt(prompt):
         )
         annotations = completion.choices[0].message.annotations
         sources = extract_base_domains([annotation.url_citation.url for annotation in annotations if annotation.type == 'url_citation'])
-        print(sources)
         return completion.choices[0].message.content, sources
     except Exception as e:
         print(f"Error getting response from OpenAI: {e}")
