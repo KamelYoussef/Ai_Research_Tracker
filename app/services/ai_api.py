@@ -50,7 +50,7 @@ def chatgpt(prompt):
         return completion.choices[0].message.content, sources
     except Exception as e:
         print(f"Error getting response from OpenAI: {e}")
-        return None
+        return "", []
 
 
 def gemini(prompt):
@@ -73,7 +73,7 @@ def gemini(prompt):
 
     except Exception as e:
         print(f"Error getting response from Gemini: {e}")
-        return None
+        return "", []
 
 
 def perplexity(prompt):
@@ -92,7 +92,8 @@ def perplexity(prompt):
         return answer, sources
 
     except Exception as e:
-        return f"Error: {e}"
+        print(f"Error getting response from perplexity: {e}")
+        return "", []
 
 
 def extract_base_domains(urls):
