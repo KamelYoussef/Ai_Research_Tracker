@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Boolean
 from app.database import Base
 
 
@@ -8,6 +8,7 @@ class Response(Base):
     id = Column(Integer, primary_key=True, index=True)
     product = Column(String, index=True)
     location = Column(String, index=True)
+    is_city = Column(Boolean) #ALTER TABLE ai_responses ADD COLUMN is_city BOOLEAN;
     total_count = Column(Integer)
     ai_platform = Column(String, index=True)
     date = Column(String(6), index=True)

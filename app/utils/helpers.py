@@ -179,7 +179,8 @@ def get_counts_from_config(config_path):
         config = load_and_validate_config(config_path)
 
         # Count locations and products
-        n_locations = len(config['locations'])
+        n_provinces = 6 # provinces in locations in config.yml
+        n_locations = len(config['locations']) - n_provinces
         n_products = len(config['products'])
         n_ai_platforms = len(config['ai_platforms'])
 
@@ -190,13 +191,14 @@ def get_counts_from_config(config_path):
         raise RuntimeError(f"Error retrieving counts from configuration: {str(e)}")
 
 
-def aggregate_total_by_product(db: Session, month: str):
+def aggregate_total_by_product(db: Session, month: str, is_city: bool = True):
     """
     Aggregate total_count by product for a given month.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
+        is_city
 
     Returns:
         List[dict]: Aggregated totals by product.
@@ -212,6 +214,7 @@ def aggregate_total_by_product(db: Session, month: str):
             Response.ai_platform
         )
         .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
         .group_by(Response.day, Response.product, Response.ai_platform)
         .all()
     )
@@ -230,7 +233,7 @@ def aggregate_total_by_product(db: Session, month: str):
     ]
 
 
-def aggregate_total_by_location(db: Session, month: str):
+def aggregate_total_by_location(db: Session, month: str, is_city: bool = True):
     """
     Aggregate total_count by location for a given month, including competitor data.
 
@@ -252,6 +255,7 @@ def aggregate_total_by_location(db: Session, month: str):
             Response.ai_platform
         )
         .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
         .group_by(Response.day, Response.location, Response.ai_platform)
         .all()
     )
@@ -269,7 +273,7 @@ def aggregate_total_by_location(db: Session, month: str):
     ]
 
 
-def aggregate_total_by_product_and_location(db: Session, month: str):
+def aggregate_total_by_product_and_location(db: Session, month: str, is_city: bool = True):
     """
     Aggregate total_count by product and location for a given month, including competitor data.
 
@@ -292,6 +296,7 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
             Response.ai_platform
         )
         .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
         .group_by(Response.product, Response.location, Response.day, Response.ai_platform)
         .all()
     )
@@ -310,7 +315,7 @@ def aggregate_total_by_product_and_location(db: Session, month: str):
     ]
 
 
-def calculate_score_ai(db: Session, month: str, config_path, flag_competitor):
+def calculate_score_ai(db: Session, month: str, config_path, flag_competitor, is_city: bool = True):
     """
     Calculate the AI score by summing the total_count for a given month.
 
@@ -325,8 +330,9 @@ def calculate_score_ai(db: Session, month: str, config_path, flag_competitor):
     """
     # Query to sum the total_count for all products, locations, or combinations in the month
     result = db.query(func.coalesce(func.sum(getattr(Response, flag_competitor)), 0)) \
-               .filter(Response.date == month) \
-               .scalar()
+        .filter(Response.date == month) \
+        .filter(Response.is_city == is_city) \
+        .scalar()
 
     n_locations, n_products, n_ai_platforms = get_counts_from_config(config_path)
     score = result / (n_locations * n_products * n_ai_platforms) / 4 * 100  # 4 is for 4 weeks in the month
@@ -394,34 +400,47 @@ def admin_required(payload: dict = Depends(validate_token)):
     return payload
 
 
-def calculate_rank(db: Session, month: str):
+def calculate_rank(db: Session, month: str, is_city: bool = True):
     """
-    Calculate the average rank for a given month.
+    Calculate the average rank for a given month, optionally filtered by city status.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
+        is_city (bool): Filter rows based on whether location is a city. Default is True.
 
     Returns:
         avg_rank : Average rank for the given month, or None if no data is found.
     """
-    avg_rank = db.query(func.avg(Response.rank)).filter(Response.date == month).scalar()
+    avg_rank = (
+        db.query(func.avg(Response.rank))
+        .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
+        .scalar()
+    )
     return avg_rank  # Returns None if no records are found
 
 
-def calculate_rank_by_platform(db: Session, month: str, ai_platform: str):
+def calculate_rank_by_platform(db: Session, month: str, ai_platform: str, is_city: bool = True):
     """
-    Calculate the average rank for a specific AI platform and month.
+    Calculate the average rank for a specific AI platform and month, filtered by city status.
 
     Args:
         db (Session): SQLAlchemy session.
-        platform (str): The name of the AI platform.
         month (str): The month in 'YYYYMM' format.
+        ai_platform (str): The name of the AI platform.
+        is_city (bool): Filter rows based on whether location is a city. Default is True.
 
     Returns:
         avg_rank: The average rank, or None if no data is found.
     """
-    avg_rank = db.query(func.avg(Response.rank)).filter(Response.ai_platform == ai_platform, Response.date == month).scalar()
+    avg_rank = (
+        db.query(func.avg(Response.rank))
+        .filter(Response.ai_platform == ai_platform)
+        .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
+        .scalar()
+    )
     return avg_rank
 
 
@@ -451,32 +470,45 @@ def get_aggregated_sources(db: Session, ai_platform: str, month: str) -> dict:
     return dict(sorted(total_sources.items(), key=lambda x: x[1], reverse=True))
 
 
-def calculate_sentiment(db: Session, month: str):
+def calculate_sentiment(db: Session, month: str, is_city: bool = True):
     """
-    Calculate the average sentiment for a given month.
+    Calculate the average sentiment for a given month, optionally filtered by city status.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
+        is_city (bool): Filter rows based on whether location is a city. Default is True.
 
     Returns:
-        avg_rank : Average sentiment for the given month, or None if no data is found.
+        avg_sentiment : Average sentiment for the given month, or None if no data is found.
     """
-    avg_sentiment = db.query(func.avg(Response.sentiment)).filter(Response.date == month).scalar()
+    avg_sentiment = (
+        db.query(func.avg(Response.sentiment))
+        .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
+        .scalar()
+    )
     return avg_sentiment
 
 
-def calculate_sentiment_by_platform(db: Session, month: str, ai_platform: str):
+def calculate_sentiment_by_platform(db: Session, month: str, ai_platform: str, is_city: bool = True):
     """
-    Calculate the average sentiment for a specific AI platform and month.
+    Calculate the average sentiment for a specific AI platform and month, optionally filtered by city status.
 
     Args:
         db (Session): SQLAlchemy session.
-        platform (str): The name of the AI platform.
+        ai_platform (str): The name of the AI platform.
         month (str): The month in 'YYYYMM' format.
+        is_city (bool): Filter rows based on whether location is a city. Default is True.
 
     Returns:
-        avg_rank: The average sentiment, or None if no data is found.
+        avg_sentiment: The average sentiment, or None if no data is found.
     """
-    avg_sentiment = db.query(func.avg(Response.sentiment)).filter(Response.ai_platform == ai_platform, Response.date == month).scalar()
+    avg_sentiment = (
+        db.query(func.avg(Response.sentiment))
+        .filter(Response.ai_platform == ai_platform)
+        .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
+        .scalar()
+    )
     return avg_sentiment
