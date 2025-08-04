@@ -335,6 +335,8 @@ def calculate_score_ai(db: Session, month: str, config_path, flag_competitor, is
         .scalar()
 
     n_locations, n_products, n_ai_platforms = get_counts_from_config(config_path)
+    if is_city is False:
+        n_locations = 6 # number of provinces
     score = result / (n_locations * n_products * n_ai_platforms) / 4 * 100  # 4 is for 4 weeks in the month
 
     return score if score else 0
