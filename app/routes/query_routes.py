@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.dependencies import get_db
@@ -90,12 +90,18 @@ async def submit_query(prompt, ai_platform):
 
 
 @router.get("/aggregate_total_by_product/{month}")
-async def aggregate_total_by_product_route(month: str, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def aggregate_total_by_product_route(
+    month: str,
+    is_city: bool = Query(True, description="Filter by city (True) or province (False)"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     """
     Aggregate total_count by product for a given month.
 
     Args:
         month (str): Month in YYYYMM format.
+        is_city (bool): Filter by city or region.
         db (Session): SQLAlchemy session.
 
     Returns:
@@ -103,39 +109,50 @@ async def aggregate_total_by_product_route(month: str, db: Session = Depends(get
     """
     try:
         validate_token(credentials)
-        # Call the helper function to aggregate data
-        aggregated_data = aggregate_total_by_product(db=db, month=month)
+        aggregated_data = aggregate_total_by_product(db=db, month=month, is_city=is_city)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error aggregating data: {str(e)}")
 
 
 @router.get("/aggregate_total_by_location/{month}")
-async def aggregate_total_by_location_route(month: str, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def aggregate_total_by_location_route(
+    month: str,
+    is_city: bool = Query(True, description="Filter by city (True) or province (False)"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     """
     Get the aggregated total_count by location for a given month.
 
     Args:
         month (str): Month in YYYYMM format.
+        is_city (bool): Whether to filter by city (True) or region (False).
 
     Returns:
         JSON: Aggregated totals by location.
     """
     try:
         validate_token(credentials)
-        aggregated_data = aggregate_total_by_location(db, month)
+        aggregated_data = aggregate_total_by_location(db=db, month=month, is_city=is_city)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         return {"error": str(e)}
 
 
 @router.get("/aggregate_total_by_product_and_location/{month}")
-async def aggregate_total_by_product_and_location_route(month: str, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def aggregate_total_by_product_and_location_route(
+    month: str,
+    is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
     """
     Endpoint to aggregate total_count by product and location for a given month.
 
     Args:
         month (str): Month in YYYYMM format.
+        is_city (bool): Filter data for cities or regions.
         db (Session): SQLAlchemy session.
 
     Returns:
@@ -143,7 +160,7 @@ async def aggregate_total_by_product_and_location_route(month: str, db: Session 
     """
     try:
         validate_token(credentials)
-        aggregated_data = aggregate_total_by_product_and_location(db, month)
+        aggregated_data = aggregate_total_by_product_and_location(db, month, is_city)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         return {"error": str(e)}
@@ -151,33 +168,34 @@ async def aggregate_total_by_product_and_location_route(month: str, db: Session 
 
 @router.get("/score_ai/{month}/{flag_competitor}")
 async def get_score_ai(
-        month: str,
-        flag_competitor: str,
-        db: Session = Depends(get_db),
-        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+    month: str,
+    flag_competitor: str,
+    is_city: bool = Query(True, description="Filter by city (True) or region (False)"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """
     Calculate and return the AI score for a given month, with token validation.
 
     Args:
         month (str): Month in YYYYMM format.
-        flag_competitor (str): Flag representing the competitor.
-        db (Session): Database session dependency.
+        flag_competitor (str): Competitor flag.
+        is_city (bool): Filter by city or region.
+        db (Session): SQLAlchemy session.
 
     Returns:
         dict: The month and corresponding AI score.
     """
     try:
-        # Validate the token using the validate_token function
         validate_token(credentials)
 
-        # If token is valid, calculate the AI score
-        score = calculate_score_ai(db, month, "app/config.yml", flag_competitor)
+        # Pass is_city to the score function (make sure it's supported inside that function)
+        score = calculate_score_ai(db, month, "app/config.yml", flag_competitor, is_city=is_city)
 
         return {"month": month, "score_ai": round(float(score), 1)}
 
     except HTTPException as e:
-        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
 
@@ -245,116 +263,105 @@ def delete_user(username: str, db: Session = Depends(get_db), _: dict = Depends(
 
 @router.get("/rank/{month}")
 async def get_rank(
-        month: str,
-        db: Session = Depends(get_db),
-        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+    month: str,
+    is_city: bool = Query(True, description="Filter by city (True) or region (False)"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
+    """
+    Get the AI rank for a given month, with optional filtering by city or region.
+
+    Args:
+        month (str): Month in YYYYMM format.
+        is_city (bool): True for city-level, False for region-level.
+        db (Session): SQLAlchemy session.
+
+    Returns:
+        dict: Rank data.
+    """
     try:
-        # Validate the token using the validate_token function
         validate_token(credentials)
 
-        # If token is valid, calculate the AI score
-        position = calculate_rank(db, month)
+        # Make sure `calculate_rank` supports is_city
+        position = calculate_rank(db, month, is_city=is_city)
 
         return {"month": month, "rank": position}
 
     except HTTPException as e:
-        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+        raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error calculating rank: {str(e)}")
 
 
 @router.get("/rank/{month}/{ai_platform}")
 async def get_rank_by_platform(
-        month: str,
-        ai_platform: str,
-        db: Session = Depends(get_db),
-        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+    month: str,
+    ai_platform: str,
+    is_city: bool = Query(True, description="Filter by city or region"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     try:
-        # Validate the token using the validate_token function
         validate_token(credentials)
 
-        # If token is valid, calculate the AI score
-        position = calculate_rank_by_platform(db, month, ai_platform)
+        # Make sure your business logic supports is_city as well
+        position = calculate_rank_by_platform(db, month, ai_platform, is_city=is_city)
+
         return {"month": month, "rank": position, "ai_platform": ai_platform}
 
     except HTTPException as e:
-        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
 
 
 @router.get("/sources/{month}/{ai_platform}")
 async def get_sources(
-        month: str,
-        ai_platform: str,
-        db: Session = Depends(get_db),
-        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+    month: str,
+    ai_platform: str,
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
-    """
-    Return the sources for a given month, with token validation.
-
-    Args:
-        month (str): Month in YYYYMM format.
-        flag_competitor (str): Flag representing the competitor.
-        db (Session): Database session dependency.
-
-    Returns:
-        dict: The month and corresponding AI score.
-    """
     try:
-        # Validate the token using the validate_token function
         validate_token(credentials)
-
-        # If token is valid, calculate the AI score
         sources = get_aggregated_sources(db, ai_platform, month)
-
         return {"month": month, "ai_platform": ai_platform, "sources": sources}
-
     except HTTPException as e:
-        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
 
 
 @router.get("/sentiment/{month}")
 async def get_sentiment(
-        month: str,
-        db: Session = Depends(get_db),
-        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+    month: str,
+    is_city: bool = Query(True, description="Filter by city or region"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     try:
-        # Validate the token using the validate_token function
         validate_token(credentials)
-
-        # If token is valid, calculate the AI score
-        sentiment = calculate_sentiment(db, month)
-
+        sentiment = calculate_sentiment(db, month, is_city=is_city)  # pass is_city
         return {"month": month, "sentiment": sentiment}
-
     except HTTPException as e:
-        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating sentiment: {str(e)}")
 
 
 @router.get("/sentiment/{month}/{ai_platform}")
 async def get_sentiment_by_platform(
-        month: str,
-        ai_platform: str,
-        db: Session = Depends(get_db),
-        credentials: HTTPAuthorizationCredentials = Depends(security)  # Token validation here
+    month: str,
+    ai_platform: str,
+    is_city: bool = Query(True, description="Filter by city or region"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     try:
-        # Validate the token using the validate_token function
         validate_token(credentials)
-
-        # If token is valid, calculate the AI score
-        sentiment = calculate_sentiment_by_platform(db, month, ai_platform)
+        sentiment = calculate_sentiment_by_platform(db, month, ai_platform, is_city=is_city)  # pass is_city
         return {"month": month, "sentiment": sentiment, "ai_platform": ai_platform}
-
     except HTTPException as e:
-        raise e  # If token is invalid, HTTPException will be raised in validate_token()
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")

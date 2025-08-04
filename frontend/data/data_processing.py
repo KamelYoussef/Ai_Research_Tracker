@@ -3,20 +3,20 @@ import streamlit as st
 import pandas as pd
 
 
-def ai_platforms_score(month, competitor_flag):
-    df = download_data(month, competitor_flag)[2]
+def ai_platforms_score(month, competitor_flag, is_city=True):
+    df = download_data(month, competitor_flag, is_city=is_city)[2]
     n_locations, n_products, n_ai_platforms = df["location"].nunique(), df["product"].nunique(), df["ai_platform"].nunique()
     ai_scores = df.groupby("ai_platform")[["Total Count"]].sum().reset_index()
     ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / 4 * 100).round(1)
     return ai_scores.set_index('ai_platform')['Total Count'].to_dict()
 
 
-def keywords_data(month, competitor_flag):
+def keywords_data(month, competitor_flag, is_city=True):
     # Process the data
-    df = download_data(month, competitor_flag)[0]
+    df = download_data(month, competitor_flag, is_city=is_city)[0]
 
     ai_platforms = df["ai_platform"].unique()
-    df["Total Count"] = (df["Total Count"] / len(fetch_param(month, competitor_flag)[0]) / 4 * 100).astype(float).round(2)
+    df["Total Count"] = (df["Total Count"] / len(fetch_param(month, competitor_flag, is_city=is_city)[0]) / 4 * 100).astype(float).round(2)
     x = df.groupby(["ai_platform", "product"])[["Total Count"]].sum()
 
     keywords_presence = {}
@@ -27,14 +27,14 @@ def keywords_data(month, competitor_flag):
 
 
 @st.cache_data
-def fetch_and_process_data(month, competitor_flag):
-    locations, keywords, models = fetch_param(month, competitor_flag)
-    scores = ai_platforms_score(month, competitor_flag)
-    locations_data_df = locations_data(month, competitor_flag)
+def fetch_and_process_data(month, competitor_flag, is_city=True):
+    locations, keywords, models = fetch_param(month, competitor_flag, is_city=is_city)
+    scores = ai_platforms_score(month, competitor_flag, is_city=is_city)
+    locations_data_df = locations_data(month, competitor_flag, is_city=is_city)
     return locations, keywords, models, scores, locations_data_df
 
 
-def locations_data(month, competitor_flag):
+def locations_data(month, competitor_flag, is_city=True):
     """
     Calculate the number of locations that showed results and the number of locations with no results
     for each AI platform, ensuring the output lists match the total number of locations.
@@ -48,7 +48,7 @@ def locations_data(month, competitor_flag):
           where values are lists of counts for each AI platform.
     """
     # Process the data
-    df = download_data(month, competitor_flag)[1]
+    df = download_data(month, competitor_flag, is_city=is_city)[1]
 
     # Get the unique ai_platform values
     ai_platforms = df["ai_platform"].unique()
@@ -74,19 +74,19 @@ def locations_data(month, competitor_flag):
     }
 
 
-def top_locations(month, competitor_flag):
-    df = download_data(month, competitor_flag)[1]
+def top_locations(month, competitor_flag, is_city=True):
+    df = download_data(month, competitor_flag, is_city)[1]
     ranking_df = df.groupby("location")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
     return ranking_df['location'].tolist()
 
 
-def top_low_keywords(month, competitor_flag):
-    df = download_data(month, competitor_flag)[0]
+def top_low_keywords(month, competitor_flag, is_city=True):
+    df = download_data(month, competitor_flag, is_city=is_city)[0]
     ranking_df = df.groupby("product")[["Total Count"]].sum().reset_index().sort_values(by='Total Count', ascending=False)
     return ranking_df.iloc[0]["product"], ranking_df.iloc[-1]["product"]
 
 
-def stats_by_location(month: int, selected_location: str, competitor_flag) -> pd.DataFrame:
+def stats_by_location(month: int, selected_location: str, competitor_flag, is_city=True) -> pd.DataFrame:
     """
     Generate a pivot table showing statistics by product and AI platform for a given location and month.
 
@@ -98,7 +98,7 @@ def stats_by_location(month: int, selected_location: str, competitor_flag) -> pd
         pd.DataFrame: A pivot table with products as rows, AI platforms as columns, and normalized total counts as values.
     """
     # Process and pivot the data
-    df = download_data(month, competitor_flag)[2]
+    df = download_data(month, competitor_flag, is_city=is_city)[2]
 
     # Validate inputs
     if selected_location not in df["location"].unique():
@@ -134,12 +134,12 @@ def convert_df(df):
     return df.to_csv(index=False)
 
 
-def get_location_scores(month, locations, competitor_flag):
+def get_location_scores(month, locations, competitor_flag, is_city=True):
     scores = []
 
     for loc in locations:
         # Call your function to get data for this location
-        data = stats_by_location(month, loc, competitor_flag)
+        data = stats_by_location(month, loc, competitor_flag, is_city=is_city)
 
         # Convert data to DataFrame
         df = pd.DataFrame(data)

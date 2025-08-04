@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 
 def store_response(db: Session, product: str, location: str, total_count: int, ai_platform: str, date: str, day: str,
-                   competitor_1: str, competitor_2: str, competitor_3: str, rank: int, sentiment: float):
+                   competitor_1: str, competitor_2: str, competitor_3: str, rank: int, sentiment: float, is_city: bool):
     """
     Store the AI-generated response in the database.
 
@@ -19,10 +19,13 @@ def store_response(db: Session, product: str, location: str, total_count: int, a
     Returns:
     - The stored Response object
     """
+    provinces = ['Manitoba', 'Alberta', 'British Columbia', 'Saskatchewan', 'Ontario', 'Canada']
+
     # Create a new Response object with the data, including the query and response text
     response = Response(
         product=product,
         location=location,
+        is_city=True if location not in provinces else False,
         total_count=total_count,
         ai_platform=ai_platform,
         date=date,
