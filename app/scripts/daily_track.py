@@ -6,6 +6,23 @@ from app.utils.helpers import track_responses
 from app.database import Base, engine
 import time
 from collections import Counter
+import logging
+import os
+
+# Make sure log directory exists
+os.makedirs("logs", exist_ok=True)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("logs/daily_track.log", mode='w'),  # Overwrite on each run
+        logging.StreamHandler()  # Optional: also log to terminal
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 
 def startup():
@@ -21,7 +38,7 @@ def daily_track(ai_platfrom):
 
     try:
         ai_responses, results = track_responses(ai_platfrom, "app/config.yml")
-        print(results)
+        logger.info(results)
         source_counter = Counter()
         for result in results:
             product = result.get('product')
@@ -60,7 +77,7 @@ def daily_track(ai_platfrom):
             sources=top_sources
         )
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
     finally:
         db.close()
 
@@ -71,13 +88,13 @@ if __name__ == "__main__":
 
     daily_track("CHATGPT")
     chat_time = time.time() - start_time
-    print(f"Time taken to execute chatgpt: {chat_time:.2f} seconds")
+    logger.info(f"Time taken to execute chatgpt: {chat_time:.2f} seconds")
 
     tmp = time.time()
     daily_track("PERPLEXITY")
     perplexity_time = time.time() - tmp
-    print(f"Time taken to execute perplexity: {perplexity_time:.2f} seconds")
+    logger.info(f"Time taken to execute perplexity: {perplexity_time:.2f} seconds")
 
     daily_track("GEMINI")
     gemini_time = time.time() - start_time - perplexity_time - chat_time
-    print(f"Time taken to execute gemini: {gemini_time:.2f} seconds")
+    logger.info(f"Time taken to execute gemini: {gemini_time:.2f}  seconds")
