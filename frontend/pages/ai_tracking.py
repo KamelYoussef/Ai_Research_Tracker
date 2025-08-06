@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import logout, fetch_param, get_date_today, fetch_response
+from streamlit_option_menu import option_menu
 
 
 if 'logged_in' in st.session_state and st.session_state.logged_in:
@@ -31,12 +32,27 @@ st.write(font_css, unsafe_allow_html=True)
 
 def main():
     # Sidebar buttons
-    if st.sidebar.button("Dashboard"):
+    with st.sidebar:
+        selected = option_menu(
+            menu_title="Menu",  # Optional
+            options=["Tracker", "Investigator", "Maps", "Clear Cache", "Logout", "Settings"],
+            icons=["eye", "search", "geo-alt", "arrow-clockwise", "box-arrow-left", "gear"],  # Optional icons
+            menu_icon="list",
+            default_index=1
+        )
+
+    if selected == "Tracker":
         st.switch_page("pages/webapp.py")
-    if st.sidebar.button("Clear Cache"):
+
+    elif selected == "Clear Cache":
         st.cache_data.clear()
-    if st.sidebar.button("Logout"):
+        st.success("Cache cleared!")
+
+    elif selected == "Logout":
         logout()
+
+    elif selected == "Settings":
+        st.switch_page("pages/user_management.py")
 
     # Fetch parameters
     with open(str(Path(__file__).resolve().parent.parent)+'/data/data.yml', 'r') as file:

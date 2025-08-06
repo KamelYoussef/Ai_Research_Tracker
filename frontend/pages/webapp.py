@@ -11,6 +11,7 @@ from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
     fetch_and_process_data, get_location_scores
 from components.header import render_tooltip_heading
+from streamlit_option_menu import option_menu
 
 # Check the login state
 if 'logged_in' in st.session_state and validate_token():
@@ -36,12 +37,7 @@ font_css = """
 """
 st.write(font_css, unsafe_allow_html=True)
 
-is_city = True
-on = st.sidebar.toggle("View provinces")
-if on:
-    is_city = False
-
-header_col1, header_col2, header_col3 = st.columns([2, 4, 2])
+header_col1, header_col2, _ ,header_col3 = st.columns([1.5, 1.5, 2, 2])
 # Choose company or one of the competitors
 with header_col1:
     competitor_flags = {
@@ -51,6 +47,12 @@ with header_col1:
         "Brokerlink": "competitor_3",
     }
     choice = st.selectbox(" ", list(competitor_flags.keys()))
+
+with header_col2:
+    view_option = st.selectbox(" ",["Locations", "Provinces"])
+
+#is_city = view_option == "Locations"
+is_city=True
 
 with header_col3:
     # get the month to generate the monthly report
@@ -198,6 +200,7 @@ with st.expander("How to interpret this pie chart ? ℹ️"):
 
 st.divider()
 
+st.markdown(f"<h3 style='text-align: left;'>Detailed Analysis</h3>", unsafe_allow_html=True)
 # Stats by location
 col7, col8 = st.columns([3, 5])
 with col7:
@@ -231,15 +234,25 @@ for tab, model in zip(tabs, models):
     with tab:
         st.write(dict_to_text(get_sources(month, model)))
 
-# Sidebar buttons
-if st.sidebar.button("AI Investigator"):
+# Sidebar menu
+with st.sidebar:
+    selected = option_menu(
+        menu_title="Menu",  # Optional
+        options=["Tracker", "Investigator", "Maps", "Clear Cache", "Logout", "Settings"],
+        icons=["eye", "search", "geo-alt", "arrow-clockwise", "box-arrow-left", "gear"],  # Optional icons
+        menu_icon="list"
+    )
+
+# Actions based on selection
+if selected == "Investigator":
     st.switch_page("pages/ai_tracking.py")
 
-if st.sidebar.button("Clear Cache"):
+elif selected == "Clear Cache":
     st.cache_data.clear()
+    st.success("Cache cleared!")
 
-if st.sidebar.button("Logout"):
+elif selected == "Logout":
     logout()
 
-if st.sidebar.button("Settings"):
+elif selected == "Settings":
     st.switch_page("pages/user_management.py")

@@ -200,7 +200,7 @@ def validate_token():
 
 def login():
     """Handles the login functionality."""
-    st.header("Sign in to AI Tracker")
+    st.header("Presence AI -- Western Financial Group")
     with st.form("login_form", clear_on_submit=True):
         # Username input field
         username = st.text_input("Username")
