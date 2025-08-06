@@ -256,3 +256,38 @@ elif selected == "Logout":
 
 elif selected == "Settings":
     st.switch_page("pages/user_management.py")
+
+with st.sidebar:
+    st.markdown("""
+    <style>
+    /* Make sidebar container relative and reserve footer space */
+    div[data-testid="stSidebar"] > div:nth-child(1) {
+        position: relative;
+        padding-bottom: 4rem; /* Reserve space for footer */
+    }
+
+    /* Add padding below the navigation menu */
+    [data-testid="stSidebarNav"] {
+        padding-bottom: 2rem;
+    }
+
+    /* Absolutely position the footer right under the nav, pinned to sidebar bottom */
+    [data-testid="stSidebarNav"] + div {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    </style>
+
+    <div>
+      <p style="margin: 0; font-size: 0.8rem; color: #888;">
+        © 2025 Presence AI
+      </p>
+      <p style="margin: 0; font-size: 0.8rem; color: #888;">
+        A portion of the revenue is donated to support Palestine 🇵🇸
+      </p>
+    </div>
+    """, unsafe_allow_html=True)
