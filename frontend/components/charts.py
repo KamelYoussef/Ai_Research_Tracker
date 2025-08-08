@@ -104,10 +104,16 @@ def display_map_with_score_colors(df_scores):
 
     # Map to RGB color: blue (low) → red (high)
     def score_to_color(s):
-        r = int(s * 255 / 100)
-        g = int((1 - s / 100) * 100)
-        b = int((1 - s / 100) * 255)
-        return [r, g, b, 200]  # Last is alpha
+        # Clamp s between 0 and 100
+        s = max(0, min(s, 100))
+
+        # Red decreases from 255 to 0 as s goes 0→100
+        r = int((1 - s / 100) * 255)
+        # Green increases from 0 to 255 as s goes 0→100
+        g = int((s / 100) * 255)
+        b = 0
+
+        return [r, g, b, 200]  # Alpha 200 for some transparency
 
     df['color'] = df['score'].apply(score_to_color)
 
@@ -129,7 +135,7 @@ def display_map_with_score_colors(df_scores):
         data=df,
         get_position='[longitude, latitude]',
         get_color='color',
-        get_radius=30000,
+        get_radius=20000,
         pickable=True
     )
 
@@ -173,11 +179,11 @@ def display_overview_map(df_scores):
     # Map rank to RGB color: green (1) → red (10)
     def rank_to_color(rank):
         if rank is None or (isinstance(rank, float) and math.isnan(rank)):
-            return [128, 128, 128, 200]  # Black for NaN
+            return [128, 128, 128, 220]  # Black for NaN
         elif rank <= 5:
-            return [0, 180, 0, 200]   # Green
+            return [0, 180, 0, 220]   # Green
         else:
-            return [255, 0, 0, 200]  # Red
+            return [255, 0, 0, 220]  # Red
 
     df['color'] = df['Color Rank'].apply(rank_to_color)
 
@@ -199,7 +205,7 @@ def display_overview_map(df_scores):
         data=df,
         get_position='[longitude, latitude]',
         get_color='color',
-        get_radius=30000,  # meters
+        get_radius=20000,  # meters
         pickable=True
     )
 

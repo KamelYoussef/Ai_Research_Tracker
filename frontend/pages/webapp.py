@@ -130,8 +130,8 @@ if is_city:
     display_map_with_score_colors(get_location_scores(month, locations, competitor_flags[choice], is_city))
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 30px; height: 20px; background-color: rgb(0, 100, 255);"></div> Low Score
-            <div style="width: 30px; height: 20px; background-color: rgb(255, 0, 0);"></div> High Score
+            <div style="width: 30px; height: 20px; background-color: rgb(255, 0, 0);"></div> Low Score
+            <div style="width: 30px; height: 20px; background-color: rgb(0, 255, 0);"></div> High Score
         </div>
         """, unsafe_allow_html=True)
 
