@@ -51,8 +51,7 @@ with header_col1:
 with header_col2:
     view_option = st.selectbox(" ",["Locations", "Provinces"])
 
-#is_city = view_option == "Locations"
-is_city=True
+is_city = view_option == "Locations"
 
 with header_col3:
     # get the month to generate the monthly report
@@ -246,6 +245,9 @@ with st.sidebar:
 # Actions based on selection
 if selected == "Investigator":
     st.switch_page("pages/ai_tracking.py")
+
+elif selected == "Maps":
+    st.switch_page("pages/maps.py")
 
 elif selected == "Clear Cache":
     st.cache_data.clear()

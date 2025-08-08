@@ -4,6 +4,7 @@ from app.nlp.extractor import find_words_in_texts, find_competitors_in_texts, ra
 from concurrent.futures import ThreadPoolExecutor
 from app.models.response import Response
 from app.models.sources import Sources
+from app.models.maps import Maps
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -15,12 +16,18 @@ from passlib.context import CryptContext
 import time
 from threading import Semaphore
 from collections import Counter
+from dotenv import load_dotenv
+import os
+import requests
 
 semaphore = Semaphore(50)  # Limit to 50 concurrent threads
 SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 security = HTTPBearer()
+load_dotenv()
+API_KEY_MAPS = os.getenv('API_KEY_MAPS')
+BASE_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
 
 
 def load_config(config_file):
@@ -514,3 +521,124 @@ def calculate_sentiment_by_platform(db: Session, month: str, ai_platform: str, i
         .scalar()
     )
     return avg_sentiment
+
+
+def get_insurance_brokers_by_city(config_path):
+    results = {}
+    config = load_and_validate_config(config_path)
+    for location in config["locations"]:
+        results[location] = []  # Initialize empty list for each city
+
+        for product in config["products"]:
+            query = f"{product} insurance in {location}"
+            params = {
+                'query': query,
+                'key': API_KEY_MAPS
+            }
+
+            response = requests.get(BASE_URL, params=params)
+            data = response.json()
+
+            for place in data.get("results", []):
+                name = place.get("name")
+                rating = place.get("rating")
+                reviews = place.get("user_ratings_total")
+
+                results[location].append({
+                    "product": product,
+                    "name": name,
+                    "rating": rating,
+                    "reviews": reviews
+                })
+
+            time.sleep(1)  # avoid hitting API rate limits
+
+    return results
+
+
+def find_target_rank_by_city_and_keyword(results,config_path):
+    target_ranks = {}
+    config = load_and_validate_config(config_path)
+
+    for location, places in results.items():
+        # Group places by keyword
+        places_by_keyword = {}
+        for place in places:
+            product = place.get("product", "unknown")
+            places_by_keyword.setdefault(product, []).append(place)
+
+        for product, keyword_places in places_by_keyword.items():
+            found_rank = None
+            matched_name = None
+            matched_rating = None
+            matched_reviews = None
+
+            for i, place in enumerate(keyword_places, start=1):
+                name = place["name"]
+                rating = place.get("rating")
+                reviews = place.get("reviews")
+                name_lower = name.lower()
+                if any(target in name_lower for target in config["search_phrases"]):
+                    found_rank = i
+                    matched_name = name
+                    matched_rating = rating
+                    matched_reviews = reviews
+                    break
+
+            # Use a tuple key (city, keyword)
+            target_ranks[(location, product)] = {
+                "rank": found_rank,
+                "name": matched_name,
+                "rating": matched_rating,
+                "reviews": matched_reviews
+            }
+    data = []
+    for (location, product), info in target_ranks.items():
+        data.append({
+            'location': location,
+            'product': product,
+            'rank': info.get('rank', 'None'),
+            'rating': info.get('rating', 'None'),
+            'reviews': info.get('reviews', 'None')
+        })
+
+    return data
+
+
+def aggregate_maps_by_product_and_location(db: Session, month: str, is_city: bool = True):
+    """
+    Aggregate total_count by product and location for a given month, including competitor data.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+
+    Returns:
+        List[dict]: Aggregated totals by product and location.
+    """
+    results = (
+        db.query(
+            Maps.product,
+            Maps.location,
+            func.sum(Maps.rank).label("rank"),
+            Maps.day,
+            Maps.rating,
+            Maps.reviews
+        )
+        .filter(Maps.date == month)
+        .filter(Maps.is_city == is_city)
+        .group_by(Maps.product, Maps.location, Maps.day, Maps.rating, Maps.reviews)
+        .all()
+    )
+
+    return [
+        {
+            "product": r[0],
+            "location": r[1],
+            "rank": r[2],
+            "day": r[3],
+            "rating": r[4],
+            "reviews": r[5]
+        }
+        for r in results
+    ]

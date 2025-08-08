@@ -397,3 +397,66 @@ def get_avg_sentiment_by_platform(month, ai_platform, flag_competitor, is_city=T
                 return "N/A"
     else:
         return "N/A"
+
+
+def maps(month, is_city):
+    if fetch_data('aggregate_maps_by_product_and_location', month, is_city=is_city).get("aggregated_data", []):
+        # Get unique days and find the latest one (assuming day is a string representing a number)
+
+        data = pd.DataFrame(fetch_data('aggregate_maps_by_product_and_location', month, is_city=is_city).get("aggregated_data", []))
+        days = data['day'].unique()
+
+        # Convert days to integers to find max day easily
+        max_day = max(map(int, days))
+        max_day_str = f"{max_day:02d}"  # zero-padded string
+
+        # Create dict of dfs split by day
+        dfs = {day: data[data['day'] == day].reset_index(drop=True) for day in days}
+
+        # Define last_df as the dataframe for the latest day
+        last_df = dfs[max_day_str]
+
+        # Rename rank columns to avoid collisions and keep only relevant columns for merging
+        for i, (day, df) in enumerate(dfs.items()):
+            dfs[day] = df.rename(columns={'rank': f'rank_{i + 1}'})[['location', 'product', f'rank_{i + 1}']]
+
+        # Merge all rank dfs on ['location', 'product'] only (drop 'day' from merge keys)
+        dfs_list = list(dfs.values())
+        merged_df = dfs_list[0]
+        for df in dfs_list[1:]:
+            merged_df = pd.merge(merged_df, df, on=['location', 'product'], how='outer')
+
+        # Prepare last_df to contain rating and reviews for latest day, keep only location/product/rating/reviews
+        last_df = last_df[['location', 'product', 'rating', 'reviews']]
+
+        # Merge merged_df (with ranks) with last_df (rating/reviews) on location/product
+        final_df = pd.merge(merged_df, last_df, on=['location', 'product'], how='left')
+
+        # Calculate average rank across all rank columns, ignoring NaNs
+        rank_cols = [col for col in final_df.columns if col.startswith('rank_')]
+        final_df['Avg Rank'] = final_df[rank_cols].mean(axis=1, skipna=True)
+
+        # Select and reorder columns, no 'day' column here
+        cols = ['location', 'product', 'Avg Rank', 'rating', 'reviews']
+        final_df = final_df[cols]
+
+        final_df = final_df.rename(columns={
+            'location': 'City',
+            'product': 'Keyword',
+            'rating': 'Rating',
+            'reviews': 'Reviews'
+        })
+
+        # Select and reorder columns
+        cols = ['City', 'Keyword', 'Avg Rank', 'Rating', 'Reviews']
+        final_df = final_df[cols]
+
+        # Fill NaNs if you want
+        final_df = final_df.fillna('None')
+
+        # Fill NaNs with 'None' if desired
+        final_df = final_df.fillna('None')
+
+        return final_df
+    else :
+        return None

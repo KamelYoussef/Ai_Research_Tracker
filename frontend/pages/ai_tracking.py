@@ -44,6 +44,9 @@ def main():
     if selected == "Tracker":
         st.switch_page("pages/webapp.py")
 
+    elif selected == "Maps":
+        st.switch_page("pages/maps.py")
+
     elif selected == "Clear Cache":
         st.cache_data.clear()
         st.success("Cache cleared!")
