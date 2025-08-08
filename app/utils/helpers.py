@@ -530,7 +530,7 @@ def get_insurance_brokers_by_city(config_path):
         results[location] = []  # Initialize empty list for each city
 
         for product in config["products"]:
-            query = f"{product} insurance in {location}"
+            query = f"{product} insurance in {location} canada"
             params = {
                 'query': query,
                 'key': API_KEY_MAPS

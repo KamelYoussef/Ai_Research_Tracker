@@ -5,6 +5,7 @@ import streamlit as st
 import pydeck as pdk
 import pandas as pd
 import json
+import math
 
 def plot_pie_chart(data):
     return px.pie(
@@ -154,3 +155,59 @@ def plot_sentiment_chart(data):
     )
 
     st.altair_chart(chart, use_container_width=True)
+
+
+def display_overview_map(df_scores):
+    # Load geo.json with city coordinates
+    with open("data/geo.json") as f:
+        locations = json.load(f)
+    df_locations = pd.DataFrame(locations)  # expects 'location', 'latitude', 'longitude'
+
+    # Merge geo data with scores
+    df = df_locations.merge(df_scores, left_on="location", right_on="City", how="left")
+    #df['Avg Rank'] = df['Avg Rank'].fillna(0)
+
+    # Cap rank visually at 10
+    df['Color Rank'] = df['Avg Rank'].apply(lambda x: min(x, 10))
+
+    # Map rank to RGB color: green (1) → red (10)
+    def rank_to_color(rank):
+        if rank is None or (isinstance(rank, float) and math.isnan(rank)):
+            return [128, 128, 128, 200]  # Black for NaN
+        elif rank <= 5:
+            return [0, 180, 0, 200]   # Green
+        else:
+            return [255, 0, 0, 200]  # Red
+
+    df['color'] = df['Color Rank'].apply(rank_to_color)
+
+    # Center view on all points
+    center_lat = (df['latitude'].min() + df['latitude'].max()) / 2
+    center_lon = (df['longitude'].min() + df['longitude'].max()) / 2
+
+    # View settings
+    view_state = pdk.ViewState(
+        latitude=center_lat,
+        longitude=center_lon,
+        zoom=3.6,
+        pitch=0
+    )
+
+    # Scatterplot layer
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=df,
+        get_position='[longitude, latitude]',
+        get_color='color',
+        get_radius=30000,  # meters
+        pickable=True
+    )
+
+    # Show map
+    st.pydeck_chart(pdk.Deck(
+        layers=[layer],
+        initial_view_state=view_state,
+        tooltip={"html": "<b>City:</b> {location}<br/>"
+                         "<b>Avg Rank:</b> {Avg Rank}"},
+        map_style="mapbox://styles/mapbox/light-v9"
+    ))

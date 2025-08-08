@@ -6,6 +6,7 @@ import plotly.express as px
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from streamlit_option_menu import option_menu
 from data.fetch_utils import logout, maps, select_month
+from components.charts import display_overview_map
 
 if 'logged_in' in st.session_state and st.session_state.logged_in:
     pass
@@ -68,7 +69,7 @@ else:
 
     with col1:
         # Compute average rank per keyword across all cities
-        keyword_avg = df.groupby("Keyword", as_index=False)["Avg Rank"].mean()
+        keyword_avg = df.groupby("Keyword", as_index=False)["Avg Rank"].mean().round(2)
         keyword_avg['Color Rank'] = keyword_avg['Avg Rank'].apply(lambda x: min(x, 10))
 
         # Calculate mean across all keywords
@@ -93,7 +94,7 @@ else:
             x1=len(keyword_avg) - 0.5,
             y0=overall_mean,
             y1=overall_mean,
-            line=dict(color="white", width=2, dash="dash")
+            line=dict(color="orange", width=2, dash="dash")
         )
 
         # Add annotation for mean line
@@ -103,7 +104,7 @@ else:
             text=f"Overall Avg. Rank: {overall_mean:.2f}",
             showarrow=False,
             yshift=10,
-            font=dict(color="white")
+            font=dict(color="orange")
         )
 
         st.plotly_chart(fig_overall)
@@ -113,8 +114,8 @@ else:
         m1, m2, m3, _ = st.columns(4)
         m2.metric("🔢 Avg. Rank", f"{df['Avg Rank'].mean():.2f}")
         m2.metric("⭐ Avg. Rating", f"{df['Rating'].mean():.2f}")
-        m3.metric("🗣️ Total Reviews", f"{int(df['Reviews'].sum() / df['Keyword'].nunique())}")
-        m3.metric("🗣️ Avg. Reviews", f"{int(df['Reviews'].mean())}")
+        #m3.metric("🗣️ Total Reviews", f"{int(df['Reviews'].sum() / df['Keyword'].nunique())}")
+        #m3.metric("🗣️ Avg. Reviews", f"{int(df['Reviews'].mean())}")
 
     st.divider()
     # ---------------------
@@ -127,6 +128,19 @@ else:
         </style>
     """, unsafe_allow_html=True)
     st.header("🏙️ City View")
+
+    #map
+    display_overview_map(df)
+    st.markdown("""
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 30px; height: 20px; background-color: rgb(255, 0, 0);"></div> Rank above 5
+                <div style="width: 30px; height: 20px; background-color: rgb(0, 180, 0);"></div> Rank below 5
+                <div style="width: 30px; height: 20px; background-color: rgb(128, 128, 128);"></div> No Rank
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.divider()
+
     selected_city = st.selectbox("Select a City", sorted(df['City'].unique()))
     city_data = df[df['City'] == selected_city]
     col5, col6 = st.columns(2)
@@ -157,7 +171,7 @@ else:
             type="line",
             x0=-0.5, x1=len(city_data['Keyword']) - 0.5,  # full width of x-axis
             y0=mean_rank, y1=mean_rank,
-            line=dict(color="white", width=2, dash="dash"),
+            line=dict(color="orange", width=2, dash="dash"),
         )
 
         # Optional: Add annotation for the line
@@ -167,7 +181,7 @@ else:
             text=f"Avg. Rank: {mean_rank:.2f}",
             showarrow=False,
             yshift=10,
-            font=dict(color="white")
+            font=dict(color="orange")
         )
 
         st.plotly_chart(fig2)
@@ -177,7 +191,7 @@ else:
         col7, col8, col9, _ = st.columns(4)
         col8.metric("🔢 Avg. Rank", f"{city_data['Avg Rank'].mean():.2f}")
         col8.metric("⭐ Avg. Rating", f"{city_data['Rating'].mean():.2f}")
-        col9.metric("🗣️ Total Reviews", f"{int(city_data['Reviews'].sum() / city_data['Keyword'].nunique())}")
+        #col9.metric("🗣️ Total Reviews", f"{int(city_data['Reviews'].sum() / city_data['Keyword'].nunique())}")
 
     # ---------------------
     # Optional: raw table
