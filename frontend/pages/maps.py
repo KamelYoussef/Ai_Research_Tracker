@@ -130,7 +130,7 @@ else:
     st.header("🏙️ City View")
 
     #map
-    display_overview_map(df)
+    display_overview_map(keyword_avg)
     st.markdown("""
             <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 30px; height: 20px; background-color: rgb(255, 0, 0);"></div> Rank above 5
