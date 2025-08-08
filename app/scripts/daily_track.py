@@ -88,7 +88,7 @@ def maps_track():
     current_day = datetime.now().strftime("%d")
     db: Session = SessionLocal()
     try :
-        results = find_target_rank_by_city_and_keyword(get_insurance_brokers_by_city("../config.yml"), "../config.yml")
+        results = find_target_rank_by_city_and_keyword(get_insurance_brokers_by_city("app/config.yml"), "app/config.yml")
         logger.info(results)
         for result in results:
             product = result.get('product')
@@ -116,6 +116,7 @@ def maps_track():
 
 if __name__ == "__main__":
     startup()
+    maps_track()
     start_time = time.time()
 
     daily_track("CHATGPT")
@@ -130,5 +131,3 @@ if __name__ == "__main__":
     daily_track("GEMINI")
     gemini_time = time.time() - start_time - perplexity_time - chat_time
     logger.info(f"Time taken to execute gemini: {gemini_time:.2f}  seconds")
-
-    maps_track()
