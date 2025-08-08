@@ -1,5 +1,6 @@
 from app.models.response import Response
 from app.models.sources import Sources
+from app.models.maps import Maps
 from sqlalchemy.orm import Session
 
 
@@ -75,3 +76,41 @@ def store_sources(
     db.commit()
     db.refresh(source_record)
     return source_record
+
+
+def store_maps(db: Session, product: str, location: str, rank: int, date: str, day: str,
+               rating: float, reviews: int):
+    """
+    Store the API MAPS response in the database.
+
+    Args:
+    - db: Database session
+    - product: The product being queried
+    - location: The location of interest
+    - total_count: The number of results
+    - query: The query made to the AI system
+    - response_text: The AI's response
+
+    Returns:
+    - The stored Response object
+    """
+    provinces = ['Manitoba', 'Alberta', 'British Columbia', 'Saskatchewan', 'Ontario', 'Canada']
+
+    # Create a new Response object with the data, including the query and response text
+    response = Maps(
+        product=product,
+        location=location,
+        is_city=True if location not in provinces else False,
+        rank=rank,
+        date=date,
+        day=day,
+        rating=rating,
+        reviews=reviews
+    )
+
+    # Add the response to the session and commit
+    db.add(response)
+    db.commit()  # Save to the database
+    db.refresh(response)  # Get the updated data (including the generated id)
+
+    return response  # Return the stored response object

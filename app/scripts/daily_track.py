@@ -1,8 +1,8 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app.services.storage import store_response, store_sources
-from app.utils.helpers import track_responses
+from app.services.storage import store_response, store_sources, store_maps
+from app.utils.helpers import track_responses, get_insurance_brokers_by_city, find_target_rank_by_city_and_keyword
 from app.database import Base, engine
 import time
 from collections import Counter
@@ -82,6 +82,38 @@ def daily_track(ai_platfrom):
         db.close()
 
 
+def maps_track():
+    """Function to be executed daily."""
+    current_date = datetime.now().strftime("%Y%m")
+    current_day = datetime.now().strftime("%d")
+    db: Session = SessionLocal()
+    try :
+        results = find_target_rank_by_city_and_keyword(get_insurance_brokers_by_city("../config.yml"), "../config.yml")
+        logger.info(results)
+        for result in results:
+            product = result.get('product')
+            location = result.get('location')
+            rank = result.get('rank')
+            rating = result.get('rating')
+            reviews = result.get('reviews')
+
+            store_maps(
+                db=db,
+                product=product,
+                location=location,
+                date=current_date,
+                day=current_day,
+                rank=rank,
+                rating=rating,
+                reviews=reviews
+            )
+
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
     startup()
     start_time = time.time()
@@ -98,3 +130,5 @@ if __name__ == "__main__":
     daily_track("GEMINI")
     gemini_time = time.time() - start_time - perplexity_time - chat_time
     logger.info(f"Time taken to execute gemini: {gemini_time:.2f}  seconds")
+
+    maps_track()

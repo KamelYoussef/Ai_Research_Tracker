@@ -9,7 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
     aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
     validate_token, verify_password, admin_required, hash_password, calculate_rank, calculate_rank_by_platform, \
-    get_aggregated_sources, calculate_sentiment, calculate_sentiment_by_platform
+    get_aggregated_sources, calculate_sentiment, calculate_sentiment_by_platform, aggregate_maps_by_product_and_location
 
 
 router = APIRouter()
@@ -365,3 +365,30 @@ async def get_sentiment_by_platform(
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
+
+
+@router.get("/aggregate_maps_by_product_and_location/{month}")
+async def aggregate_maps_by_product_and_location_route(
+    month: str,
+    is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    """
+    Endpoint to aggregate total_count by product and location for a given month.
+
+    Args:
+        month (str): Month in YYYYMM format.
+        is_city (bool): Filter data for cities or regions.
+        db (Session): SQLAlchemy session.
+
+    Returns:
+        dict: Aggregated totals by product and location.
+    """
+    try:
+        validate_token(credentials)
+        aggregated_data = aggregate_maps_by_product_and_location(db, month, is_city)
+        print(aggregated_data)
+        return {"aggregated_data": aggregated_data}
+    except Exception as e:
+        return {"error": str(e)}
