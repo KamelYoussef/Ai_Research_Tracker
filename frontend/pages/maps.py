@@ -130,7 +130,8 @@ else:
     st.header("🏙️ City View")
 
     #map
-    display_overview_map(keyword_avg)
+    df_avg = df.groupby("City", as_index=False)["Avg Rank"].mean()
+    display_overview_map(df_avg)
     st.markdown("""
             <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 30px; height: 20px; background-color: rgb(255, 0, 0);"></div> Rank above 5
