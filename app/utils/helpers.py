@@ -6,7 +6,7 @@ from app.models.response import Response
 from app.models.sources import Sources
 from app.models.maps import Maps
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, distinct
 from datetime import datetime, timedelta
 from jose import jwt
 from fastapi import HTTPException, status
@@ -341,10 +341,15 @@ def calculate_score_ai(db: Session, month: str, config_path, flag_competitor, is
         .filter(Response.is_city == is_city) \
         .scalar()
 
+    unique_days = db.query(func.count(distinct(Response.day))) \
+        .filter(Response.date == month) \
+        .filter(Response.is_city == is_city) \
+        .scalar()
+
     n_locations, n_products, n_ai_platforms = get_counts_from_config(config_path)
     if is_city is False:
         n_locations = 6 # number of provinces
-    score = result / (n_locations * n_products * n_ai_platforms) / 4 * 100  # 4 is for 4 weeks in the month
+    score = result / (n_locations * n_products * n_ai_platforms) / unique_days * 100
 
     return score if score else 0
 

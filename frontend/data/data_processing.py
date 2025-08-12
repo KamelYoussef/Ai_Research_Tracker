@@ -7,16 +7,25 @@ def ai_platforms_score(month, competitor_flag, is_city=True):
     df = download_data(month, competitor_flag, is_city=is_city)[2]
     n_locations, n_products, n_ai_platforms = df["location"].nunique(), df["product"].nunique(), df["ai_platform"].nunique()
     ai_scores = df.groupby("ai_platform")[["Total Count"]].sum().reset_index()
-    ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / 4 * 100).round(1)
+    day_columns = [
+        col for col in df.columns
+        if str(col).isdigit()  # only columns that are purely numeric
+    ]
+    unique_days_count = len(day_columns)
+    ai_scores["Total Count"] = (ai_scores["Total Count"] / (n_locations * n_products) / unique_days_count * 100).round(1)
     return ai_scores.set_index('ai_platform')['Total Count'].to_dict()
 
 
 def keywords_data(month, competitor_flag, is_city=True):
     # Process the data
     df = download_data(month, competitor_flag, is_city=is_city)[0]
-
+    day_columns = [
+        col for col in df.columns
+        if str(col).isdigit()  # only columns that are purely numeric
+    ]
+    unique_days_count = len(day_columns)
     ai_platforms = df["ai_platform"].unique()
-    df["Total Count"] = (df["Total Count"] / len(fetch_param(month, competitor_flag, is_city=is_city)[0]) / 4 * 100).astype(float).round(2)
+    df["Total Count"] = (df["Total Count"] / len(fetch_param(month, competitor_flag, is_city=is_city)[0]) / unique_days_count * 100).astype(float).round(2)
     x = df.groupby(["ai_platform", "product"])[["Total Count"]].sum()
 
     keywords_presence = {}
@@ -99,7 +108,11 @@ def stats_by_location(month: int, selected_location: str, competitor_flag, is_ci
     """
     # Process and pivot the data
     df = download_data(month, competitor_flag, is_city=is_city)[2]
-
+    day_columns = [
+        col for col in df.columns
+        if str(col).isdigit()  # only columns that are purely numeric
+    ]
+    unique_days_count = len(day_columns)
     # Validate inputs
     if selected_location not in df["location"].unique():
         raise ValueError(f"Invalid location: {selected_location}. Please select a valid location.")
@@ -109,7 +122,7 @@ def stats_by_location(month: int, selected_location: str, competitor_flag, is_ci
 
     # Normalize and round the "Total Count" column
     filtered_df.loc[:, "Total Count"] = (
-        (filtered_df["Total Count"] / 4 * 100)
+        (filtered_df["Total Count"] / unique_days_count * 100)
         .astype(float)
         .round(0)
     )
