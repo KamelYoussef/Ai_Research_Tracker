@@ -2,6 +2,8 @@ import re
 import json
 from google import genai
 from app.config import GEMINI_API_KEY
+import time
+import random
 
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 
@@ -58,19 +60,36 @@ def find_competitors_in_texts(text, competitors):
     return matches
 
 
-def extract_organizations_gemini(text):
-    response = client_gemini.models.generate_content(
-        model="gemini-1.5-flash",
-        contents=f"Extract only insurances providers organization names in order of appearance from the following text and return them as a JSON array:\n\n{text}\n\n")
+def extract_organizations_gemini(text, retries=3, backoff=2):
+    for attempt in range(retries):
+        try:
+            response = client_gemini.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=(
+                    "Extract only insurance provider organization names in order of appearance "
+                    "from the following text and return them as a JSON array:\n\n"
+                    f"{text}\n\n"
+                )
+            )
+            raw = response.text.strip()
+            cleaned = re.sub(r"^```json|^```|```$", "", raw, flags=re.MULTILINE).strip()
+            return json.loads(cleaned)
 
-    raw = response.text.strip()
-    cleaned = re.sub(r"^```json|^```|```$", "", raw, flags=re.MULTILINE).strip()
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        print("❌ Failed to parse response as JSON. Raw output:")
-        print(cleaned)
-        return []
+        except json.JSONDecodeError:
+            print("❌ Failed to parse response as JSON. Raw output:")
+            print(cleaned)
+            return []
+
+        except Exception as e:
+            if "503" in str(e) or "Service Unavailable" in str(e):
+                wait_time = backoff ** attempt + random.uniform(0, 1)
+                print(f"⚠️ 503 error — retrying in {wait_time:.1f} seconds...")
+                time.sleep(wait_time)
+            else:
+                raise
+    # If all retries fail
+    print("❌ Gemini request failed after retries.")
+    return []
 
 
 def ranking(text, search_phrases):
@@ -84,23 +103,43 @@ def ranking(text, search_phrases):
     return None
 
 
-def extract_sentiment(text):
-    response = client_gemini.models.generate_content(
-        model="gemini-1.5-flash",
-        contents=f"Extract only the names of insurance provider organizations and their associated sentiment scores \
-        from the text below. Return the results as a JSON array. Each object in the array should have two keys:\
-    'organization': the full name of the insurance provider 'sentiment_score': a numeric score between -1 and 1 \
-    indicating the overall sentiment toward the organization (where -1 is very negative, 0 is neutral, and 1 is very\
-     positive) \n Do not include any extra text or explanations — only return the JSON array.:\n\n{text}\n\n")
+def extract_sentiment(text, retries=3, backoff=2):
+    """
+    Extract sentiment scores for insurance providers using Gemini,
+    retrying on 503 or transient errors, and returning [] on failure.
+    """
+    for attempt in range(retries):
+        try:
+            response = client_gemini.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=(
+                    "Extract only the names of insurance provider organizations and their associated sentiment scores "
+                    "from the text below. Return the results as a JSON array. "
+                    "Each object in the array should have two keys: "
+                    "'organization' and 'sentiment_score' (between -1 and 1). "
+                    "Do not include any extra text or explanations — only return the JSON array:\n\n"
+                    f"{text}\n\n"
+                )
+            )
+            raw = response.text.strip()
+            cleaned = re.sub(r"^```json|^```|```$", "", raw, flags=re.MULTILINE).strip()
+            return json.loads(cleaned)
 
-    raw = response.text.strip()
-    cleaned = re.sub(r"^```json|^```|```$", "", raw, flags=re.MULTILINE).strip()
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        print("❌ Failed to parse response as JSON. Raw output:")
-        print(cleaned)
-        return []
+        except json.JSONDecodeError:
+            print("❌ Failed to parse sentiment JSON. Raw output:")
+            print(cleaned)
+            return []
+
+        except Exception as e:
+            if "503" in str(e) or "Service Unavailable" in str(e):
+                wait_time = backoff ** attempt + random.uniform(0, 1)
+                print(f"⚠️ 503 error — retrying in {wait_time:.1f} seconds...")
+                time.sleep(wait_time)
+            else:
+                raise
+
+    print("❌ Sentiment extraction failed after retries.")
+    return []
 
 
 def get_sentiment_score(data, search_phrases):

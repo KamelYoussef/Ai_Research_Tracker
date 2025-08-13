@@ -6,23 +6,6 @@ from app.utils.helpers import track_responses, get_insurance_brokers_by_city, fi
 from app.database import Base, engine
 import time
 from collections import Counter
-import logging
-import os
-
-# Make sure log directory exists
-os.makedirs("logs", exist_ok=True)
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("logs/daily_track.log", mode='w'),  # Overwrite on each run
-        logging.StreamHandler()  # Optional: also log to terminal
-    ]
-)
-
-logger = logging.getLogger(__name__)
 
 
 def startup():
@@ -38,7 +21,7 @@ def daily_track(ai_platfrom):
 
     try:
         ai_responses, results = track_responses(ai_platfrom, "app/config.yml")
-        logger.info(results)
+        print(results)
         source_counter = Counter()
         for result in results:
             product = result.get('product')
@@ -77,7 +60,7 @@ def daily_track(ai_platfrom):
             sources=top_sources
         )
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        print.error(f"An error occurred: {e}")
     finally:
         db.close()
 
@@ -89,7 +72,7 @@ def maps_track():
     db: Session = SessionLocal()
     try :
         results = find_target_rank_by_city_and_keyword(get_insurance_brokers_by_city("app/config.yml"), "app/config.yml")
-        logger.info(results)
+        print(results)
         for result in results:
             product = result.get('product')
             location = result.get('location')
@@ -109,7 +92,7 @@ def maps_track():
             )
 
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        print(f"An error occurred: {e}")
     finally:
         db.close()
 
@@ -121,13 +104,13 @@ if __name__ == "__main__":
 
     daily_track("CHATGPT")
     chat_time = time.time() - start_time
-    logger.info(f"Time taken to execute chatgpt: {chat_time:.2f} seconds")
+    print(f"Time taken to execute chatgpt: {chat_time:.2f} seconds")
 
     tmp = time.time()
     daily_track("PERPLEXITY")
     perplexity_time = time.time() - tmp
-    logger.info(f"Time taken to execute perplexity: {perplexity_time:.2f} seconds")
+    print(f"Time taken to execute perplexity: {perplexity_time:.2f} seconds")
 
     daily_track("GEMINI")
     gemini_time = time.time() - start_time - perplexity_time - chat_time
-    logger.info(f"Time taken to execute gemini: {gemini_time:.2f}  seconds")
+    print(f"Time taken to execute gemini: {gemini_time:.2f}  seconds")

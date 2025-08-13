@@ -20,7 +20,9 @@ from dotenv import load_dotenv
 import os
 import requests
 
-semaphore = Semaphore(50)  # Limit to 50 concurrent threads
+semaphore = Semaphore(10)  # Limit to 50 concurrent threads
+RPM = 50
+SECONDS_PER_REQUEST = 60 / RPM
 SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -92,14 +94,21 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             "matches": match_results,
             "competitors": competitors,
             "rank": rank,
-            "sentiment":sentiment,
+            "sentiment": sentiment,
             "sources": sources
         }
     except Exception as e:
+        print(f"[ERROR] {product} - {location}: {e}")
         return {
             "product": product,
             "location": location,
             "ai_response": "",
+            "total_count": 0,
+            "matches": {},
+            "competitors": {"co-operators": 0, "westland": 0, "brokerlink": 0},
+            "rank": None,
+            "sentiment": None,
+            "sources": [],
             "error": str(e)
         }
 
@@ -109,15 +118,14 @@ def process_product_location_with_delay(product, location, search_phrases, ai_pl
     semaphore.acquire()
 
     try:
-        # Your existing logic to process the product-location pair
+        start_time = time.time()
         result = process_product_location(product, location, search_phrases, ai_platform, prompt, competitors)
-
-        # If you want to rate-limit each individual request (e.g., by 1 second)
-        time.sleep(60)  # Adjust sleep time as necessary
-
+        elapsed = time.time() - start_time
+        # Sleep just enough to respect RPM
+        if elapsed < SECONDS_PER_REQUEST:
+            time.sleep(SECONDS_PER_REQUEST - elapsed)
         return result
     finally:
-        # Release the semaphore to allow other threads to execute
         semaphore.release()
 
 
