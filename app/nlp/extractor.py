@@ -60,11 +60,11 @@ def find_competitors_in_texts(text, competitors):
     return matches
 
 
-def extract_organizations_gemini(text, retries=3, backoff=5):
+def extract_organizations_gemini(text, retries=3, backoff=2):
     for attempt in range(retries):
         try:
             response = client_gemini.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-2.0-flash",
                 contents=(
                     "Extract only insurance provider organization names in order of appearance "
                     "from the following text and return them as a JSON array:\n\n"
@@ -82,7 +82,7 @@ def extract_organizations_gemini(text, retries=3, backoff=5):
 
         except Exception as e:
             if "503" in str(e) or "Service Unavailable" in str(e):
-                wait_time = backoff * (2 ** attempt)
+                wait_time = backoff ** attempt + random.uniform(0, 1)
                 print(f"⚠️ 503 error — retrying in {wait_time:.1f} seconds...")
                 time.sleep(wait_time)
             else:
@@ -111,7 +111,7 @@ def extract_sentiment(text, retries=3, backoff=2):
     for attempt in range(retries):
         try:
             response = client_gemini.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-2.0-flash",
                 contents=(
                     "Extract only the names of insurance provider organizations and their associated sentiment scores "
                     "from the text below. Return the results as a JSON array. "
