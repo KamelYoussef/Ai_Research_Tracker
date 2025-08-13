@@ -60,7 +60,7 @@ def find_competitors_in_texts(text, competitors):
     return matches
 
 
-def extract_organizations_gemini(text, retries=3, backoff=2):
+def extract_organizations_gemini(text, retries=3, backoff=5):
     for attempt in range(retries):
         try:
             response = client_gemini.models.generate_content(
@@ -82,7 +82,7 @@ def extract_organizations_gemini(text, retries=3, backoff=2):
 
         except Exception as e:
             if "503" in str(e) or "Service Unavailable" in str(e):
-                wait_time = backoff ** attempt + random.uniform(0, 1)
+                wait_time = backoff * (2 ** attempt)
                 print(f"⚠️ 503 error — retrying in {wait_time:.1f} seconds...")
                 time.sleep(wait_time)
             else:
