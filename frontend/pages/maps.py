@@ -7,6 +7,10 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from streamlit_option_menu import option_menu
 from data.fetch_utils import logout, maps, select_month
 from components.charts import display_overview_map
+import yaml
+
+with open("data/data.yml", "r") as f:
+    yaml_data = yaml.safe_load(f)
 
 if 'logged_in' in st.session_state and st.session_state.logged_in:
     pass
@@ -197,6 +201,16 @@ else:
     # ---------------------
     # Optional: raw table
     with st.expander("📄 Explore Data"):
+        label_keys = ["top_41"]
+        city_to_label = {}
+        for key in label_keys:
+            if key in yaml_data:
+                for city in yaml_data[key]:
+                    city_to_label[city] = key
+
+        # Add to DataFrame
+        df["Labels"] = df["City"].map(city_to_label).fillna("None")
+
         st.dataframe(df)
 
 with st.sidebar:

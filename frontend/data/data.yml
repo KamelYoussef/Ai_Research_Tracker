@@ -125,149 +125,45 @@ locations:
   - Winnipeg
   - Wolseley
   - Yorkton
-Brands:
-  Western:
-    - Alix
-    - Assiniboia
-    - Barrhead
-    - Bashaw
-    - Bassano
-    - Beaverlodge
-    - Bolton
-    - Bow Island
-    - Brandon
-    - Brooks
-    - Burns Lake
-    - Campbell River
-    - Camrose
-    - Chase
-    - Claresholm
-    - Clive
-    - Cochrane
-    - Cold Lake
-    - Coleman
-    - Coronation
-    - Cranbrook
-    - Creston
-    - Dawson Creek
-    - Drumheller
-    - Edmonton
-    - Edson
-    - Elkford
-    - Estevan
-    - Fairview
-    - Fernie
-    - Fort Nelson
-    - Fort St. John
-    - Fraser Lake
-    - Fruitvale
-    - Gilbert Plains
-    - Glenavon
-    - Golden
-    - Grande Cache
-    - Grande Prairie
-    - Grimshaw
-    - Gull Lake
-    - Hanna
-    - High River
-    - Houston
-    - Kaslo
-    - Kelowna
-    - Kimberley
-    - King City
-    - Kitchener
-    - Lac La Biche
-    - Lacombe
-    - Leduc
-    - LeRoy
-    - Lethbridge
-    - Lloydminster
-    - Mayerthorpe
-    - Medicine Hat
-    - Melfort
-    - Nanaimo
-    - Nanton
-    - Nipawin
-    - North Battleford
-    - Okotoks
-    - Olds
-    - One Hundred Mile House
-    - Parry Sound
-    - Peace River
-    - Pembroke
-    - Pender Island
-    - Petawawa
-    - Prince Albert
-    - Prince George
-    - Red Deer
-    - Roblin
-    - Rosetown
-    - Salmo
-    - Schomberg
-    - Shaunavon
-    - Smithers
-    - Souris
-    - Sparwood
-    - Spruce Grove
-    - Strathmore
-    - Swift Current
-    - Taber
-    - Terrace
-    - Thompson
-    - Turner Valley
-    - Vanderhoof
-    - Vegreville
-    - Vermilion
-    - Vernon
-    - Victoria
-    - Vulcan
-    - Wainwright
-    - Watrous
-    - West Kelowna
-    - Weyburn
-    - White Fox
-    - Williams Lake
-    - Willow Bunch
-    - Winfield
-    - Winnipeg
-    - Wolseley
-    - Yorkton
-  Huestis:
-    - Annapolis Royal
-    - Bathurst
-    - Bedford
-    - Bridgetown
-    - Campbellton
-    - Charlottetown
-    - Church Point
-    - Dartmouth
-    - Digby County
-    - Edmundston
-    - Fredericton
-    - Grand Manan
-    - Minto
-    - Miramichi
-    - Moncton
-    - North Sydney
-    - Oromocto
-    - Petitcodiac
-    - Rothesay
-    - Saint John
-    - Tracadie-Sheila
-    - Woodstock
-    - Yarmouth
-  Coast:
-    - Coquitlam
-    - Duncan
-    - Langley
-    - Mill Bay
-    - Nanaimo
-    - Richmond
-    - Saanichton
-    - Sidney
-    - Sooke
-    - Surrey
-    - Vancouver
-    - Victoria
-  Wyatt:
-    - Winnipeg
+top_41:
+  - Bolton
+  - Brandon
+  - Victoria
+  - Brooks
+  - Camrose
+  - Campbell River
+  - Richmond
+  - Cochrane
+  - Coquitlam
+  - Cranbrook
+  - Dawson Creek
+  - Duncan
+  - Drumheller
+  - Edmonton
+  - Fernie
+  - Fort St. John
+  - Vancouver
+  - Grande Prairie
+  - High River
+  - Kelowna
+  - Winnipeg
+  - Lethbridge
+  - Langley
+  - Lloydminster
+  - Medicine Hat
+  - Nanaimo
+  - Okotoks
+  - One Hundred Mile House
+  - Prince Albert
+  - Prince George
+  - Red Deer
+  - Richmond Hill
+  - Schomberg
+  - Surrey
+  - Smithers
+  - Sooke
+  - Spruce Grove
+  - Taber
+  - Terrace
+  - Vernon
+  - West Kelowna
