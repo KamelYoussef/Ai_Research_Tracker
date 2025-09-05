@@ -75,21 +75,13 @@ def process_and_pivot_data(endpoint, index_columns, month, competitor_flag, is_c
 
 
 def select_month():
-    """Setup sidebar with year and month selection (default to one month ago)."""
+    """Setup sidebar with year and month selection (default to current month)."""
     # Get the current year and month
     current_year = datetime.today().year
     current_month = datetime.today().month
 
-    # Calculate previous month and adjust year if needed
-    if current_month == 1:
-        default_year = current_year - 1
-        default_month = 12
-    else:
-        default_year = current_year
-        default_month = current_month - 1
-
-    # Create a list of years
-    years = [str(year) for year in range(current_year, 2024 - 1, -1)]
+    # Create a list of years (from 2024 up to current year)
+    years = [str(year) for year in range(current_year, 2023, -1)]
 
     # List of months as full names
     month_names = [
@@ -97,13 +89,13 @@ def select_month():
         "July", "August", "September", "October", "November", "December"
     ]
 
-    # Convert default month number to its name
-    default_month_name = month_names[default_month - 1]
+    # Default month name
+    default_month_name = month_names[current_month - 1]
 
     # Allow the user to select a year and month
     col1, col2 = st.columns([1, 1])
     with col1:
-        selected_year = st.selectbox("Select Year", years, index=years.index(str(default_year)))
+        selected_year = st.selectbox("Select Year", years, index=years.index(str(current_year)))
     with col2:
         selected_month_name = st.selectbox("Select Month", month_names, index=month_names.index(default_month_name))
 
@@ -111,7 +103,6 @@ def select_month():
     selected_month = month_names.index(selected_month_name) + 1
     selected_month_str = f"{selected_year}{str(selected_month).zfill(2)}"
 
-    # Return the selected month string
     return selected_month_str
 
 
