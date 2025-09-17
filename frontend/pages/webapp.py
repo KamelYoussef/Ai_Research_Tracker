@@ -154,7 +154,7 @@ st.divider()
 
 st.markdown(f"<h3 style='text-align: left;'>Analysis by Platform</h3>", unsafe_allow_html=True)
 
-columns = st.columns(3)
+columns = st.columns(4)
 for model, score, locations_showed, locations_no_results, keyword_presence, column in zip(
         models, scores.values(), locations_data_df["Locations Showed"], locations_data_df["Locations No Results"],
         keywords_presence.values(), columns
@@ -180,7 +180,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
 
         # Pie chart for Locations Showed vs No Results
         pie_data = pd.DataFrame({
-            "Category": ["Locations Showed", "Locations No Results"],
+            "Category": ["Showed", "No Results"],
             "Count": [locations_showed, locations_no_results],
         })
         st.plotly_chart(plot_pie_chart(pie_data), key=f"pie_chart_{model}", use_container_width=True)

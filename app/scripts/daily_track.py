@@ -114,3 +114,6 @@ if __name__ == "__main__":
     daily_track("GEMINI")
     gemini_time = time.time() - start_time - perplexity_time - chat_time
     print(f"Time taken to execute gemini: {gemini_time:.2f}  seconds")
+
+    daily_track("CLAUDE")
+    print("End of script")
