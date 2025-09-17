@@ -20,7 +20,7 @@ else:
 st.set_page_config(page_title="Maps", layout="wide")
 header_col1, header_col2, _ ,header_col3 = st.columns([2.5, 1.5, 2, 2.5])
 with header_col1:
-    st.header("📊 Google Places Ranking")
+    st.header("📊 Map Pack")
 with header_col3:
     month = select_month()
 st.divider()
@@ -153,12 +153,12 @@ else:
 
     with col5:
         # Ensure values above 10 are capped visually for coloring
+        city_data['Avg Rank'] = city_data['Avg Rank'].round(2)
         city_data['Color Rank'] = city_data['Avg Rank'].apply(lambda x: min(x, 10))
 
         # Calculate mean
         mean_rank = city_data['Avg Rank'].mean()
 
-        #st.subheader(f"Average Rank by Keyword in {selected_city}")
         fig2 = px.bar(
             city_data,
             x="Keyword",

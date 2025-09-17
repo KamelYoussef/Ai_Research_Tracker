@@ -111,9 +111,12 @@ if __name__ == "__main__":
     perplexity_time = time.time() - tmp
     print(f"Time taken to execute perplexity: {perplexity_time:.2f} seconds")
 
+    tmp = time.time()
     daily_track("GEMINI")
-    gemini_time = time.time() - start_time - perplexity_time - chat_time
+    gemini_time = time.time() - tmp
     print(f"Time taken to execute gemini: {gemini_time:.2f}  seconds")
 
+    tmp = time.time()
     daily_track("CLAUDE")
-    print("End of script")
+    claude_time = time.time() - tmp
+    print(f"Time taken to execute gemini: {claude_time:.2f}  seconds")

@@ -154,7 +154,7 @@ st.divider()
 
 st.markdown(f"<h3 style='text-align: left;'>Analysis by Platform</h3>", unsafe_allow_html=True)
 
-columns = st.columns(4)
+columns = st.columns(len(models))
 for model, score, locations_showed, locations_no_results, keyword_presence, column in zip(
         models, scores.values(), locations_data_df["Locations Showed"], locations_data_df["Locations No Results"],
         keywords_presence.values(), columns
