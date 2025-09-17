@@ -12,6 +12,7 @@ ai_platforms:
   - CHATGPT
   - PERPLEXITY
   - GEMINI
+  - CLAUDE
 locations:
   - Alix
   - Assiniboia

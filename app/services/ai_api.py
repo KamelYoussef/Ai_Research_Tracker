@@ -1,13 +1,15 @@
 from openai import OpenAI
-from app.config import OPENAI_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY
+from app.config import OPENAI_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY
 from google import genai
 from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 from urllib.parse import urlparse
+from anthropic import Anthropic
 
 
 client_chatgpt = OpenAI(api_key=OPENAI_API_KEY)
 client_perplexity = OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
+client_claude = Anthropic(api_key=CLAUDE_API_KEY)
 
 
 def get_ai_response(prompt, ai_platform):
@@ -15,6 +17,7 @@ def get_ai_response(prompt, ai_platform):
         "CHATGPT": chatgpt,
         "GEMINI": gemini,
         "PERPLEXITY": perplexity,
+        "CLAUDE":claude
     }
 
     handler = platform_handlers.get(ai_platform)
@@ -93,6 +96,50 @@ def perplexity(prompt):
 
     except Exception as e:
         print(f"Error getting response from perplexity: {e}")
+        return "", []
+
+
+def claude(prompt):
+    try:
+        response = client_claude.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            system="You are a helpful assistant for people in Canada.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 20,
+                "user_location": {
+                    "type": "approximate",
+                    "country": "CA",
+                    "city": "Calgary"
+                }
+            }]
+        )
+
+        # Extract text response
+        answer_parts = []
+        citations = []
+
+        for block in response.content:
+            if block.__class__.__name__ == "TextBlock":
+                # Collect the text
+                answer_parts.append(block.text)
+
+                # Collect citations if any
+                if block.citations:
+                    for cite in block.citations:
+                        citations.append(getattr(cite, "url", None))
+
+        answer = "\n".join(answer_parts)
+        sources = extract_base_domains(citations)
+
+        return answer, sources
+    except Exception as e:
+        print(f"Error getting response from Claude: {e}")
         return "", []
 
 

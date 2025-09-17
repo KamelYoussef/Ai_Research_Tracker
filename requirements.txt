@@ -168,3 +168,4 @@ websockets==15.0.1
 wrapt==1.17.0
 yarl==1.18.3
 streamlit-option-menu
+anthropic==0.66.0
