@@ -169,3 +169,13 @@ def get_location_scores(month, locations, competitor_flag, is_city=True):
 
     # Return DataFrame with location and score
     return pd.DataFrame(scores)
+
+
+def transform_value(x):
+    """
+    Transforms a value from the range [-1, 1] to [0, 100].
+    """
+    if not (-1 <= x <= 1):
+        raise ValueError("Input value must be between -1 and 1, inclusive.")
+
+    return (x + 1) * 50

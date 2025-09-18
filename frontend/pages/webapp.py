@@ -9,7 +9,7 @@ from data.fetch_utils import select_month, get_ai_total_score, download_data, lo
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart, \
     display_map_with_score_colors, plot_sentiment_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
-    fetch_and_process_data, get_location_scores
+    fetch_and_process_data, get_location_scores, transform_value
 from components.header import render_tooltip_heading
 from streamlit_option_menu import option_menu
 
@@ -76,8 +76,8 @@ with header_col5:
 col1, col2, col3 = st.columns(3)
 with col1:
     # Display Total Score in a header
-    render_tooltip_heading("Visibility score", "How often your brand appeared in AI-generated responses this month \
-    across 3 AI platforms. \n [Based on 1,680 prompts run weekly (4 runs per month), totaling 6,720 prompts across all \
+    render_tooltip_heading("Visibility Score", "How often your brand appeared in AI-generated responses this month \
+    across 4 AI platforms. \n [Based on 2360 prompts run weekly (4 runs per month), totaling 9,440 prompts across all \
     locations and keywords].")
 
     st.markdown(
@@ -89,7 +89,7 @@ with col1:
     plot_ai_scores_chart(get_ai_scores_full_year(month, competitor_flags[choice], is_city))
 
 with col2:
-    render_tooltip_heading("Average position", "Average position where your brand appeared in AI-generated responses this\
+    render_tooltip_heading("Global Ranking", "Average position where your brand appeared in AI-generated responses this\
     month. \nInstances where your brand was not mentioned are excluded from the average.")
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
@@ -98,21 +98,16 @@ with col2:
     plot_rank_chart(get_ranks_full_year(month, competitor_flags[choice], is_city))
 
 with col3:
-    render_tooltip_heading("Average sentiment", "Average sentiment (scale: -1 to 1) based on AI-generated responses \
+    render_tooltip_heading("Sentiment Score", "Average sentiment based on AI-generated responses \
     this month. Responses that did not mention your brand are excluded from the calculation.")
     avg_sentiment = get_avg_sentiment(month, competitor_flags[choice], is_city)
     if avg_sentiment != "N/A":
-        if avg_sentiment >= 0.6: sentiment_label = "Very Positive 😀"
-        elif avg_sentiment >= 0.25: sentiment_label = "Positive 🙂"
-        elif avg_sentiment <= -0.6: sentiment_label = "Very Negative 😡"
-        elif avg_sentiment <= -0.25: sentiment_label = "Negative 😕"
-        else: sentiment_label = "Neutral 😐"
-    else : sentiment_label ="N/A"
+        avg_sentiment = transform_value(avg_sentiment)
+    else : avg_sentiment ="N/A"
     st.markdown(
         f"""
             <div style="display: inline-flex; align-items: center; margin-top: -30px;">
-                <h1 style="margin: 0;">{avg_sentiment}</h1>
-                <span style="font-size: 15px; margin-left: -15px;white-space: nowrap;">({sentiment_label})</span>
+                <h1 style="margin: 0;">{avg_sentiment} %</h1>
             </div>
             """,
         unsafe_allow_html=True
@@ -138,15 +133,17 @@ if is_city:
 st.divider()
 
 # Lists for Top Locations and Opportunities
+st.markdown(f"<h3 style='text-align: left;'>Insights</h3>", unsafe_allow_html=True)
+
 col4, col5, col6 = st.columns(3)
 with col4:
-    st.markdown(f"<h4 style='text-align: left;'>Top-Performing Locations: 🚀</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: left;'>Top-Performing Locations : 🚀</h4>", unsafe_allow_html=True)
     st.write("\n".join(f"- {location}" for location in top_locations(month, competitor_flags[choice], is_city)[:5]))
 with col5:
-    st.markdown(f"<h4 style='text-align: left;'>Areas for Opportunity: 🎯</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: left;'>Areas for Opportunity : 🎯</h4>", unsafe_allow_html=True)
     st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice], is_city)[-5:]))))
 with col6:
-    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight:</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight :</h4>", unsafe_allow_html=True)
     top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice], is_city)
     st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
 
@@ -162,13 +159,16 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
     with column:
         st.markdown(f"<h4 style='text-align: left;'>{model}</h4>", unsafe_allow_html=True)
         st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Visibility score : {score} % "
+                    f"Visibility Score : {score} % "
                     f"</h6>", unsafe_allow_html=True)
         st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Average position : {get_avg_rank_by_platform(month, model, competitor_flags[choice], is_city)} "
+                    f"Global Ranking : {get_avg_rank_by_platform(month, model, competitor_flags[choice], is_city)} "
                     f"</h6>", unsafe_allow_html=True)
+        model_sentiment = get_avg_sentiment_by_platform(month, model, competitor_flags[choice], is_city)
+        if model_sentiment != 'N/A' and model_sentiment != 0:
+            model_sentiment = transform_value(model_sentiment)
         st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Average sentiment : {get_avg_sentiment_by_platform(month, model, competitor_flags[choice], is_city)} "
+                    f"Sentiment Score : {model_sentiment} %"
                     f"</h6>", unsafe_allow_html=True)
 
         # Bar chart for Keyword Presence
@@ -189,7 +189,7 @@ with st.expander("How to interpret this pie chart ? ℹ️"):
     st.markdown("""
     This chart presents data **aggregated by location**, showing how many locations your brand appeared in across AI-generated responses this month.
 
-    It summarizes visibility using **6,720 prompts total**, which come from running **1,680 prompts weekly (4 runs per month)** across multiple keywords and locations.
+    It summarizes visibility using **9,440 prompts total**, which come from running **2360 prompts weekly (4 runs per month)** across multiple keywords and locations.
 
     - **“Locations Showed”**: The brand showed up **at least once** in AI results for that location — even if only for one keyword in one prompt.
     - **“Locations Not Showed”**: The brand **did not appear even once** for any keyword in that location across all prompts for the month.
@@ -201,7 +201,7 @@ st.divider()
 
 st.markdown(f"<h3 style='text-align: left;'>Detailed Analysis</h3>", unsafe_allow_html=True)
 # Stats by location
-col7, col8 = st.columns([3, 5])
+col7, col8 = st.columns([3.5, 5])
 with col7:
     search_query = st.selectbox("**Search Locations**", options=locations, index=0)
 

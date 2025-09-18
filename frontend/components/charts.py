@@ -6,6 +6,7 @@ import pydeck as pdk
 import pandas as pd
 import json
 import math
+from data.data_processing import transform_value
 
 def plot_pie_chart(data):
     return px.pie(
@@ -151,11 +152,15 @@ def display_map_with_score_colors(df_scores):
 def plot_sentiment_chart(data):
     df = data.reset_index()
     df.columns = ["month", "sentiment"]
+
+    df['sentiment'] = df['sentiment'].apply(
+        lambda x: transform_value(x) if (x != 'N/A' and x != 0) else x
+    )
     month_order = df["month"].tolist()
 
     chart = alt.Chart(df).mark_line(point=True).encode(
         x=alt.X('month:N', sort=month_order, axis=alt.Axis(title='')),
-        y=alt.Y('sentiment:Q', scale=alt.Scale(domain=[-1,1]),axis=alt.Axis(title=''))
+        y=alt.Y('sentiment:Q', scale=alt.Scale(domain=[0, 100]),axis=alt.Axis(title=''))
     ).properties(
         height=200
     )
