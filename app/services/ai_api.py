@@ -17,7 +17,7 @@ def get_ai_response(prompt, ai_platform):
         "CHATGPT": chatgpt,
         "GEMINI": gemini,
         "PERPLEXITY": perplexity,
-        "CLAUDE":claude
+        "CLAUDE": claude
     }
 
     handler = platform_handlers.get(ai_platform)
@@ -102,7 +102,7 @@ def perplexity(prompt):
 def claude(prompt):
     try:
         response = client_claude.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-3-5-haiku-latest",
             max_tokens=4096,
             system="You are a helpful assistant for people in Canada.",
             messages=[
