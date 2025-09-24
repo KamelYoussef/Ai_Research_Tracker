@@ -17,5 +17,4 @@ if __name__ == "__main__":
     #print(score_ai)
 
     #print(aggregate_maps_by_product_and_location(db, month, is_city=True))
-    print(calculate_avg_rank_by_location_platform(db, month))
-    print(len(calculate_avg_rank_by_location_platform(db, month)))
+    print(calculate_avg_sentiment_by_location_platform(db, month, is_city=False))

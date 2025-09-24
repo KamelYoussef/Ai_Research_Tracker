@@ -13,6 +13,7 @@ from data.data_processing import keywords_data, top_locations, top_low_keywords,
     fetch_and_process_data, get_location_scores, transform_value
 from components.header import render_tooltip_heading
 from streamlit_option_menu import option_menu
+import numpy as np
 
 # Check the login state
 if 'logged_in' in st.session_state and validate_token():
@@ -148,10 +149,11 @@ with col5:
     st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice], is_city)[-5:]))))
 with col6:
     if data_rank is not None and data_sentiment is not None:
-        st.markdown(f"<h4 style='text-align: left;'>Worst Average Ranking : </h4>", unsafe_allow_html=True)
-        st.markdown(data_rank.loc[data_rank["avg_rank"].idxmax(), 'location'] +" : "+ str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'avg_rank']))
-        st.markdown(f"<h4 style='text-align: left;'>Worst Sentiment score : </h4>", unsafe_allow_html=True)
-        st.write(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'location']+" : "+ str(transform_value(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'avg_sentiment']))+" %")
+        if not (data_rank["avg_rank"].isnull().all() and data_sentiment["avg_sentiment"].isnull().all()):
+            st.markdown(f"<h4 style='text-align: left;'>Lowest Ranking : </h4>", unsafe_allow_html=True)
+            st.markdown(data_rank.loc[data_rank["avg_rank"].idxmax(), 'location'] +" ➖ "+str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'ai_platform']) +" ➖ "+ str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'avg_rank']))
+            st.markdown(f"<h4 style='text-align: left;'>Lowest Sentiment Score : </h4>", unsafe_allow_html=True)
+            st.write(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'location']+" ➖ "+str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'ai_platform']) +" ➖ "+ str(transform_value(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'avg_sentiment']))+" %")
 #with col6:
 #    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight :</h4>", unsafe_allow_html=True)
 #    top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice], is_city)
@@ -225,22 +227,22 @@ with col7:
 
     if data_rank is not None:
         avg_rank = data_rank[data_rank['location'] == search_query]["avg_rank"].mean()
-        st.markdown(f"<h6 style='text-align: left;'>"
-                    f"Average Ranking : {round(float(avg_rank), 1)} "
-                   f"</h6>", unsafe_allow_html=True)
+        if avg_rank is not np.nan:
+            st.markdown(f"<h6 style='text-align: left;'>"
+                        f"Average Ranking : {round(float(avg_rank), 1)} "
+                        f"</h6>", unsafe_allow_html=True)
 
-    if data_rank is not None:
+    if data_sentiment is not None:
         avg_sentiment = data_sentiment[data_sentiment['location'] == search_query]["avg_sentiment"].mean()
-        if avg_sentiment != 'N/A' and avg_sentiment != 0:
-            avg_sentiment = transform_value(avg_sentiment)
-        st.markdown(f"<h6 style='text-align: left;'>"
-                    f"Sentiment Score : {round(float(avg_sentiment), 1)} % "
-                    f"</h6>", unsafe_allow_html=True)
+        if avg_sentiment is not np.nan:
+            if avg_sentiment != 'N/A':
+                avg_sentiment = transform_value(avg_sentiment)
+            st.markdown(f"<h6 style='text-align: left;'>"
+                        f"Sentiment Score : {round(float(avg_sentiment), 1)} % "
+                        f"</h6>", unsafe_allow_html=True)
     st.divider()
     st.write(f"{search_query}'s visibility score across AI platforms")
     st.dataframe(df, hide_index=True, use_container_width=True)
-
-    #st.write(data_rank.loc[data_rank["avg_rank"].idxmax()])
 
 with col8:
     with st.container():
