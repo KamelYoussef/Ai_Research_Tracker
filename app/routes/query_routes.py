@@ -9,7 +9,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
     aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
     validate_token, verify_password, admin_required, hash_password, calculate_rank, calculate_rank_by_platform, \
-    get_aggregated_sources, calculate_sentiment, calculate_sentiment_by_platform, aggregate_maps_by_product_and_location
+    get_aggregated_sources, calculate_sentiment, calculate_sentiment_by_platform, \
+    aggregate_maps_by_product_and_location, calculate_avg_sentiment_by_location_platform, \
+    calculate_avg_rank_by_location_platform
 
 
 router = APIRouter()
@@ -392,3 +394,49 @@ async def aggregate_maps_by_product_and_location_route(
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         return {"error": str(e)}
+
+
+@router.get("/sentiment_by_location/{month}")
+async def get_sentiment_by_location_platform(
+    month: str,
+    is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    """
+    Get average sentiment grouped by location and AI platform for a given month.
+    """
+    try:
+        validate_token(credentials)
+        sentiment_data = calculate_avg_sentiment_by_location_platform(db, month, is_city)
+        return {"month": month, "results": sentiment_data}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error calculating sentiment by location/platform: {str(e)}"
+        )
+
+
+@router.get("/rank_by_location/{month}")
+async def get_rank_by_location_platform(
+    month: str,
+    is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    """
+    Get average sentiment grouped by location and AI platform for a given month.
+    """
+    try:
+        validate_token(credentials)
+        rank_data = calculate_avg_rank_by_location_platform(db, month, is_city)
+        return {"results": rank_data}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error calculating sentiment by location/platform: {str(e)}"
+        )

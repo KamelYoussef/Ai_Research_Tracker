@@ -451,3 +451,25 @@ def maps(month, is_city):
         return final_df
     else :
         return None
+
+
+def get_avg_sentiment_by_location(month, flag_competitor, is_city=True):
+    if flag_competitor == "total_count":
+        if fetch_data("sentiment_by_location", month, is_city=is_city):
+            if fetch_data("sentiment_by_location", month, is_city=is_city).get("results", []) is not None:
+                return pd.DataFrame(fetch_data("sentiment_by_location", month, is_city=is_city).get("results", []))
+            else:
+                return None
+    else:
+        return None
+
+
+def get_avg_rank_by_location(month, flag_competitor, is_city=True):
+    if flag_competitor == "total_count":
+        if fetch_data("rank_by_location", month, is_city=is_city):
+            if fetch_data("rank_by_location", month, is_city=is_city).get("results", []) is not None:
+                return pd.DataFrame(fetch_data("rank_by_location", month, is_city=is_city).get("results", []))
+            else:
+                return None
+    else:
+        return None

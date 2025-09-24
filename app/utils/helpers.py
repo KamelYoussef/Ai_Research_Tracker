@@ -659,3 +659,65 @@ def aggregate_maps_by_product_and_location(db: Session, month: str, is_city: boo
         }
         for r in results
     ]
+
+
+def calculate_avg_sentiment_by_location_platform(db: Session, month: str, is_city: bool = True):
+    """
+    Calculate the average sentiment grouped by location and AI platform for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+        is_city (bool): Filter rows based on whether location is a city. Default is True.
+
+    Returns:
+        results (list of dict): Each dict contains location, ai_platform, and avg_sentiment.
+    """
+    query = (
+        db.query(
+            Response.location,
+            Response.ai_platform,
+            func.avg(Response.sentiment).label("avg_sentiment")
+        )
+        .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
+        .group_by(Response.location, Response.ai_platform)
+        .all()
+    )
+
+    results = [
+        {"location": loc, "ai_platform": platform, "avg_sentiment": avg}
+        for loc, platform, avg in query
+    ]
+    return results
+
+
+def calculate_avg_rank_by_location_platform(db: Session, month: str, is_city: bool = True):
+    """
+    Calculate the average rank grouped by location and AI platform for a given month.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): Month in YYYYMM format.
+        is_city (bool): Filter rows based on whether location is a city. Default is True.
+
+    Returns:
+        results (list of dict): Each dict contains location, ai_platform, and avg_rank.
+    """
+    query = (
+        db.query(
+            Response.location,
+            Response.ai_platform,
+            func.round(func.avg(Response.rank), 2).label("avg_rank")
+        )
+        .filter(Response.date == month)
+        .filter(Response.is_city == is_city)
+        .group_by(Response.location, Response.ai_platform)
+        .all()
+    )
+
+    results = [
+        {"location": loc, "ai_platform": platform, "avg_rank": avg_rank}
+        for loc, platform, avg_rank in query
+    ]
+    return results

@@ -5,7 +5,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
     validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month,\
-    get_sources, dict_to_text, get_avg_sentiment, get_sentiments_full_year, get_avg_sentiment_by_platform
+    get_sources, dict_to_text, get_avg_sentiment, get_sentiments_full_year, get_avg_sentiment_by_platform,\
+    get_avg_sentiment_by_location, get_avg_rank_by_location
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart, \
     display_map_with_score_colors, plot_sentiment_chart
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
@@ -89,7 +90,7 @@ with col1:
     plot_ai_scores_chart(get_ai_scores_full_year(month, competitor_flags[choice], is_city))
 
 with col2:
-    render_tooltip_heading("Global Ranking", "Average position where your brand appeared in AI-generated responses this\
+    render_tooltip_heading("Average Ranking", "Average position where your brand appeared in AI-generated responses this\
     month. \nInstances where your brand was not mentioned are excluded from the average.")
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
@@ -135,6 +136,9 @@ st.divider()
 # Lists for Top Locations and Opportunities
 st.markdown(f"<h3 style='text-align: left;'>Insights</h3>", unsafe_allow_html=True)
 
+data_rank = get_avg_rank_by_location(month, competitor_flags[choice], is_city)
+data_sentiment = get_avg_sentiment_by_location(month, competitor_flags[choice], is_city)
+
 col4, col5, col6 = st.columns(3)
 with col4:
     st.markdown(f"<h4 style='text-align: left;'>Top-Performing Locations : 🚀</h4>", unsafe_allow_html=True)
@@ -143,9 +147,15 @@ with col5:
     st.markdown(f"<h4 style='text-align: left;'>Areas for Opportunity : 🎯</h4>", unsafe_allow_html=True)
     st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice], is_city)[-5:]))))
 with col6:
-    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight :</h4>", unsafe_allow_html=True)
-    top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice], is_city)
-    st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
+    if data_rank is not None and data_sentiment is not None:
+        st.markdown(f"<h4 style='text-align: left;'>Worst Average Ranking : </h4>", unsafe_allow_html=True)
+        st.markdown(data_rank.loc[data_rank["avg_rank"].idxmax(), 'location'] +" : "+ str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'avg_rank']))
+        st.markdown(f"<h4 style='text-align: left;'>Worst Sentiment score : </h4>", unsafe_allow_html=True)
+        st.write(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'location']+" : "+ str(transform_value(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'avg_sentiment']))+" %")
+#with col6:
+#    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight :</h4>", unsafe_allow_html=True)
+#    top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice], is_city)
+#    st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
 
 st.divider()
 
@@ -162,7 +172,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
                     f"Visibility Score : {score} % "
                     f"</h6>", unsafe_allow_html=True)
         st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Global Ranking : {get_avg_rank_by_platform(month, model, competitor_flags[choice], is_city)} "
+                    f"Average Ranking : {get_avg_rank_by_platform(month, model, competitor_flags[choice], is_city)} "
                     f"</h6>", unsafe_allow_html=True)
         model_sentiment = get_avg_sentiment_by_platform(month, model, competitor_flags[choice], is_city)
         if model_sentiment != 'N/A' and model_sentiment != 0:
@@ -204,9 +214,7 @@ st.markdown(f"<h3 style='text-align: left;'>Detailed Analysis</h3>", unsafe_allo
 col7, col8 = st.columns([3.5, 5])
 with col7:
     search_query = st.selectbox("**Search Locations**", options=locations, index=0)
-
-    data = stats_by_location(month, search_query, competitor_flags[choice], is_city)
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(stats_by_location(month, search_query, competitor_flags[choice], is_city))
 
     total_sum = df.select_dtypes(include='number').sum().sum()
     total_count = df.select_dtypes(include='number').count().sum()
@@ -214,8 +222,25 @@ with col7:
     st.markdown(f"<h6 style='text-align: left;'>"
                 f"Visibility score : {round(float(total_sum / total_count),1)} % "
                 f"</h6>", unsafe_allow_html=True)
+
+    if data_rank is not None:
+        avg_rank = data_rank[data_rank['location'] == search_query]["avg_rank"].mean()
+        st.markdown(f"<h6 style='text-align: left;'>"
+                    f"Average Ranking : {round(float(avg_rank), 1)} "
+                   f"</h6>", unsafe_allow_html=True)
+
+    if data_rank is not None:
+        avg_sentiment = data_sentiment[data_sentiment['location'] == search_query]["avg_sentiment"].mean()
+        if avg_sentiment != 'N/A' and avg_sentiment != 0:
+            avg_sentiment = transform_value(avg_sentiment)
+        st.markdown(f"<h6 style='text-align: left;'>"
+                    f"Sentiment Score : {round(float(avg_sentiment), 1)} % "
+                    f"</h6>", unsafe_allow_html=True)
+    st.divider()
     st.write(f"{search_query}'s visibility score across AI platforms")
     st.dataframe(df, hide_index=True, use_container_width=True)
+
+    #st.write(data_rank.loc[data_rank["avg_rank"].idxmax()])
 
 with col8:
     with st.container():
