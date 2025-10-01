@@ -65,7 +65,7 @@ with header_col4:
     st.markdown(
         f"<h3 style='text-align: left;'>Overview - {format_month(month)}</h3>", unsafe_allow_html=True)
     st.markdown(f"<h7 style='text-align: left;'> Here’s a quick summary of your brand’s performance this month across \
-    all three AI platforms, multiple locations, and five keywords showing how often it appeared and where it ranked. </h7>", unsafe_allow_html=True)
+    all four AI platforms, multiple locations, and five keywords showing how often it appeared and where it ranked. </h7>", unsafe_allow_html=True)
 with header_col5:
     st.download_button(
         label="Export data",
