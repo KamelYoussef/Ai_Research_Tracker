@@ -102,7 +102,7 @@ def perplexity(prompt):
 def claude(prompt):
     try:
         response = client_claude.messages.create(
-            model="claude-3-5-haiku-latest",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=4096,
             system="You are a helpful assistant for people in Canada.",
             messages=[

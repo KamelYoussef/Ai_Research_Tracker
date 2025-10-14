@@ -99,20 +99,20 @@ def maps_track():
 
 if __name__ == "__main__":
     startup()
-    maps_track()
+    #maps_track()
     start_time = time.time()
 
-    daily_track("CHATGPT")
+    #daily_track("CHATGPT")
     chat_time = time.time() - start_time
     print(f"Time taken to execute chatgpt: {chat_time:.2f} seconds")
 
     tmp = time.time()
-    daily_track("PERPLEXITY")
+    #daily_track("PERPLEXITY")
     perplexity_time = time.time() - tmp
     print(f"Time taken to execute perplexity: {perplexity_time:.2f} seconds")
 
     tmp = time.time()
-    daily_track("GEMINI")
+    #daily_track("GEMINI")
     gemini_time = time.time() - tmp
     print(f"Time taken to execute gemini: {gemini_time:.2f}  seconds")
 
