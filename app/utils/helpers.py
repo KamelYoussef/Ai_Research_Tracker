@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 import os
 import requests
 
-semaphore = Semaphore(10)  # Limit to 10 concurrent threads
+semaphore = Semaphore(7)  # Limit to 10 concurrent threads
 SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -115,7 +115,7 @@ def process_product_location_with_delay(product, location, search_phrases, ai_pl
     # Wait until we are allowed to acquire the semaphore (this will throttle the rate)
     semaphore.acquire()
     if ai_platform == 'CLAUDE':
-        RPM = 20
+        RPM = 1
     else:
         RPM = 50
 
