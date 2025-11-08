@@ -150,7 +150,6 @@ else:
     city_data = df[df['City'] == selected_city]
     col5, col6 = st.columns(2)
 
-
     with col5:
         # Ensure values above 10 are capped visually for coloring
         city_data['Avg Rank'] = city_data['Avg Rank'].round(2)
@@ -199,18 +198,70 @@ else:
         #col9.metric("🗣️ Total Reviews", f"{int(city_data['Reviews'].sum() / city_data['Keyword'].nunique())}")
 
     # ---------------------
-    # Optional: raw table
+    # Top Locations
+    st.divider()
+    label_keys = ["top_41"]
+    city_to_label = {}
+    for key in label_keys:
+        if key in yaml_data:
+            for city in yaml_data[key]:
+                city_to_label[city] = key
+
+    df["Labels"] = df["City"].map(city_to_label).fillna("None")
+
+    df_top = df[df["Labels"] == "top_41"]
+
+    col10, col11 = st.columns(2)
+
+    with col10:
+        # Compute average rank per keyword across all cities
+        keyword_avg = df_top.groupby("Keyword", as_index=False)["Avg Rank"].mean().round(2)
+        keyword_avg['Color Rank'] = keyword_avg['Avg Rank'].apply(lambda x: min(x, 10))
+
+        # Calculate mean across all keywords
+        overall_mean = keyword_avg['Avg Rank'].mean()
+
+        fig_overall = px.bar(
+            keyword_avg,
+            x="Keyword",
+            y="Avg Rank",
+            color="Color Rank",
+            text="Avg Rank",
+            title="Average Rank by Keyword (Top Locations)",
+            color_continuous_scale="OrRd",
+            range_color=(1, 10),
+            height=400
+        )
+
+        # Add horizontal mean line
+        fig_overall.add_shape(
+            type="line",
+            x0=-0.5,
+            x1=len(keyword_avg) - 0.5,
+            y0=overall_mean,
+            y1=overall_mean,
+            line=dict(color="orange", width=2, dash="dash")
+        )
+
+        # Add annotation for mean line
+        fig_overall.add_annotation(
+            x=4.5,  # or use x=4.5 depending on layout
+            y=overall_mean,
+            text=f"Overall Avg. Rank: {overall_mean:.2f}",
+            showarrow=False,
+            yshift=10,
+            font=dict(color="orange")
+        )
+
+        st.plotly_chart(fig_overall)
+
+    with col11:
+        st.markdown("<div style='height: 140px;'></div>", unsafe_allow_html=True)
+        n1, n2, n3, _ = st.columns(4)
+        n2.metric("🔢 Avg. Rank", f"{df_top['Avg Rank'].mean():.2f}")
+        n2.metric("⭐ Avg. Rating", f"{df_top['Rating'].mean():.2f}")
+
     with st.expander("📄 Explore Data"):
-        label_keys = ["top_41"]
-        city_to_label = {}
-        for key in label_keys:
-            if key in yaml_data:
-                for city in yaml_data[key]:
-                    city_to_label[city] = key
-
-        # Add to DataFrame
-        df["Labels"] = df["City"].map(city_to_label).fillna("None")
-
         st.dataframe(df)
 
 with st.sidebar:
