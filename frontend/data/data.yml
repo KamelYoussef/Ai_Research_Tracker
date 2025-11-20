@@ -124,6 +124,33 @@ locations:
   - Winnipeg
   - Wolseley
   - Yorkton
+  - Charlottetown
+  - Miramichi
+  - Edmundston
+  - Yarmouth
+  - Moncton
+  - Bedford
+  - Tracadie
+  - North Sydney
+  - Fredericton
+  - Cole Harbour
+  - Woodstock
+  - Saint John
+  - Kensington
+  - Barrington Passage
+  - Digby
+  - Summerside
+  - Minto
+  - Campbellton
+  - Oromocto
+  - Rothesay
+  - Church Point
+  - Bathurst
+  - Blackville
+  - Grand Manan
+  - Petitcodiac
+  - Bridgetown
+  - Annapolis
 top_41:
   - Bolton
   - Brandon
@@ -166,3 +193,31 @@ top_41:
   - Terrace
   - Vernon
   - West Kelowna
+Huestis:
+  - Charlottetown
+  - Miramichi
+  - Edmundston
+  - Yarmouth
+  - Moncton
+  - Bedford
+  - Tracadie
+  - North Sydney
+  - Fredericton
+  - Cole Harbour
+  - Woodstock
+  - Saint John
+  - Kensington
+  - Barrington Passage
+  - Digby
+  - Summerside
+  - Minto
+  - Campbellton
+  - Oromocto
+  - Rothesay
+  - Church Point
+  - Bathurst
+  - Blackville
+  - Grand Manan
+  - Petitcodiac
+  - Bridgetown
+  - Annapolis
