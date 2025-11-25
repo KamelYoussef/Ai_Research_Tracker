@@ -69,7 +69,7 @@ else:
     # 1. OVERALL VIEW
     st.header("Overview")
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1.5, 1])
 
     with col1:
         # Compute average rank per keyword across all cities
@@ -148,7 +148,7 @@ else:
 
     selected_city = st.selectbox("Select a City", sorted(df['City'].unique()))
     city_data = df[df['City'] == selected_city]
-    col5, col6 = st.columns(2)
+    col5, col6 = st.columns([1.5, 1])
 
     with col5:
         # Ensure values above 10 are capped visually for coloring
@@ -200,7 +200,7 @@ else:
     # ---------------------
     # Top Locations
     st.divider()
-    label_keys = ["top_41"]
+    label_keys = ["top_41","Huestis"]
     city_to_label = {}
     for key in label_keys:
         if key in yaml_data:
@@ -211,7 +211,7 @@ else:
 
     df_top = df[df["Labels"] == "top_41"]
 
-    col10, col11 = st.columns(2)
+    col10, col11 = st.columns([1.5, 1])
 
     with col10:
         # Compute average rank per keyword across all cities
@@ -264,22 +264,14 @@ else:
     # ---------------------
     # Huestis Locations
     st.divider()
-    label_keys = ["Huestis"]
-    city_to_label = {}
-    for key in label_keys:
-        if key in yaml_data:
-            for city in yaml_data[key]:
-                city_to_label[city] = key
 
-    df["Labels"] = df["City"].map(city_to_label).fillna("None")
+    df_huestis = df[df["Labels"] == "Huestis"]
 
-    df_top = df[df["Labels"] == "Huestis"]
-
-    col12, col13 = st.columns(2)
+    col12, col13 = st.columns([1.5, 1])
 
     with col12:
         # Compute average rank per keyword across all cities
-        keyword_avg = df_top.groupby("Keyword", as_index=False)["Avg Rank"].mean().round(2)
+        keyword_avg = df_huestis.groupby("Keyword", as_index=False)["Avg Rank"].mean().round(2)
         keyword_avg['Color Rank'] = keyword_avg['Avg Rank'].apply(lambda x: min(x, 10))
 
         # Calculate mean across all keywords
@@ -322,8 +314,8 @@ else:
     with col13:
         st.markdown("<div style='height: 140px;'></div>", unsafe_allow_html=True)
         n1, n2, n3, _ = st.columns(4)
-        n2.metric("🔢 Avg. Rank", f"{df_top['Avg Rank'].mean():.2f}")
-        n2.metric("⭐ Avg. Rating", f"{df_top['Rating'].mean():.2f}")
+        n2.metric("🔢 Avg. Rank", f"{df_huestis['Avg Rank'].mean():.2f}")
+        n2.metric("⭐ Avg. Rating", f"{df_huestis['Rating'].mean():.2f}")
 
     with st.expander("📄 Explore Data"):
         st.dataframe(df)
