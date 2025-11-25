@@ -357,7 +357,13 @@ def calculate_score_ai(db: Session, month: str, config_path, flag_competitor, is
         .filter(Response.is_city == is_city) \
         .scalar()
 
-    n_locations, n_products, _ = get_counts_from_config(config_path)
+    _, n_products, _ = get_counts_from_config(config_path)
+
+    n_locations = db.query(func.count(distinct(Response.location))) \
+        .filter(Response.date == month) \
+        .filter(Response.is_city == is_city) \
+        .scalar() - 6 # number of provinces
+
     if is_city is False:
         n_locations = 6 # number of provinces
     n_ai_platforms = db.query(func.count(distinct(Response.ai_platform))) \
