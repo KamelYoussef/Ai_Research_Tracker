@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 
 def store_response(db: Session, product: str, location: str, total_count: int, ai_platform: str, date: str, day: str,
-                   competitor_1: str, competitor_2: str, competitor_3: str, rank: int, sentiment: float):
+                   competitor_1: str, competitor_2: str, competitor_3: str, competitor_4: str, rank: int, sentiment: float):
     """
     Store the AI-generated response in the database.
 
@@ -34,6 +34,7 @@ def store_response(db: Session, product: str, location: str, total_count: int, a
         competitor_1=competitor_1,
         competitor_2=competitor_2,
         competitor_3=competitor_3,
+        competitor_4=competitor_4,
         rank=rank,
         sentiment=sentiment
     )

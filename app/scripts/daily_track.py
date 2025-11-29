@@ -31,6 +31,7 @@ def daily_track(ai_platfrom):
             competitor_1 = competitors.get('co-operators')
             competitor_2 = competitors.get('westland')
             competitor_3 = competitors.get('brokerlink')
+            competitor_4 = competitors.get('acera')
             rank = result.get('rank')
             sentiment = result.get('sentiment')
             sources = result.get('sources', [])
@@ -47,6 +48,7 @@ def daily_track(ai_platfrom):
                 competitor_1=competitor_1,
                 competitor_2=competitor_2,
                 competitor_3=competitor_3,
+                competitor_4=competitor_4,
                 rank=rank,
                 sentiment=sentiment
             )

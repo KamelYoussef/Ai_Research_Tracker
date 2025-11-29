@@ -228,6 +228,7 @@ def aggregate_total_by_product(db: Session, month: str, is_city: bool = True):
             func.sum(Response.competitor_1).label("competitor_1"),
             func.sum(Response.competitor_2).label("competitor_2"),
             func.sum(Response.competitor_3).label("competitor_3"),
+            func.sum(Response.competitor_4).label("competitor_4"),
             Response.day,
             Response.ai_platform
         )
@@ -244,8 +245,9 @@ def aggregate_total_by_product(db: Session, month: str, is_city: bool = True):
             "competitor_1": r[2],
             "competitor_2": r[3],
             "competitor_3": r[4],
-            "day": r[5],
-            "ai_platform": r[6]
+            "competitor_4": r[5],
+            "day": r[6],
+            "ai_platform": r[7]
         }
         for r in results
     ]
@@ -269,6 +271,7 @@ def aggregate_total_by_location(db: Session, month: str, is_city: bool = True):
             func.sum(Response.competitor_1).label("competitor_1"),
             func.sum(Response.competitor_2).label("competitor_2"),
             func.sum(Response.competitor_3).label("competitor_3"),
+            func.sum(Response.competitor_4).label("competitor_4"),
             Response.day,
             Response.ai_platform
         )
@@ -284,8 +287,9 @@ def aggregate_total_by_location(db: Session, month: str, is_city: bool = True):
             "competitor_1": r[2],
             "competitor_2": r[3],
             "competitor_3": r[4],
-            "day": r[5],
-            "ai_platform": r[6],
+            "competitor_4": r[5],
+            "day": r[6],
+            "ai_platform": r[7]
         }
         for r in results
     ]
@@ -310,6 +314,7 @@ def aggregate_total_by_product_and_location(db: Session, month: str, is_city: bo
             func.sum(Response.competitor_1).label("competitor_1"),
             func.sum(Response.competitor_2).label("competitor_2"),
             func.sum(Response.competitor_3).label("competitor_3"),
+            func.sum(Response.competitor_4).label("competitor_4"),
             Response.day,
             Response.ai_platform
         )
@@ -326,8 +331,9 @@ def aggregate_total_by_product_and_location(db: Session, month: str, is_city: bo
             "competitor_1": r[3],
             "competitor_2": r[4],
             "competitor_3": r[5],
-            "day": r[6],
-            "ai_platform": r[7],
+            "competitor_4": r[6],
+            "day": r[7],
+            "ai_platform": r[8],
         }
         for r in results
     ]

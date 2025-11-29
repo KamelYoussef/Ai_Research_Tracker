@@ -39,7 +39,7 @@ font_css = """
 """
 st.write(font_css, unsafe_allow_html=True)
 
-header_col1, header_col2, _ ,header_col3 = st.columns([1.5, 1.5, 2, 2])
+header_col1, header_col2, _, header_col3 = st.columns([1.5, 1.5, 2, 2])
 # Choose company or one of the competitors
 with header_col1:
     competitor_flags = {
@@ -47,6 +47,7 @@ with header_col1:
         "Co-operators": "competitor_1",
         "Westland": "competitor_2",
         "Brokerlink": "competitor_3",
+        "Acera Insurance": "competitor_4"
     }
     choice = st.selectbox(" ", list(competitor_flags.keys()))
 

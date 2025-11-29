@@ -67,7 +67,12 @@ def process_and_pivot_data(endpoint, index_columns, month, competitor_flag, is_c
             fill_value=0
         ).reset_index()
         df_pivot["Total Count"] = df_pivot.iloc[:, len(index_columns):].sum(axis=1)
-        return df_pivot
+        if df_pivot.empty:
+            st.error(f"No data available.")
+            st.stop()
+            return None
+        else:
+            return df_pivot
     else:
         st.error(f"No data available.")
         st.stop()

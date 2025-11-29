@@ -16,5 +16,6 @@ class Response(Base):
     competitor_1 = Column(Integer)
     competitor_2 = Column(Integer)
     competitor_3 = Column(Integer)
+    competitor_4 = Column(Integer) #ALTER TABLE ai_responses ADD COLUMN competitor_4 INTEGER;
     rank = Column(Integer)
     sentiment = Column(Float)
