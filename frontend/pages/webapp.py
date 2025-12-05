@@ -14,6 +14,7 @@ from data.data_processing import keywords_data, top_locations, top_low_keywords,
 from components.header import render_tooltip_heading
 from streamlit_option_menu import option_menu
 import numpy as np
+import yaml
 
 # Check the login state
 if 'logged_in' in st.session_state and validate_token():
@@ -141,7 +142,7 @@ st.markdown(f"<h3 style='text-align: left;'>Insights</h3>", unsafe_allow_html=Tr
 data_rank = get_avg_rank_by_location(month, competitor_flags[choice], is_city)
 data_sentiment = get_avg_sentiment_by_location(month, competitor_flags[choice], is_city)
 
-col4, col5, col6 = st.columns(3)
+col4, col5, col6, col61 = st.columns(4)
 with col4:
     st.markdown(f"<h4 style='text-align: left;'>Top-Performing Locations : 🚀</h4>", unsafe_allow_html=True)
     st.write("\n".join(f"- {location}" for location in top_locations(month, competitor_flags[choice], is_city)[:5]))
@@ -155,10 +156,54 @@ with col6:
             st.markdown(data_rank.loc[data_rank["avg_rank"].idxmax(), 'location'] +" ➖ "+str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'ai_platform']) +" ➖ "+ str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'avg_rank']))
             st.markdown(f"<h4 style='text-align: left;'>Lowest Sentiment Score : </h4>", unsafe_allow_html=True)
             st.write(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'location']+" ➖ "+str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'ai_platform']) +" ➖ "+ str(transform_value(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'avg_sentiment']))+" %")
-#with col6:
-#    st.markdown(f"<h4 style='text-align: left;'>Keywords Insight :</h4>", unsafe_allow_html=True)
-#    top_keyword, low_keyword = top_low_keywords(month, competitor_flags[choice], is_city)
-#    st.write(f"- Top keyword: {top_keyword}\n- Low keyword: {low_keyword}")
+with col61:
+    if is_city:
+        st.markdown(f"<h4 style='text-align: left;'>Top Locations Analysis</h3>", unsafe_allow_html=True)
+        with open('data/data.yml', 'r') as file:
+            config = yaml.safe_load(file)
+            AGGREGATION_LIST = config.get('top_41', [])
+
+        all_data = []
+        for loc in AGGREGATION_LIST:
+            # Ensure all required variables (month, competitor_flags, is_city) are defined
+            df_loc = pd.DataFrame(stats_by_location(month, loc, competitor_flags[choice], is_city))
+            all_data.append(df_loc)
+
+        # Concatenate all dataframes into one aggregated dataframe
+        df_aggregated = pd.concat(all_data, ignore_index=True)
+        total_sum = df_aggregated.select_dtypes(include='number').sum().sum()
+        total_count = df_aggregated.select_dtypes(include='number').count().sum()
+
+        visibility_score = round(float(total_sum / total_count), 1) if total_count > 0 else 0
+
+        st.markdown(f"<h5 style='text-align: left;'>"
+                    f"Visibility score : {visibility_score} % "
+                    f"</h5>", unsafe_allow_html=True)
+
+        # --- Calculate Aggregated Average Ranking ---
+        if data_rank is not None:
+            # Filter data_rank using the AGGREGATION_LIST
+            avg_rank_filtered = data_rank[data_rank['location'].isin(AGGREGATION_LIST)]
+            avg_rank = avg_rank_filtered["avg_rank"].mean()
+
+            if avg_rank is not np.nan:
+                st.markdown(f"<h5 style='text-align: left;'>"
+                            f"Average Ranking : {round(float(avg_rank), 1)} "
+                            f"</h5>", unsafe_allow_html=True)
+
+        # --- Calculate Aggregated Sentiment Score ---
+        if data_sentiment is not None:
+            # Filter data_sentiment using the AGGREGATION_LIST
+            avg_sentiment_filtered = data_sentiment[data_sentiment['location'].isin(AGGREGATION_LIST)]
+            avg_sentiment = avg_sentiment_filtered["avg_sentiment"].mean()
+
+            if avg_sentiment is not np.nan:
+                if avg_sentiment != 'N/A':
+                    # Ensure transform_value handles the aggregated mean correctly
+                    avg_sentiment = transform_value(avg_sentiment)
+                st.markdown(f"<h5 style='text-align: left;'>"
+                            f"Sentiment Score : {round(float(avg_sentiment), 1)} % "
+                            f"</h5>", unsafe_allow_html=True)
 
 st.divider()
 
@@ -250,6 +295,10 @@ with col8:
         # Create and display the radar chart
         radar_chart = create_radar_chart(df)
         st.plotly_chart(radar_chart, use_container_width=True)
+
+
+# Top Locations Analysis
+
 
 st.divider()
 
