@@ -5,6 +5,7 @@ from app.dependencies import get_db
 from app.models.response import Response
 from app.models.user import User
 from datetime import datetime
+from typing import List, Optional
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.helpers import track_responses, get_ai_response, aggregate_total_by_product, \
     aggregate_total_by_location, aggregate_total_by_product_and_location, calculate_score_ai, create_access_token, \
@@ -74,7 +75,6 @@ async def submit_query_with_ai_platform(query: QueryRequest, credentials: HTTPAu
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
-
 @router.get("/responses/")
 async def fetch_responses(db: Session = Depends(get_db)):
     """
@@ -95,6 +95,7 @@ async def submit_query(prompt, ai_platform):
 async def aggregate_total_by_product_route(
     month: str,
     is_city: bool = Query(True, description="Filter by city (True) or province (False)"),
+    locations: Optional[List[str]] = Query(None,description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -111,7 +112,7 @@ async def aggregate_total_by_product_route(
     """
     try:
         validate_token(credentials)
-        aggregated_data = aggregate_total_by_product(db=db, month=month, is_city=is_city)
+        aggregated_data = aggregate_total_by_product(db=db, month=month, is_city=is_city, locations=locations)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error aggregating data: {str(e)}")
@@ -121,6 +122,7 @@ async def aggregate_total_by_product_route(
 async def aggregate_total_by_location_route(
     month: str,
     is_city: bool = Query(True, description="Filter by city (True) or province (False)"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -136,7 +138,7 @@ async def aggregate_total_by_location_route(
     """
     try:
         validate_token(credentials)
-        aggregated_data = aggregate_total_by_location(db=db, month=month, is_city=is_city)
+        aggregated_data = aggregate_total_by_location(db=db, month=month, is_city=is_city, locations=locations)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         return {"error": str(e)}
@@ -146,6 +148,7 @@ async def aggregate_total_by_location_route(
 async def aggregate_total_by_product_and_location_route(
     month: str,
     is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
@@ -162,7 +165,7 @@ async def aggregate_total_by_product_and_location_route(
     """
     try:
         validate_token(credentials)
-        aggregated_data = aggregate_total_by_product_and_location(db, month, is_city)
+        aggregated_data = aggregate_total_by_product_and_location(db, month, is_city, locations=locations)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
         return {"error": str(e)}
@@ -173,6 +176,7 @@ async def get_score_ai(
     month: str,
     flag_competitor: str,
     is_city: bool = Query(True, description="Filter by city (True) or region (False)"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -192,7 +196,7 @@ async def get_score_ai(
         validate_token(credentials)
 
         # Pass is_city to the score function (make sure it's supported inside that function)
-        score = calculate_score_ai(db, month, "app/config.yml", flag_competitor, is_city=is_city)
+        score = calculate_score_ai(db, month, "app/config.yml", flag_competitor, is_city=is_city, locations=locations)
 
         return {"month": month, "score_ai": round(float(score), 1)}
 
@@ -267,6 +271,7 @@ def delete_user(username: str, db: Session = Depends(get_db), _: dict = Depends(
 async def get_rank(
     month: str,
     is_city: bool = Query(True, description="Filter by city (True) or region (False)"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -285,7 +290,7 @@ async def get_rank(
         validate_token(credentials)
 
         # Make sure `calculate_rank` supports is_city
-        position = calculate_rank(db, month, is_city=is_city)
+        position = calculate_rank(db, month, is_city=is_city, locations=locations)
 
         return {"month": month, "rank": position}
 
@@ -300,6 +305,7 @@ async def get_rank_by_platform(
     month: str,
     ai_platform: str,
     is_city: bool = Query(True, description="Filter by city or region"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -307,7 +313,7 @@ async def get_rank_by_platform(
         validate_token(credentials)
 
         # Make sure your business logic supports is_city as well
-        position = calculate_rank_by_platform(db, month, ai_platform, is_city=is_city)
+        position = calculate_rank_by_platform(db, month, ai_platform, is_city=is_city, locations=locations)
 
         return {"month": month, "rank": position, "ai_platform": ai_platform}
 
@@ -338,12 +344,13 @@ async def get_sources(
 async def get_sentiment(
     month: str,
     is_city: bool = Query(True, description="Filter by city or region"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     try:
         validate_token(credentials)
-        sentiment = calculate_sentiment(db, month, is_city=is_city)  # pass is_city
+        sentiment = calculate_sentiment(db, month, is_city=is_city, locations=locations)
         return {"month": month, "sentiment": sentiment}
     except HTTPException as e:
         raise e
@@ -356,12 +363,13 @@ async def get_sentiment_by_platform(
     month: str,
     ai_platform: str,
     is_city: bool = Query(True, description="Filter by city or region"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     try:
         validate_token(credentials)
-        sentiment = calculate_sentiment_by_platform(db, month, ai_platform, is_city=is_city)  # pass is_city
+        sentiment = calculate_sentiment_by_platform(db, month, ai_platform, is_city=is_city, locations=locations)
         return {"month": month, "sentiment": sentiment, "ai_platform": ai_platform}
     except HTTPException as e:
         raise e
@@ -373,6 +381,7 @@ async def get_sentiment_by_platform(
 async def aggregate_maps_by_product_and_location_route(
     month: str,
     is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
@@ -389,7 +398,7 @@ async def aggregate_maps_by_product_and_location_route(
     """
     try:
         validate_token(credentials)
-        aggregated_data = aggregate_maps_by_product_and_location(db, month, is_city)
+        aggregated_data = aggregate_maps_by_product_and_location(db, month, is_city, locations=locations)
         print(aggregated_data)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
@@ -400,6 +409,7 @@ async def aggregate_maps_by_product_and_location_route(
 async def get_sentiment_by_location_platform(
     month: str,
     is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
@@ -408,7 +418,7 @@ async def get_sentiment_by_location_platform(
     """
     try:
         validate_token(credentials)
-        sentiment_data = calculate_avg_sentiment_by_location_platform(db, month, is_city)
+        sentiment_data = calculate_avg_sentiment_by_location_platform(db, month, is_city, locations=locations)
         return {"month": month, "results": sentiment_data}
     except HTTPException as e:
         raise e
@@ -423,6 +433,7 @@ async def get_sentiment_by_location_platform(
 async def get_rank_by_location_platform(
     month: str,
     is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
@@ -431,7 +442,7 @@ async def get_rank_by_location_platform(
     """
     try:
         validate_token(credentials)
-        rank_data = calculate_avg_rank_by_location_platform(db, month, is_city)
+        rank_data = calculate_avg_rank_by_location_platform(db, month, is_city, locations=locations)
         return {"results": rank_data}
     except HTTPException as e:
         raise e

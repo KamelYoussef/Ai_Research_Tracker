@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 import logging
 from dateutil.relativedelta import relativedelta
+from typing import List, Optional
 
 # Load environment variables
 load_dotenv()
@@ -15,50 +16,83 @@ FASTAPI_URL = os.getenv("FASTAPI_URL")
 
 
 # Utility: Fetch data from the API
-def fetch_data(endpoint: str, month: str, flag_competitor=None, is_city=True):
+def fetch_data(endpoint: str, month: str, flag_competitor=None, is_city=True, locations: Optional[List[str]] = None):
     """
-    Fetch data from the FastAPI endpoint.
+    Fetch data from the FastAPI endpoint. (Updated to handle multi-element locations list)
 
     Args:
-        endpoint (str): API endpoint to query.
-        month (str): Month in YYYYMM format.
+        # ... (arguments remain the same)
 
     Returns:
         list: Data from the API response, or an empty list if an error occurs.
     """
     try:
+        # Build base URL (same as before)
         if flag_competitor is not None:
             url = f"{FASTAPI_URL}/{endpoint}/{month}/{flag_competitor}"
         else:
             url = f"{FASTAPI_URL}/{endpoint}/{month}"
-        url += f"?is_city={str(is_city).lower()}"
+
+        # Start query parameters with is_city
+        params = [f"is_city={str(is_city).lower()}"]
+
+        # 🔑 CRITICAL CHANGE: Repeat 'locations=' for each element
+        if locations:
+            # Create separate query string parameters for each location
+            location_params = [f"locations={loc}" for loc in locations]
+            params.extend(location_params)  # Add them to the main list of parameters
+
+        # Combine base URL and parameters
+        url += "?" + "&".join(
+            params)  # This will join everything correctly (e.g., ?is_city=true&locations=Alix&locations=Bolton)
+
         headers = {
             "Authorization": f"Bearer {st.session_state.get('token')}"
         }
+
+        # print(f"Querying URL: {url}") # Optional: for debugging
+
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
-        logging.error(f"Error fetching data from {endpoint}: {e}")
+        logging.error(f"Error fetching data from {endpoint} (URL: {url}): {e}")
         return []
 
 
 # Utility: Process and pivot data
-def process_and_pivot_data(endpoint, index_columns, month, competitor_flag, is_city=True):
+def process_and_pivot_data(endpoint, index_columns, month, competitor_flag, is_city=True, locations: Optional[List[str]] = None):
     """
-    Fetch and process data for given index columns.
+    Fetch and process data for given index columns, supporting location filtering.
 
     Args:
         endpoint (str): API endpoint to query.
         index_columns (list): Columns to use as index.
         month (str): Month in YYYYMM format.
+        competitor_flag (str): Column to use for pivot values.
+        is_city (bool): Whether to filter by city.
+        locations (Optional[List[str]]): Specific locations to filter by.
 
     Returns:
         pd.DataFrame: Pivoted DataFrame with aggregated data or None if empty.
     """
-    data = fetch_data(endpoint, month, is_city=is_city).get("aggregated_data", [])
+    # Pass the new 'locations' parameter to fetch_data
+    data = fetch_data(
+        endpoint,
+        month,
+        is_city=is_city,
+        locations=locations
+    ).get("aggregated_data", [])
+
     if data:
         df = pd.DataFrame(data)
+
+        # Handle cases where the required columns are missing (though they shouldn't be based on the aggregation)
+        if not all(col in df.columns for col in index_columns + ["day", competitor_flag]):
+             st.error("Missing required columns in fetched data.")
+             st.stop()
+             return None
+
         df_pivot = df.pivot_table(
             index=index_columns,
             columns="day",
@@ -66,15 +100,19 @@ def process_and_pivot_data(endpoint, index_columns, month, competitor_flag, is_c
             aggfunc="max",
             fill_value=0
         ).reset_index()
+
+        # Calculate 'Total Count' (sum across day columns)
+        # Assumes day columns start immediately after index_columns
         df_pivot["Total Count"] = df_pivot.iloc[:, len(index_columns):].sum(axis=1)
+
         if df_pivot.empty:
-            st.error(f"No data available.")
+            st.error(f"No data available after pivoting.")
             st.stop()
             return None
         else:
             return df_pivot
     else:
-        st.error(f"No data available.")
+        st.error(f"No data available for the selected month/filters.")
         st.stop()
         return None
 
@@ -127,43 +165,46 @@ def get_date_today():
     return f"{prev_year}{str(prev_month).zfill(2)}"
 
 
-def get_ai_total_score(month, flag_competitor, is_city=True):
-    if fetch_data("score_ai", month, flag_competitor, is_city=is_city):
-        return fetch_data("score_ai", month, flag_competitor, is_city=is_city).get("score_ai", [])
+def get_ai_total_score(month, flag_competitor, is_city=True, locations=None):
+    if fetch_data("score_ai", month, flag_competitor, is_city=is_city, locations=locations):
+        return fetch_data("score_ai", month, flag_competitor, is_city=is_city, locations=locations).get("score_ai", [])
     else:
         return "N/A"
 
 
-def fetch_param(month, competitor_flag, is_city=True):
-    df = download_data(month, competitor_flag, is_city=is_city)[2]
-    locations = df["location"].unique().tolist()
+def fetch_param(month, competitor_flag, is_city=True, locations=None):
+    df = download_data(month, competitor_flag, is_city=is_city, locations=locations)[2]
+    _locations = df["location"].unique().tolist()
     products = df["product"].unique().tolist()
     ai_platforms = df["ai_platform"].unique().tolist()
-    return locations, products, ai_platforms
+    return _locations, products, ai_platforms
 
 
 @st.cache_data
-def download_data(month, competitor_flag, is_city=True):
+def download_data(month, competitor_flag, is_city=True, locations=None):
     df_product = process_and_pivot_data(
         "aggregate_total_by_product",
         ["product", "ai_platform"],
         month,
         competitor_flag,
-        is_city=is_city
+        is_city=is_city,
+        locations=locations
     )
     df_location = process_and_pivot_data(
         "aggregate_total_by_location",
         ["location", "ai_platform"],
         month,
         competitor_flag,
-        is_city=is_city
+        is_city=is_city,
+        locations=locations
     )
     df_all = process_and_pivot_data(
         "aggregate_total_by_product_and_location",
         ["product", "location", "ai_platform"],
         month,
         competitor_flag,
-        is_city=is_city
+        is_city=is_city,
+        locations=locations
     )
     return df_product, df_location, df_all
 
@@ -255,29 +296,29 @@ def fetch_response(ai_platform, locations, products, prompt):
         return {"error": f"Failed to fetch data: {e}"}
 
 
-def get_avg_rank(month, flag_competitor, is_city=True):
+def get_avg_rank(month, flag_competitor, is_city=True, locations = None):
     if flag_competitor == "total_count":
-        if fetch_data("rank", month, is_city=is_city):
-            if fetch_data("rank", month, is_city=is_city).get("rank", []) is not None:
-                return round(float(fetch_data("rank", month, is_city=is_city).get("rank", [])),1)
+        if fetch_data("rank", month, is_city=is_city, locations=locations):
+            if fetch_data("rank", month, is_city=is_city, locations=locations).get("rank", []) is not None:
+                return round(float(fetch_data("rank", month, is_city=is_city, locations=locations).get("rank", [])),1)
             else:
                 return "N/A"
     else:
         return "N/A"
 
 
-def get_avg_rank_by_platform(month, ai_platform, flag_competitor, is_city=True):
+def get_avg_rank_by_platform(month, ai_platform, flag_competitor, is_city=True, locations=None):
     if flag_competitor == "total_count":
-        if fetch_data("rank", month, ai_platform, is_city=is_city):
-            if fetch_data("rank", month, ai_platform, is_city=is_city).get("rank", []) is not None:
-                return round(float(fetch_data("rank", month,ai_platform, is_city=is_city).get("rank", [])),1)
+        if fetch_data("rank", month, ai_platform, is_city=is_city, locations=locations):
+            if fetch_data("rank", month, ai_platform, is_city=is_city, locations=locations).get("rank", []) is not None:
+                return round(float(fetch_data("rank", month,ai_platform, is_city=is_city, locations=locations).get("rank", [])),1)
             else:
                 return "N/A"
     else:
         return "N/A"
 
 
-def get_ai_scores_full_year(from_month, flag_competitor, is_city=True):
+def get_ai_scores_full_year(from_month, flag_competitor, is_city=True, locations=None):
     year = int(str(from_month)[:4])
     month = int(str(from_month)[4:6])
     end_date = datetime(year, month, 1)
@@ -288,7 +329,7 @@ def get_ai_scores_full_year(from_month, flag_competitor, is_city=True):
     for i in range(12):
         current_date = end_date - relativedelta(months=11 - i)
         yyyymm = int(current_date.strftime("%Y%m"))
-        score = get_ai_total_score(yyyymm, flag_competitor, is_city=is_city)
+        score = get_ai_total_score(yyyymm, flag_competitor, is_city=is_city, locations=locations)
 
         data.append({
             "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
@@ -300,7 +341,7 @@ def get_ai_scores_full_year(from_month, flag_competitor, is_city=True):
     return df
 
 
-def get_ranks_full_year(from_month, flag_competitor, is_city=True):
+def get_ranks_full_year(from_month, flag_competitor, is_city=True, locations=None):
     year = int(str(from_month)[:4])
     month = int(str(from_month)[4:6])
     end_date = datetime(year, month, 1)
@@ -311,7 +352,7 @@ def get_ranks_full_year(from_month, flag_competitor, is_city=True):
     for i in range(12):
         current_date = end_date - relativedelta(months=11 - i)
         yyyymm = int(current_date.strftime("%Y%m"))
-        score = get_avg_rank(yyyymm, flag_competitor, is_city=is_city)
+        score = get_avg_rank(yyyymm, flag_competitor, is_city=is_city, locations=locations)
 
         data.append({
             "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
@@ -350,18 +391,18 @@ def dict_to_text(source_dict: dict) -> str:
     return "\n\n".join(lines)
 
 
-def get_avg_sentiment(month, flag_competitor, is_city=True):
+def get_avg_sentiment(month, flag_competitor, is_city=True, locations=None):
     if flag_competitor == "total_count":
-        if fetch_data("sentiment", month, is_city=is_city):
-            if fetch_data("sentiment", month, is_city=is_city).get("sentiment", []) is not None:
-                return round(float(fetch_data("sentiment", month, is_city=is_city).get("sentiment", [])),1)
+        if fetch_data("sentiment", month, is_city=is_city, locations=locations):
+            if fetch_data("sentiment", month, is_city=is_city, locations=locations).get("sentiment", []) is not None:
+                return round(float(fetch_data("sentiment", month, is_city=is_city, locations=locations).get("sentiment", [])),1)
             else:
                 return "N/A"
     else:
         return "N/A"
 
 
-def get_sentiments_full_year(from_month, flag_competitor, is_city=True):
+def get_sentiments_full_year(from_month, flag_competitor, is_city=True, locations=None):
     year = int(str(from_month)[:4])
     month = int(str(from_month)[4:6])
     end_date = datetime(year, month, 1)
@@ -372,7 +413,7 @@ def get_sentiments_full_year(from_month, flag_competitor, is_city=True):
     for i in range(12):
         current_date = end_date - relativedelta(months=11 - i)
         yyyymm = int(current_date.strftime("%Y%m"))
-        sentiment = get_avg_sentiment(yyyymm, flag_competitor, is_city=is_city)
+        sentiment = get_avg_sentiment(yyyymm, flag_competitor, is_city=is_city, locations=locations)
 
         data.append({
             "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
@@ -384,11 +425,11 @@ def get_sentiments_full_year(from_month, flag_competitor, is_city=True):
     return df
 
 
-def get_avg_sentiment_by_platform(month, ai_platform, flag_competitor, is_city=True):
+def get_avg_sentiment_by_platform(month, ai_platform, flag_competitor, is_city=True, locations=None):
     if flag_competitor == "total_count":
-        if fetch_data("sentiment", month, ai_platform, is_city=is_city):
-            if fetch_data("sentiment", month, ai_platform, is_city=is_city).get("sentiment", []) is not None:
-                return round(float(fetch_data("sentiment", month,ai_platform, is_city=is_city).get("sentiment", [])),1)
+        if fetch_data("sentiment", month, ai_platform, is_city=is_city, locations=locations):
+            if fetch_data("sentiment", month, ai_platform, is_city=is_city, locations=locations).get("sentiment", []) is not None:
+                return round(float(fetch_data("sentiment", month,ai_platform, is_city=is_city, locations=locations).get("sentiment", [])),1)
             else:
                 return "N/A"
     else:
@@ -458,22 +499,22 @@ def maps(month, is_city):
         return None
 
 
-def get_avg_sentiment_by_location(month, flag_competitor, is_city=True):
+def get_avg_sentiment_by_location(month, flag_competitor, is_city=True, locations=None):
     if flag_competitor == "total_count":
-        if fetch_data("sentiment_by_location", month, is_city=is_city):
-            if fetch_data("sentiment_by_location", month, is_city=is_city).get("results", []) is not None:
-                return pd.DataFrame(fetch_data("sentiment_by_location", month, is_city=is_city).get("results", []))
+        if fetch_data("sentiment_by_location", month, is_city=is_city, locations=locations):
+            if fetch_data("sentiment_by_location", month, is_city=is_city, locations=locations).get("results", []) is not None:
+                return pd.DataFrame(fetch_data("sentiment_by_location", month, is_city=is_city, locations=locations).get("results", []))
             else:
                 return None
     else:
         return None
 
 
-def get_avg_rank_by_location(month, flag_competitor, is_city=True):
+def get_avg_rank_by_location(month, flag_competitor, is_city=True, locations=None):
     if flag_competitor == "total_count":
-        if fetch_data("rank_by_location", month, is_city=is_city):
-            if fetch_data("rank_by_location", month, is_city=is_city).get("results", []) is not None:
-                return pd.DataFrame(fetch_data("rank_by_location", month, is_city=is_city).get("results", []))
+        if fetch_data("rank_by_location", month, is_city=is_city, locations=locations):
+            if fetch_data("rank_by_location", month, is_city=is_city, locations=locations).get("results", []) is not None:
+                return pd.DataFrame(fetch_data("rank_by_location", month, is_city=is_city, locations=locations).get("results", []))
             else:
                 return None
     else:

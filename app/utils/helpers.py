@@ -19,6 +19,7 @@ from collections import Counter
 from dotenv import load_dotenv
 import os
 import requests
+from typing import List, Optional
 
 semaphore = Semaphore(7)  # Limit to 10 concurrent threads
 SECRET_KEY = "d4f63gD82!d@#90p@KJ1$#F94mcP@Q43!gf2"
@@ -209,35 +210,52 @@ def get_counts_from_config(config_path):
         raise RuntimeError(f"Error retrieving counts from configuration: {str(e)}")
 
 
-def aggregate_total_by_product(db: Session, month: str, is_city: bool = True):
+def aggregate_total_by_product(
+        db: Session,
+        month: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
     """
-    Aggregate total_count by product for a given month.
+    Aggregate total_count by product for a given month, applying filters
+    based on 'is_city' and an optional list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
-        is_city
+        is_city (bool): Whether to filter by Response.is_city. Defaults to True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
+                                         This filter is only applied if is_city is True.
 
     Returns:
         List[dict]: Aggregated totals by product.
     """
-    results = (
-        db.query(
-            Response.product,
-            func.sum(Response.total_count).label("total_count"),
-            func.sum(Response.competitor_1).label("competitor_1"),
-            func.sum(Response.competitor_2).label("competitor_2"),
-            func.sum(Response.competitor_3).label("competitor_3"),
-            func.sum(Response.competitor_4).label("competitor_4"),
-            Response.day,
-            Response.ai_platform
-        )
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .group_by(Response.day, Response.product, Response.ai_platform)
-        .all()
+    query = db.query(
+        Response.product,
+        func.sum(Response.total_count).label("total_count"),
+        func.sum(Response.competitor_1).label("competitor_1"),
+        func.sum(Response.competitor_2).label("competitor_2"),
+        func.sum(Response.competitor_3).label("competitor_3"),
+        func.sum(Response.competitor_4).label("competitor_4"),
+        Response.day,
+        Response.ai_platform
     )
-    print(results)
+
+    # 1. Always filter by month
+    query = query.filter(Response.date == month)
+
+    # 2. Filter by is_city
+    query = query.filter(Response.is_city == is_city)
+
+    # 3. Conditional Filter: Check the list of locations ONLY if is_city is True
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # 4. Group by
+    results = (
+        query.group_by(Response.day, Response.product, Response.ai_platform)
+    ).all()
+
     return [
         {
             "product": r[0],
@@ -253,33 +271,52 @@ def aggregate_total_by_product(db: Session, month: str, is_city: bool = True):
     ]
 
 
-def aggregate_total_by_location(db: Session, month: str, is_city: bool = True):
+def aggregate_total_by_location(
+    db: Session,
+    month: str,
+    is_city: bool = True,
+    locations: Optional[List[str]] = None
+):
     """
-    Aggregate total_count by location for a given month, including competitor data.
+    Aggregate total_count by location for a given month, applying filters
+    based on 'is_city' and an optional list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
+        is_city (bool): Whether to filter by Response.is_city. Defaults to True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
+                                         This filter is only applied if provided.
 
     Returns:
         List[dict]: Aggregated totals by location.
     """
-    results = (
-        db.query(
-            Response.location,
-            func.sum(Response.total_count).label("total_count"),
-            func.sum(Response.competitor_1).label("competitor_1"),
-            func.sum(Response.competitor_2).label("competitor_2"),
-            func.sum(Response.competitor_3).label("competitor_3"),
-            func.sum(Response.competitor_4).label("competitor_4"),
-            Response.day,
-            Response.ai_platform
-        )
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .group_by(Response.day, Response.location, Response.ai_platform)
-        .all()
+    query = db.query(
+        Response.location,
+        func.sum(Response.total_count).label("total_count"),
+        func.sum(Response.competitor_1).label("competitor_1"),
+        func.sum(Response.competitor_2).label("competitor_2"),
+        func.sum(Response.competitor_3).label("competitor_3"),
+        func.sum(Response.competitor_4).label("competitor_4"),
+        Response.day,
+        Response.ai_platform
     )
+
+    # 1. Apply Month Filter
+    query = query.filter(Response.date == month)
+
+    # 2. Apply is_city Filter
+    query = query.filter(Response.is_city == is_city)
+
+    # 3. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # 4. Group by
+    results = (
+        query.group_by(Response.day, Response.location, Response.ai_platform)
+    ).all()
+
     return [
         {
             "location": r[0],
@@ -295,34 +332,55 @@ def aggregate_total_by_location(db: Session, month: str, is_city: bool = True):
     ]
 
 
-def aggregate_total_by_product_and_location(db: Session, month: str, is_city: bool = True):
+def aggregate_total_by_product_and_location(
+        db: Session,
+        month: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
     """
-    Aggregate total_count by product and location for a given month, including competitor data.
+    Aggregate total_count by product and location for a given month, applying filters
+    based on 'is_city' and an optional list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
+        is_city (bool): Whether to filter by Response.is_city. Defaults to True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
+                                         This filter is only applied if it is provided.
 
     Returns:
         List[dict]: Aggregated totals by product and location.
     """
-    results = (
-        db.query(
-            Response.product,
-            Response.location,
-            func.sum(Response.total_count).label("total_count"),
-            func.sum(Response.competitor_1).label("competitor_1"),
-            func.sum(Response.competitor_2).label("competitor_2"),
-            func.sum(Response.competitor_3).label("competitor_3"),
-            func.sum(Response.competitor_4).label("competitor_4"),
-            Response.day,
-            Response.ai_platform
-        )
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .group_by(Response.product, Response.location, Response.day, Response.ai_platform)
-        .all()
+    query = db.query(
+        Response.product,
+        Response.location,
+        func.sum(Response.total_count).label("total_count"),
+        func.sum(Response.competitor_1).label("competitor_1"),
+        func.sum(Response.competitor_2).label("competitor_2"),
+        func.sum(Response.competitor_3).label("competitor_3"),
+        func.sum(Response.competitor_4).label("competitor_4"),
+        Response.day,
+        Response.ai_platform
     )
+
+    # 1. Apply Month Filter
+    query = query.filter(Response.date == month)
+
+    # 2. Apply is_city Filter
+    query = query.filter(Response.is_city == is_city)
+
+    # 3. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        # Note: This runs regardless of the value of is_city if locations are present.
+        # If you only want it to run when is_city is True, use 'if is_city and locations:'
+        query = query.filter(Response.location.in_(locations))
+
+    # 4. Group by
+    results = (
+        query.group_by(Response.product, Response.location, Response.day, Response.ai_platform)
+    ).all()
+
     return [
         {
             "product": r[0],
@@ -339,46 +397,89 @@ def aggregate_total_by_product_and_location(db: Session, month: str, is_city: bo
     ]
 
 
-def calculate_score_ai(db: Session, month: str, config_path, flag_competitor, is_city: bool = True):
+def calculate_score_ai(
+        db: Session,
+        month: str,
+        config_path: str,
+        flag_competitor: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
     """
-    Calculate the AI score by summing the total_count for a given month.
+    Calculate the AI score by summing the total_count for a given month,
+    with an optional filter for specific locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
         config_path (str): Path to the configuration file.
-        flag_competitor (str): Flag representing the competitor.
+        flag_competitor (str): Flag representing the competitor column to sum.
+        is_city (bool): Whether to filter by Response.is_city. Defaults to True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
 
     Returns:
         float: Calculated AI score.
     """
-    # Query to sum the total_count for all products, locations, or combinations in the month
-    result = db.query(func.coalesce(func.sum(getattr(Response, flag_competitor)), 0)) \
-        .filter(Response.date == month) \
-        .filter(Response.is_city == is_city) \
-        .scalar()
 
-    unique_days = db.query(func.count(distinct(Response.day))) \
-        .filter(Response.date == month) \
-        .filter(Response.is_city == is_city) \
-        .scalar()
+    # -----------------------------------------------------------
+    # Helper for building the base query with standard filters
+    # -----------------------------------------------------------
+    def get_base_query():
+        """Returns a query object with month and is_city filters applied."""
+        q = db.query(Response) \
+            .filter(Response.date == month) \
+            .filter(Response.is_city == is_city)
 
+        # APPLY CONDITIONAL LOCATION FILTER
+        if is_city and locations:
+            q = q.filter(Response.location.in_(locations))
+
+        return q
+
+    # -----------------------------------------------------------
+
+    # 1. Calculate Sum of Scores (Result)
+    result_query = get_base_query().with_entities(
+        func.coalesce(func.sum(getattr(Response, flag_competitor)), 0)
+    )
+    result = result_query.scalar()
+
+    # 2. Calculate Unique Days
+    unique_days_query = get_base_query().with_entities(
+        func.count(distinct(Response.day))
+    )
+    unique_days = unique_days_query.scalar()
+
+    # 3. Get N Products (from config, no DB filter change needed)
     _, n_products, _ = get_counts_from_config(config_path)
 
-    n_locations = db.query(func.count(distinct(Response.location))) \
-        .filter(Response.date == month) \
-        .filter(Response.is_city == is_city) \
-        .scalar()
-
+    # 4. Calculate N Locations
     if is_city is False:
-        n_locations = 6 # number of provinces
-    n_ai_platforms = db.query(func.count(distinct(Response.ai_platform))) \
-        .filter(Response.date == month) \
-        .filter(Response.is_city == is_city) \
-        .scalar()
-    score = result / (n_locations * n_products * n_ai_platforms) / unique_days * 100
+        # If not a city, n_locations is hardcoded (6 provinces)
+        n_locations = 6
+    else:
+        # If a city, calculate unique locations based on the filtered query
+        n_locations_query = get_base_query().with_entities(
+            func.count(distinct(Response.location))
+        )
+        n_locations = n_locations_query.scalar()
 
-    return score if score else 0
+    # 5. Calculate N AI Platforms
+    n_ai_platforms_query = get_base_query().with_entities(
+        func.count(distinct(Response.ai_platform))
+    )
+    n_ai_platforms = n_ai_platforms_query.scalar()
+
+    # Calculation
+    # Note: Using max(1) to prevent DivisionByZeroError if counts are 0
+    divisor = max(n_locations, 1) * max(n_products, 1) * max(n_ai_platforms, 1) * max(unique_days, 1)
+
+    if divisor == 0:
+        return 0
+
+    score = result / divisor * 100
+
+    return score
 
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
@@ -441,47 +542,82 @@ def admin_required(payload: dict = Depends(validate_token)):
     return payload
 
 
-def calculate_rank(db: Session, month: str, is_city: bool = True):
+def calculate_rank(
+        db: Session,
+        month: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
     """
-    Calculate the average rank for a given month, optionally filtered by city status.
+    Calculate the average rank for a given month, optionally filtered by city status
+    and a specific list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
         is_city (bool): Filter rows based on whether location is a city. Default is True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
 
     Returns:
-        avg_rank : Average rank for the given month, or None if no data is found.
+        avg_rank: Average rank for the given month, or None if no data is found.
     """
-    avg_rank = (
-        db.query(func.avg(Response.rank))
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .scalar()
-    )
+
+    # Start the query
+    query = db.query(func.avg(Response.rank))
+
+    # 1. Apply Month Filter
+    query = query.filter(Response.date == month)
+
+    # 2. Apply is_city Filter
+    query = query.filter(Response.is_city == is_city)
+
+    # 3. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # Execute the final query
+    avg_rank = query.scalar()
+
     return avg_rank  # Returns None if no records are found
 
 
-def calculate_rank_by_platform(db: Session, month: str, ai_platform: str, is_city: bool = True):
+def calculate_rank_by_platform(
+        db: Session,
+        month: str,
+        ai_platform: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
     """
-    Calculate the average rank for a specific AI platform and month, filtered by city status.
+    Calculate the average rank for a specific AI platform and month, filtered by
+    city status and an optional list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): The month in 'YYYYMM' format.
         ai_platform (str): The name of the AI platform.
         is_city (bool): Filter rows based on whether location is a city. Default is True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
 
     Returns:
         avg_rank: The average rank, or None if no data is found.
     """
-    avg_rank = (
-        db.query(func.avg(Response.rank))
-        .filter(Response.ai_platform == ai_platform)
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .scalar()
-    )
+
+    # Start the query
+    query = db.query(func.avg(Response.rank))
+
+    # 1. Apply required filters
+    query = query.filter(Response.ai_platform == ai_platform)
+    query = query.filter(Response.date == month)
+    query = query.filter(Response.is_city == is_city)
+
+    # 2. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # Execute the final query
+    avg_rank = query.scalar()
+
     return avg_rank
 
 
@@ -511,47 +647,82 @@ def get_aggregated_sources(db: Session, ai_platform: str, month: str) -> dict:
     return dict(sorted(total_sources.items(), key=lambda x: x[1], reverse=True))
 
 
-def calculate_sentiment(db: Session, month: str, is_city: bool = True):
+def calculate_sentiment(
+        db: Session,
+        month: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None  # <--- NEW OPTIONAL PARAMETER
+):
     """
-    Calculate the average sentiment for a given month, optionally filtered by city status.
+    Calculate the average sentiment for a given month, optionally filtered by city status
+    and a specific list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
         is_city (bool): Filter rows based on whether location is a city. Default is True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
 
     Returns:
-        avg_sentiment : Average sentiment for the given month, or None if no data is found.
+        avg_sentiment: Average sentiment for the given month, or None if no data is found.
     """
-    avg_sentiment = (
-        db.query(func.avg(Response.sentiment))
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .scalar()
-    )
+
+    # Start the query
+    query = db.query(func.avg(Response.sentiment))
+
+    # 1. Apply Month Filter
+    query = query.filter(Response.date == month)
+
+    # 2. Apply is_city Filter
+    query = query.filter(Response.is_city == is_city)
+
+    # 3. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # Execute the final query
+    avg_sentiment = query.scalar()
+
     return avg_sentiment
 
 
-def calculate_sentiment_by_platform(db: Session, month: str, ai_platform: str, is_city: bool = True):
+def calculate_sentiment_by_platform(
+        db: Session,
+        month: str,
+        ai_platform: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
     """
-    Calculate the average sentiment for a specific AI platform and month, optionally filtered by city status.
+    Calculate the average sentiment for a specific AI platform and month, filtered by
+    city status and an optional list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
-        ai_platform (str): The name of the AI platform.
         month (str): The month in 'YYYYMM' format.
+        ai_platform (str): The name of the AI platform.
         is_city (bool): Filter rows based on whether location is a city. Default is True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
 
     Returns:
         avg_sentiment: The average sentiment, or None if no data is found.
     """
-    avg_sentiment = (
-        db.query(func.avg(Response.sentiment))
-        .filter(Response.ai_platform == ai_platform)
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .scalar()
-    )
+
+    # Start the query
+    query = db.query(func.avg(Response.sentiment))
+
+    # 1. Apply required filters
+    query = query.filter(Response.ai_platform == ai_platform)
+    query = query.filter(Response.date == month)
+    query = query.filter(Response.is_city == is_city)
+
+    # 2. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # Execute the final query
+    avg_sentiment = query.scalar()
+
     return avg_sentiment
 
 
@@ -676,63 +847,101 @@ def aggregate_maps_by_product_and_location(db: Session, month: str, is_city: boo
     ]
 
 
-def calculate_avg_sentiment_by_location_platform(db: Session, month: str, is_city: bool = True):
+def calculate_avg_sentiment_by_location_platform(
+        db: Session,
+        month: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
     """
-    Calculate the average sentiment grouped by location and AI platform for a given month.
+    Calculate the average sentiment grouped by location and AI platform for a given month,
+    optionally filtered by a list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
         is_city (bool): Filter rows based on whether location is a city. Default is True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
 
     Returns:
         results (list of dict): Each dict contains location, ai_platform, and avg_sentiment.
     """
-    query = (
-        db.query(
-            Response.location,
-            Response.ai_platform,
-            func.avg(Response.sentiment).label("avg_sentiment")
-        )
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .group_by(Response.location, Response.ai_platform)
-        .all()
+
+    # Start the base query
+    query = db.query(
+        Response.location,
+        Response.ai_platform,
+        func.avg(Response.sentiment).label("avg_sentiment")
     )
 
+    # 1. Apply base filters
+    query = query.filter(Response.date == month)
+    query = query.filter(Response.is_city == is_city)
+
+    # 2. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # 3. Group by and execute
+    query = query.group_by(Response.location, Response.ai_platform)
+
+    # Execute the final query
+    results_tuple = query.all()
+
+    # Convert results to the desired list of dicts format
     results = [
         {"location": loc, "ai_platform": platform, "avg_sentiment": avg}
-        for loc, platform, avg in query
+        for loc, platform, avg in results_tuple
     ]
+
     return results
 
 
-def calculate_avg_rank_by_location_platform(db: Session, month: str, is_city: bool = True):
+def calculate_avg_rank_by_location_platform(
+        db: Session,
+        month: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
     """
-    Calculate the average rank grouped by location and AI platform for a given month.
+    Calculate the average rank grouped by location and AI platform for a given month,
+    optionally filtered by a list of locations.
 
     Args:
         db (Session): SQLAlchemy session.
         month (str): Month in YYYYMM format.
         is_city (bool): Filter rows based on whether location is a city. Default is True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
 
     Returns:
         results (list of dict): Each dict contains location, ai_platform, and avg_rank.
     """
-    query = (
-        db.query(
-            Response.location,
-            Response.ai_platform,
-            func.round(func.avg(Response.rank), 2).label("avg_rank")
-        )
-        .filter(Response.date == month)
-        .filter(Response.is_city == is_city)
-        .group_by(Response.location, Response.ai_platform)
-        .all()
+
+    # Start the base query
+    query = db.query(
+        Response.location,
+        Response.ai_platform,
+        func.round(func.avg(Response.rank), 2).label("avg_rank")
     )
 
+    # 1. Apply base filters
+    query = query.filter(Response.date == month)
+    query = query.filter(Response.is_city == is_city)
+
+    # 2. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # 3. Group by and execute
+    query = query.group_by(Response.location, Response.ai_platform)
+
+    # Execute the final query
+    results_tuple = query.all()
+
+    # Convert results to the desired list of dicts format
     results = [
         {"location": loc, "ai_platform": platform, "avg_rank": avg_rank}
-        for loc, platform, avg_rank in query
+        for loc, platform, avg_rank in results_tuple
     ]
+
     return results

@@ -100,7 +100,7 @@ def display_map_with_score_colors(df_scores):
     df_locations = pd.DataFrame(locations)
 
     # Merge with scores
-    df = df_locations.merge(df_scores, on="location", how="left")
+    df = df_locations.merge(df_scores, on="location", how="inner")
     df['score'] = df['score'].fillna(0)
 
     # Map to RGB color: blue (low) → red (high)
