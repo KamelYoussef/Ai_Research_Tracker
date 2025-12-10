@@ -381,7 +381,6 @@ async def get_sentiment_by_platform(
 async def aggregate_maps_by_product_and_location_route(
     month: str,
     is_city: bool = Query(True, description="Filter by city (true) or province (false)"),
-    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
@@ -398,7 +397,7 @@ async def aggregate_maps_by_product_and_location_route(
     """
     try:
         validate_token(credentials)
-        aggregated_data = aggregate_maps_by_product_and_location(db, month, is_city, locations=locations)
+        aggregated_data = aggregate_maps_by_product_and_location(db, month, is_city)
         print(aggregated_data)
         return {"aggregated_data": aggregated_data}
     except Exception as e:
