@@ -29,30 +29,32 @@ def get_ai_response(prompt, ai_platform):
 
 def chatgpt(prompt):
     try:
-        completion = client_chatgpt.chat.completions.create(
-            model="gpt-4o-mini-search-preview",
-            web_search_options={
+        response = client_chatgpt.responses.create(
+            model="gpt-5-nano",
+            tools=[{
+                "type": "web_search",
                 "user_location": {
                     "type": "approximate",
-                    "approximate": {
-                        "country": "CA",
-                        "city": "Calgary",
-                    }
-                },
-            },
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant for people in canada"},
-                {
-                    "role": "user",
-                    "content": prompt
+                    "country": "CA",
+                    "city": "Calgary",
+                    "region": "Alberta",
                 }
-            ]
+            }],
+            include=["web_search_call.action.sources"],
+            input=prompt
         )
-        annotations = completion.choices[0].message.annotations
-        sources = extract_base_domains([annotation.url_citation.url for annotation in annotations if annotation.type == 'url_citation'])
-        return completion.choices[0].message.content, sources
+        full_sources_list = []
+
+        for item in response.output:
+            if item.type == 'web_search_call' and item.action:
+                if item.action.type == 'search' and hasattr(item.action, 'sources'):
+                    full_sources_list.extend(item.action.sources)
+
+        sources = extract_base_domains([source.url for source in full_sources_list])
+        return response.output_text, sources
+
     except Exception as e:
-        print(f"Error getting response from OpenAI: {e}")
+        print(f"Error getting response from OpenAI Responses API: {e}")
         return "", []
 
 

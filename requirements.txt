@@ -78,7 +78,7 @@ multidict==6.2.0
 murmurhash==1.0.11
 narwhals==1.16.0
 numpy==2.0.2
-openai==1.66.5
+openai==2.11.0
 packaging==24.2
 pandas==2.2.3
 parso==0.8.4
