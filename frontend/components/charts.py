@@ -22,7 +22,8 @@ def plot_bar_chart(data):
         height=350
     )
     fig.update_layout(
-        yaxis=dict(range=[0, 100])
+        yaxis=dict(range=[0, 100]),
+        xaxis_title = " "
     )
     return fig
 
@@ -34,6 +35,7 @@ def plot_group_bar(data):
         y='Visibility Score (%)',  # Y-axis: The single column containing ALL scores
         color='AI Platform',  # Grouping/Coloring: Separates the bars
         barmode='group',  # Sets the bars side-by-side
+        title=" ",
         labels={
             "product": "Insurance Product",
             "Visibility Score (%)": "Visibility Score"
@@ -47,8 +49,8 @@ def plot_group_bar(data):
     )
     fig.update_layout(
         yaxis=dict(range=[0, 100], ticksuffix="%"),
-        xaxis_title="Keywords",
-        height=350
+        xaxis_title=" ",
+        height=375
     )
     return fig
 

@@ -13,7 +13,8 @@ from data.fetch_utils import select_month, get_ai_total_score, download_data, lo
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, \
     plot_rank_chart, display_map_with_score_colors, plot_sentiment_chart, plot_group_bar
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location, \
-    fetch_and_process_data, get_location_scores, transform_value, get_ai_platforms_score_full_year, ai_platforms_score
+    fetch_and_process_data, get_location_scores, transform_value, get_ai_platforms_score_full_year, ai_platforms_score,\
+    get_ai_scores_full_year_per_location
 from components.header import render_tooltip_heading
 
 # -----------------------------Initialisation------------------------------
@@ -304,11 +305,21 @@ with col7:
     df = pd.DataFrame(stats_by_location(
         month, search_query, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])
     )
-
     total_sum = df.select_dtypes(include='number').sum().sum()
     total_count = df.select_dtypes(include='number').count().sum()
 
-    st.metric(label="Visibility score", value=f"{round(float(total_sum / total_count), 1)} % ", border=True)
+    full_year_ai_score_location = get_ai_scores_full_year_per_location(
+        month, search_query, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
+    )
+
+    st.metric(label="Visibility score",
+              value=f"{round(float(total_sum / total_count), 1)} % ",
+              chart_type="area",
+              border=True,
+              delta=f"{round(float(full_year_ai_score_location[-1] - full_year_ai_score_location[-2]),1)} pts MoM"
+              if len(full_year_ai_score_location) >= 2 else f"{0.0} pts MoM",
+              chart_data=full_year_ai_score_location
+              )
 
     horizontal_group = st.container(horizontal=True)
     with horizontal_group:
@@ -325,7 +336,8 @@ with col7:
                     st.metric(label="Sentiment Score", value=f"{round(float(avg_sentiment), 1)} % ", border=True)
 
 with col8:
-    with st.container():
+    st.write("")
+    with st.container(border=True):
         if int(month) < 202510:
             ai_list_bars = ['CHATGPT', 'GEMINI', 'PERPLEXITY']
         else:
@@ -337,7 +349,7 @@ with col8:
                           value_name='Visibility Score (%)'
                           )
 
-    st.plotly_chart(plot_group_bar(df_long), width='stretch')
+        st.plotly_chart(plot_group_bar(df_long), width='stretch')
 
 
 st.divider()
@@ -413,13 +425,6 @@ with st.sidebar:
 
 st.markdown(
     """
-    <style>
-        /* Cible la barre latérale uniquement lorsqu'elle est ouverte */
-        [data-testid="stSidebar"][aria-expanded="true"] {
-            min-width: 250px;
-            max-width: 250px;
-        }
-    </style>
     <style>
     html {
         zoom: 92%;

@@ -115,6 +115,13 @@ def stats_by_location(month: int, selected_location: str, competitor_flag, is_ci
     Returns:
         pd.DataFrame: A pivot table with products as rows, AI platforms as columns, and normalized total counts as values.
     """
+    if is_city:
+        if int(month) < 202504:
+            return None
+    else:
+        if int(month) < 202508:
+            return None
+
     # Process and pivot the data
     df = download_data(month, competitor_flag, is_city=is_city, locations=locations)[2]
     day_columns = [
@@ -124,7 +131,8 @@ def stats_by_location(month: int, selected_location: str, competitor_flag, is_ci
     unique_days_count = len(day_columns)
     # Validate inputs
     if selected_location not in df["location"].unique():
-        raise ValueError(f"Invalid location: {selected_location}. Please select a valid location.")
+        return None
+        #raise ValueError(f"Invalid location: {selected_location}. Please select a valid location.")
 
     # Filter the data for the selected location
     filtered_df = df[df["location"] == selected_location].copy()
@@ -232,3 +240,29 @@ def get_ai_platforms_score_full_year(from_month, flag_competitor, is_city=True, 
     df_long['score'] = pd.to_numeric(df_long['score'])
 
     return df_long
+
+
+def get_ai_scores_full_year_per_location(from_month, search_query, flag_competitor, is_city=True, locations=None):
+    year = int(str(from_month)[:4])
+    month = int(str(from_month)[4:6])
+    end_date = datetime(year, month, 1)
+    output = []
+    data = []
+    iter_ = 5
+    if flag_competitor == "competitor_4":
+        iter_ = 1
+    elif is_city:
+        iter_ = 9
+    # Last 12 months: from (end_date - 11 months) to end_date
+    # not a year for now
+    for i in range(iter_):
+        current_date = end_date - relativedelta(months=iter_ - 1 - i)
+        yyyymm = int(current_date.strftime("%Y%m"))
+
+        scores = stats_by_location(yyyymm, search_query, flag_competitor, is_city=is_city, locations=locations)
+        if scores is not None:
+            total_sum = pd.DataFrame(scores).select_dtypes(include='number').sum().sum()
+            total_count = pd.DataFrame(scores).select_dtypes(include='number').count().sum()
+            output.append(round(float(total_sum / total_count), 1))
+
+    return output
