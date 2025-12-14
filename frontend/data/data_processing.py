@@ -1,6 +1,8 @@
 from data.fetch_utils import download_data, fetch_param
 import streamlit as st
 import pandas as pd
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 
 def ai_platforms_score(month, competitor_flag, is_city=True, locations=None):
@@ -179,3 +181,48 @@ def transform_value(x):
         raise ValueError("Input value must be between -1 and 1, inclusive.")
 
     return round((x + 1) * 50, 1)
+
+
+def get_ai_platforms_score_full_year(from_month, flag_competitor, is_city=True, locations=None):
+    year = int(str(from_month)[:4])
+    month = int(str(from_month)[4:6])
+    end_date = datetime(year, month, 1)
+
+    data = []
+    iter_ = 5
+    if is_city:
+        if flag_competitor == "competitor_4":
+            iter_ = 1
+        else:
+            iter_ = 9
+    # Last 12 months: from (end_date - 11 months) to end_date
+    # not a year for now
+    for i in range(iter_):
+        current_date = end_date - relativedelta(months=iter_-1 - i)
+        yyyymm = int(current_date.strftime("%Y%m"))
+
+        scores = ai_platforms_score(yyyymm, flag_competitor, is_city=is_city, locations=locations)
+
+        data.append({
+            "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
+            "scores": scores
+        })
+
+    flat_data = []
+    for entry in data:
+        month = entry['month']
+        # Loop through the nested 'scores' dictionary to create one row per AI Platform
+        for platform, score in entry['scores'].items():
+            flat_data.append({
+                'month': month,
+                'AI Platform': platform,
+                'score': score
+            })
+
+    # Create the final DataFrame from the flattened list of dictionaries
+    df_long = pd.DataFrame(flat_data)
+
+    # Optional: Ensure scores are numeric
+    df_long['score'] = pd.to_numeric(df_long['score'])
+
+    return df_long
