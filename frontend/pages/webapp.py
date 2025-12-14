@@ -237,11 +237,11 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
 ):
     with column:
         data = dfs_by_platform[model]['score']
-        delta = f"{round(float(data.iloc[-1] - data.iloc[-2]), 1)} pts MoM" if len(data) >= 2 else None
+        delta = f"{round(float(data.iloc[-1] - data.iloc[-2]), 1)} pts MoM" if len(data) >= 2 else f"{0.0} pts MoM"
 
         st.subheader(f"{model}")
         st.metric(label="Visibility Score", value=f"{score} %", delta=delta,
-                  border=True, chart_data=data, chart_type="line")
+                  border=True, chart_data=data, chart_type="area")
 
         if COMPETITOR_FLAGS[choice] == "total_count":
             st.metric(label="Average Ranking",
@@ -324,9 +324,13 @@ with col7:
 
 with col8:
     with st.container():
+        if int(month) < 202510:
+            ai_list_bars = ['CHATGPT', 'GEMINI', 'PERPLEXITY']
+        else:
+            ai_list_bars = ['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY']
         df_long = pd.melt(df,
                           id_vars=['product'],
-                          value_vars=['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY'],
+                          value_vars=ai_list_bars,
                           var_name='AI Platform',
                           value_name='Visibility Score (%)'
                           )

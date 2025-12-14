@@ -189,7 +189,7 @@ def display_map_with_score_colors(df_scores):
         layers=[layer],
         initial_view_state=view_state,
         tooltip={"text": "{location}\nScore: {score}"},
-        map_style="mapbox://styles/mapbox/light-v9"
+        map_style=None
     ))
 
 
@@ -277,5 +277,5 @@ def display_overview_map(df_scores):
         initial_view_state=view_state,
         tooltip={"html": "<b>City:</b> {location}<br/>"
                          "<b>Avg Rank:</b> {Avg Rank}"},
-        map_style="mapbox://styles/mapbox/light-v9"
+        map_style=None
     ))

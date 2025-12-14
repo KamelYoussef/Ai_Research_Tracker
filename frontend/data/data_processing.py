@@ -6,6 +6,13 @@ from dateutil.relativedelta import relativedelta
 
 
 def ai_platforms_score(month, competitor_flag, is_city=True, locations=None):
+    if is_city:
+        if int(month) < 202504:
+            return "N/A"
+    else:
+        if int(month) < 202508:
+            return "N/A"
+
     df = download_data(month, competitor_flag, is_city=is_city, locations=locations)[2]
     n_locations, n_products, n_ai_platforms = df["location"].nunique(), df["product"].nunique(), df["ai_platform"].nunique()
     ai_scores = df.groupby("ai_platform")[["Total Count"]].sum().reset_index()
@@ -190,11 +197,10 @@ def get_ai_platforms_score_full_year(from_month, flag_competitor, is_city=True, 
 
     data = []
     iter_ = 5
-    if is_city:
-        if flag_competitor == "competitor_4":
-            iter_ = 1
-        else:
-            iter_ = 9
+    if flag_competitor == "competitor_4":
+        iter_ = 1
+    elif is_city:
+        iter_ = 9
     # Last 12 months: from (end_date - 11 months) to end_date
     # not a year for now
     for i in range(iter_):
@@ -202,11 +208,11 @@ def get_ai_platforms_score_full_year(from_month, flag_competitor, is_city=True, 
         yyyymm = int(current_date.strftime("%Y%m"))
 
         scores = ai_platforms_score(yyyymm, flag_competitor, is_city=is_city, locations=locations)
-
-        data.append({
-            "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
-            "scores": scores
-        })
+        if scores != "N/A":
+            data.append({
+                "month": current_date.strftime("%b").upper(),  # 'JAN', 'FEB', etc.
+                "scores": scores
+            })
 
     flat_data = []
     for entry in data:
