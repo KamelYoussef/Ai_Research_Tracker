@@ -191,3 +191,20 @@ if __name__ == "__main__":
           </p>
         </div>
         """, unsafe_allow_html=True)
+        st.markdown(
+            """
+            <style>
+                /* Cible la barre latérale uniquement lorsqu'elle est ouverte */
+                [data-testid="stSidebar"][aria-expanded="true"] {
+                    min-width: 250px;
+                    max-width: 250px;
+                }
+            </style>
+            <style>
+            html {
+                zoom: 90%;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )

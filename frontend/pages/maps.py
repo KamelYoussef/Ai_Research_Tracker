@@ -5,7 +5,7 @@ from pathlib import Path
 import plotly.express as px
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from streamlit_option_menu import option_menu
-from data.fetch_utils import logout, maps, select_month
+from data.fetch_utils import logout, maps, select_month, format_month
 from components.charts import display_overview_map
 import yaml
 
@@ -23,7 +23,7 @@ with header_col1:
     st.header("📊 Map Pack")
 with header_col3:
     month = select_month()
-st.divider()
+
 
 # Sidebar buttons
 with st.sidebar:
@@ -67,7 +67,7 @@ else:
 
     # ---------------------
     # 1. OVERALL VIEW
-    st.header("Overview")
+    st.header(f"Overview - {format_month(month)}")
 
     col1, col2 = st.columns([1.5, 1])
 
@@ -354,3 +354,15 @@ with st.sidebar:
       </p>
     </div>
     """, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <style>
+            /* Cible la barre latérale uniquement lorsqu'elle est ouverte */
+            [data-testid="stSidebar"][aria-expanded="true"] {
+                min-width: 250px;
+                max-width: 250px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )

@@ -186,14 +186,14 @@ data_sentiment = get_avg_sentiment_by_location(
 # Insights
 col4, col5, col6 = st.columns(3)
 with col4:
-    st.subheader("Top-Performing Locations : 🚀")
+    st.subheader("Top-Performing Locations :")
     st.write(
         "\n".join(f"- {location}" for location in top_locations(
             month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])[:7]
                   )
     )
 with col5:
-    st.subheader("Areas for Opportunity : 🎯")
+    st.subheader("Areas for Opportunity :")
     st.write(
         "\n".join(f"- {location}" for location in
                   list(reversed(top_locations(
@@ -242,8 +242,8 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         st.subheader(f"{model}")
         st.metric(label="Visibility Score", value=f"{score} %", delta=delta,
                   border=True, chart_data=data, chart_type="area")
-        horizontal_group = st.container(horizontal=True)
-        with horizontal_group:
+
+        with st.container(horizontal=True):
             if COMPETITOR_FLAGS[choice] == "total_count":
                 st.metric(label="Average Ranking",
                           value=f"""{get_avg_rank_by_platform(
@@ -259,27 +259,26 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
                 st.metric(label="Sentiment Score", value=f"{model_sentiment} %", border=True)
 
         # Bar chart for Keyword Presence
-        with st.container(border=True):
-            bar_data = pd.DataFrame({
-                "Keyword": keywords,
-                "Visibility score": keyword_presence,
-            })
-            st.plotly_chart(
-                plot_bar_chart(bar_data),
-                key=f"bar_chart_{model}",
-                width='stretch'
-            )
-        with st.container(border=True):
-            # Pie chart for Locations Showed vs No Results
-            pie_data = pd.DataFrame({
-                "Category": ["Showed", "No Results"],
-                "Count": [locations_showed, locations_no_results],
-            })
-            st.plotly_chart(
-                plot_pie_chart(pie_data),
-                key=f"pie_chart_{model}",
-                width='stretch'
-            )
+
+        bar_data = pd.DataFrame({
+            "Keyword": keywords,
+            "Visibility score": keyword_presence,
+        })
+        st.plotly_chart(
+            plot_bar_chart(bar_data),
+            key=f"bar_chart_{model}",
+            width='stretch'
+        )
+        # Pie chart for Locations Showed vs No Results
+        pie_data = pd.DataFrame({
+            "Category": ["Showed", "No Results"],
+            "Count": [locations_showed, locations_no_results],
+        })
+        st.plotly_chart(
+            plot_pie_chart(pie_data),
+            key=f"pie_chart_{model}",
+            width='stretch'
+        )
 
 with st.expander("How to interpret this pie chart ? ℹ️"):
     st.markdown("""
@@ -411,3 +410,21 @@ with st.sidebar:
       </p>
     </div>
     """, unsafe_allow_html=True)
+
+st.markdown(
+    """
+    <style>
+        /* Cible la barre latérale uniquement lorsqu'elle est ouverte */
+        [data-testid="stSidebar"][aria-expanded="true"] {
+            min-width: 250px;
+            max-width: 250px;
+        }
+    </style>
+    <style>
+    html {
+        zoom: 92%;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
