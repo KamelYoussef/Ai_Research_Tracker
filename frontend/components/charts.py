@@ -19,10 +19,36 @@ def plot_pie_chart(data):
 def plot_bar_chart(data):
     fig = px.bar(
         data, x="Keyword", y="Visibility score",
-        height=280
+        height=350
     )
     fig.update_layout(
         yaxis=dict(range=[0, 100])
+    )
+    return fig
+
+
+def plot_group_bar(data):
+    fig = px.bar(
+        data,
+        x='product',  # X-axis: The Insurance Product
+        y='Visibility Score (%)',  # Y-axis: The single column containing ALL scores
+        color='AI Platform',  # Grouping/Coloring: Separates the bars
+        barmode='group',  # Sets the bars side-by-side
+        labels={
+            "product": "Insurance Product",
+            "Visibility Score (%)": "Visibility Score"
+        },
+        color_discrete_map={
+            "CHATGPT": "#1034A6",
+            "CLAUDE": "#4682B4",
+            "GEMINI": "#6495ED",
+            "PERPLEXITY": "#87CEEB"
+        }
+    )
+    fig.update_layout(
+        yaxis=dict(range=[0, 100], ticksuffix="%"),
+        xaxis_title="Keywords",
+        height=350
     )
     return fig
 

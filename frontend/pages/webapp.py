@@ -2,20 +2,21 @@ import streamlit as st
 import pandas as pd
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data,\
-    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month,\
-    get_sources, dict_to_text, get_avg_sentiment, get_sentiments_full_year, get_avg_sentiment_by_platform,\
-    get_avg_sentiment_by_location, get_avg_rank_by_location, fetch_data
-from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, plot_rank_chart, \
-    display_map_with_score_colors, plot_sentiment_chart
-from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location,\
-    fetch_and_process_data, get_location_scores, transform_value
-from components.header import render_tooltip_heading
 from streamlit_option_menu import option_menu
 import numpy as np
-import yaml
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data, \
+    validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month, \
+    get_sources, dict_to_text, get_avg_sentiment, get_sentiments_full_year, get_avg_sentiment_by_platform, \
+    get_avg_sentiment_by_location, get_avg_rank_by_location, fetch_data, inject_styles, load_app_config
+from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, \
+    plot_rank_chart, display_map_with_score_colors, plot_sentiment_chart, plot_group_bar
+from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location, \
+    fetch_and_process_data, get_location_scores, transform_value
+from components.header import render_tooltip_heading
+
+# -----------------------------Initialisation------------------------------
 # Check the login state
 if 'logged_in' in st.session_state and validate_token():
     pass
@@ -28,42 +29,27 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+# Set css style
+st.write(inject_styles(), unsafe_allow_html=True)
 
-font_css = """
-<style>
-   button[data-baseweb="tab"] {
-   font-size: 24px;
-   margin: 0;
-   width: 100%;
-   }
-</style>
-"""
-st.write(font_css, unsafe_allow_html=True)
+# -----------------------------Page filters------------------------------
+header_col1, header_col2, header_col3, _, header_col4 = st.columns([1, 1, 1, 1, 2])
+CONFIG = load_app_config()
+COMPETITOR_FLAGS = CONFIG["competitor_flags"]
+AGGREGATION_LIST = CONFIG["aggregation_list"]
 
-header_col1, header_col2, header_col3, _ ,header_col4 = st.columns([1, 1, 1 ,1, 2])
 # Choose company or one of the competitors
 with header_col1:
-    competitor_flags = {
-        "Western Financial": "total_count",
-        "Co-operators": "competitor_1",
-        "Westland": "competitor_2",
-        "Brokerlink": "competitor_3",
-        "Acera Insurance": "competitor_4"
-    }
-    choice = st.selectbox(" ", list(competitor_flags.keys()))
+    choice = st.selectbox(" ", list(COMPETITOR_FLAGS.keys()))
 
+# Choose locations view or provinces view
 with header_col2:
-    view_option = st.selectbox(" ",["Locations", "Provinces"])
+    view_option = st.selectbox(" ", ["Locations", "Provinces"])
 
 is_city = view_option == "Locations"
 
-filter_locations = {}
-filter_view = "All locations"
-
+# Choose top_locations or all_locations view
 if is_city:
-    with open('data/data.yml', 'r') as file:
-        config = yaml.safe_load(file)
-        AGGREGATION_LIST = config.get('top_41', [])
     with header_col3:
         filter_locations = {
             "All locations": None,
@@ -76,75 +62,106 @@ else:
     }
     filter_view = "All locations"
 
+# get the month to generate the monthly report
 with header_col4:
-    # get the month to generate the monthly report
     month = select_month()
 
-# Download button for raw data
-header_col4, _, header_col5 = st.columns([7,2.5,1.5])
+# -----------------------------Overview------------------------------
+header_col4, _, header_col5 = st.columns([7, 2.5, 1.5])
+# Title
 with header_col4:
-    st.markdown(
-        f"<h3 style='text-align: left;'>Overview - {format_month(month)}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h7 style='text-align: left;'> Here’s a quick summary of your brand’s performance this month across \
-    all four AI platforms, multiple locations, and five keywords showing how often it appeared and where it ranked. </h7>", unsafe_allow_html=True)
+    st.header(f"Overview - {format_month(month)}")
+    st.write(
+        """
+        Here’s a quick summary of your brand’s performance this month across 
+        all four AI platforms, multiple locations, and five keywords showing 
+        how often it appeared and where it ranked.
+        """
+    )
+
+# Download button for raw data
 with header_col5:
     st.download_button(
         label="Export data",
-        data=convert_df(download_data(month, competitor_flags[choice], is_city)[2]),
+        data=convert_df(download_data(month, COMPETITOR_FLAGS[choice], is_city)[2]),
         file_name="all_data.csv",
         mime="text/csv",
         use_container_width=True
     )
 
 col1, col2, col3 = st.columns(3)
+# Display Visibility Score
 with col1:
-    # Display Total Score in a header
     render_tooltip_heading("Visibility Score", "How often your brand appeared in AI-generated responses this month \
     across 4 AI platforms. \n [Based on 2360 prompts run weekly (4 runs per month), totaling 9,440 prompts across all \
     locations and keywords].")
 
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
-        f"{get_ai_total_score(month, competitor_flags[choice], is_city, locations = filter_locations[filter_view])} %"
+        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])} %"
         f"</h1>",
         unsafe_allow_html=True)
 
-    plot_ai_scores_chart(get_ai_scores_full_year(month, competitor_flags[choice], is_city, locations = filter_locations[filter_view]))
+    plot_ai_scores_chart(
+        get_ai_scores_full_year(
+            month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
+        )
+    )
 
+# Display Average Ranking
 with col2:
-    render_tooltip_heading("Average Ranking", "Average position where your brand appeared in AI-generated responses this\
-    month. \nInstances where your brand was not mentioned are excluded from the average.")
+    render_tooltip_heading("Average Ranking", "Average position where your brand appeared in AI-generated responses \
+    this month. \nInstances where your brand was not mentioned are excluded from the average.")
+
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
-        f"{get_avg_rank(month, competitor_flags[choice], is_city, locations = filter_locations[filter_view])}</h1>",
+        f"{get_avg_rank(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])}"
+        f"</h1>",
         unsafe_allow_html=True)
-    plot_rank_chart(get_ranks_full_year(month, competitor_flags[choice], is_city, locations = filter_locations[filter_view]))
 
+    plot_rank_chart(
+        get_ranks_full_year(
+            month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
+        )
+    )
+
+# Display Sentiment Score
 with col3:
     render_tooltip_heading("Sentiment Score", "Average sentiment based on AI-generated responses \
     this month. Responses that did not mention your brand are excluded from the calculation.")
-    avg_sentiment = get_avg_sentiment(month, competitor_flags[choice], is_city, locations = filter_locations[filter_view])
-    if avg_sentiment != "N/A":
-        avg_sentiment = transform_value(avg_sentiment)
-    else : avg_sentiment ="N/A"
+
+    avg_sentiment = get_avg_sentiment(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])
+    avg_sentiment = transform_value(avg_sentiment) if avg_sentiment != "N/A" else "N/A"
     st.markdown(
-        f"""
-            <div style="display: inline-flex; align-items: center; margin-top: -30px;">
+        f"""<div style="display: inline-flex; align-items: center; margin-top: -30px;">
                 <h1 style="margin: 0;">{avg_sentiment} %</h1>
             </div>
-            """,
+        """,
         unsafe_allow_html=True
     )
 
-    plot_sentiment_chart(get_sentiments_full_year(month, competitor_flags[choice], is_city, locations = filter_locations[filter_view]))
+    plot_sentiment_chart(
+        get_sentiments_full_year(
+            month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
+        )
+    )
 
-# Display ai_platforms scores and graphs
-locations, keywords, models, scores, locations_data_df = fetch_and_process_data(month, competitor_flags[choice], is_city, locations=filter_locations[filter_view])
-keywords_presence = keywords_data(month, competitor_flags[choice], is_city, locations = filter_locations[filter_view])
-
+# -----------------------------Map and Insights------------------------------
+locations, keywords, models, scores, locations_data_df = \
+    fetch_and_process_data(
+        month,
+        COMPETITOR_FLAGS[choice],
+        is_city,
+        locations=filter_locations[filter_view]
+    )
+# Map
 if is_city:
-    st.markdown(f"<h3 style='text-align: left;'>Visibility score by location</h3>", unsafe_allow_html=True)
-    display_map_with_score_colors(get_location_scores(month, locations, competitor_flags[choice], is_city))
+    st.subheader("Visibility Score by Location")
+    display_map_with_score_colors(
+        get_location_scores(
+            month, locations, COMPETITOR_FLAGS[choice], is_city
+        )
+    )
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 10px;">
             <div style="width: 30px; height: 20px; background-color: rgb(255, 0, 0);"></div> Low Score
@@ -153,31 +170,55 @@ if is_city:
         """, unsafe_allow_html=True)
 
 st.divider()
+# Get data
+keywords_presence = keywords_data(
+    month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
+)
+data_rank = get_avg_rank_by_location(
+    month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
+)
+data_sentiment = get_avg_sentiment_by_location(
+    month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
+)
 
-# Lists for Top Locations and Opportunities
-st.markdown(f"<h3 style='text-align: left;'>Insights</h3>", unsafe_allow_html=True)
-
-data_rank = get_avg_rank_by_location(month, competitor_flags[choice], is_city, locations=filter_locations[filter_view])
-data_sentiment = get_avg_sentiment_by_location(month, competitor_flags[choice], is_city, locations=filter_locations[filter_view])
-
+# Insights
 col4, col5, col6 = st.columns(3)
 with col4:
-    st.markdown(f"<h4 style='text-align: left;'>Top-Performing Locations : 🚀</h4>", unsafe_allow_html=True)
-    st.write("\n".join(f"- {location}" for location in top_locations(month, competitor_flags[choice], is_city, locations=filter_locations[filter_view])[:5]))
+    st.subheader("Top-Performing Locations : 🚀")
+    st.write(
+        "\n".join(f"- {location}" for location in top_locations(
+            month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])[:7]
+                  )
+    )
 with col5:
-    st.markdown(f"<h4 style='text-align: left;'>Areas for Opportunity : 🎯</h4>", unsafe_allow_html=True)
-    st.write("\n".join(f"- {location}" for location in list(reversed(top_locations(month, competitor_flags[choice], is_city, locations=filter_locations[filter_view])[-5:]))))
+    st.subheader("Areas for Opportunity : 🎯")
+    st.write(
+        "\n".join(f"- {location}" for location in
+                  list(reversed(top_locations(
+                      month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])[-7:])
+                       )
+                  )
+    )
 with col6:
     if data_rank is not None and data_sentiment is not None:
         if not (data_rank["avg_rank"].isnull().all() and data_sentiment["avg_sentiment"].isnull().all()):
-            st.markdown(f"<h4 style='text-align: left;'>Lowest Ranking : </h4>", unsafe_allow_html=True)
-            st.markdown(data_rank.loc[data_rank["avg_rank"].idxmax(), 'location'] +" ➖ "+str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'ai_platform']) +" ➖ "+ str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'avg_rank']))
-            st.markdown(f"<h4 style='text-align: left;'>Lowest Sentiment Score : </h4>", unsafe_allow_html=True)
-            st.write(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'location']+" ➖ "+str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'ai_platform']) +" ➖ "+ str(transform_value(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'avg_sentiment']))+" %")
+            st.subheader("Lowest Ranking :")
+            st.markdown(
+                data_rank.loc[data_rank["avg_rank"].idxmax(), 'location'] + " ➖ " +
+                str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'ai_platform']) + " ➖ " +
+                str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'avg_rank'])
+            )
+            st.subheader("Lowest Sentiment Score :")
+            st.markdown(
+                data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'location'] + " ➖ " +
+                str(data_rank.loc[data_rank["avg_rank"].idxmax(), 'ai_platform']) + " ➖ " +
+                str(transform_value(data_sentiment.loc[data_sentiment["avg_sentiment"].idxmin(), 'avg_sentiment'])) +
+                " %"
+            )
 
 st.divider()
-
-st.markdown(f"<h3 style='text-align: left;'>Analysis by Platform</h3>", unsafe_allow_html=True)
+# -----------------------------Analysis by Platform------------------------------
+st.header("Analysis by Platform")
 
 columns = st.columns(len(models))
 for model, score, locations_showed, locations_no_results, keyword_presence, column in zip(
@@ -185,107 +226,113 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         keywords_presence.values(), columns
 ):
     with column:
-        st.markdown(f"<h4 style='text-align: left;'>{model}</h4>", unsafe_allow_html=True)
-        st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Visibility Score : {score} % "
-                    f"</h6>", unsafe_allow_html=True)
-        st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Average Ranking : {get_avg_rank_by_platform(month, model, competitor_flags[choice], is_city, locations=filter_locations[filter_view])} "
-                    f"</h6>", unsafe_allow_html=True)
-        model_sentiment = get_avg_sentiment_by_platform(month, model, competitor_flags[choice], is_city, locations=filter_locations[filter_view])
+        st.subheader(f"{model}")
+        st.metric(label="Visibility Score", value=f"{score} %")
+        st.metric(label="Average Ranking",
+                  value=f"""{get_avg_rank_by_platform(
+                      month, model, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])
+                  }"""
+                  )
+
+        model_sentiment = get_avg_sentiment_by_platform(month, model, COMPETITOR_FLAGS[choice], is_city,
+                                                        locations=filter_locations[filter_view])
         if model_sentiment != 'N/A' and model_sentiment != 0:
             model_sentiment = transform_value(model_sentiment)
-        st.markdown(f"<h6 style='text-align: left; margin-top: -10px;'>"
-                    f"Sentiment Score : {model_sentiment} %"
-                    f"</h6>", unsafe_allow_html=True)
+        st.metric(label="Sentiment Score", value=f"{model_sentiment} %")
 
         # Bar chart for Keyword Presence
         bar_data = pd.DataFrame({
             "Keyword": keywords,
             "Visibility score": keyword_presence,
         })
-        st.plotly_chart(plot_bar_chart(bar_data), key=f"bar_chart_{model}", use_container_width=True)
+        st.plotly_chart(
+            plot_bar_chart(bar_data),
+            key=f"bar_chart_{model}",
+            use_container_width=True
+        )
 
         # Pie chart for Locations Showed vs No Results
         pie_data = pd.DataFrame({
             "Category": ["Showed", "No Results"],
             "Count": [locations_showed, locations_no_results],
         })
-        st.plotly_chart(plot_pie_chart(pie_data), key=f"pie_chart_{model}", use_container_width=True)
+        st.plotly_chart(
+            plot_pie_chart(pie_data),
+            key=f"pie_chart_{model}",
+            use_container_width=True
+        )
 
 with st.expander("How to interpret this pie chart ? ℹ️"):
     st.markdown("""
-    This chart presents data **aggregated by location**, showing how many locations your brand appeared in across AI-generated responses this month.
-
-    It summarizes visibility using **9,440 prompts total**, which come from running **2360 prompts weekly (4 runs per month)** across multiple keywords and locations.
-
-    - **“Locations Showed”**: The brand showed up **at least once** in AI results for that location — even if only for one keyword in one prompt.
-    - **“Locations Not Showed”**: The brand **did not appear even once** for any keyword in that location across all prompts for the month.
-
-    ⚠️ **Locations in “Not Showed” should be flagged.** These represent areas with **zero brand visibility** in AI-generated answers — a potential risk that may require further investigation or action.
+    This chart presents data **aggregated by location**, showing how many locations your brand appeared in across \
+    AI-generated responses this month.
+    It summarizes visibility using **9,440 prompts total**, which come from running **2360 prompts weekly \
+    (4 runs per month)** across multiple keywords and locations.
+    - **“Locations Showed”**: The brand showed up **at least once** in AI results for that location — even if only for \
+    one keyword in one prompt.
+    - **“Locations Not Showed”**: The brand **did not appear even once** for any keyword in that location across all 
+    prompts for the month.
+    
+    ⚠️ **Locations in “Not Showed” should be flagged.** These represent areas with **zero brand visibility** in 
+    AI-generated answers — a potential risk that may require further investigation or action.
     """)
 
 st.divider()
-
-st.markdown(f"<h3 style='text-align: left;'>Detailed Analysis</h3>", unsafe_allow_html=True)
-# Stats by location
-col7, col8 = st.columns([3.5, 5])
+# -----------------------------Stats by location------------------------------
+st.subheader("Detailed Analysis")
+col7, col8 = st.columns([2, 5])
 with col7:
     search_query = st.selectbox("**Search Locations**", options=locations, index=0)
-    df = pd.DataFrame(stats_by_location(month, search_query, competitor_flags[choice], is_city, locations=filter_locations[filter_view]))
+    df = pd.DataFrame(stats_by_location(
+        month, search_query, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])
+    )
 
     total_sum = df.select_dtypes(include='number').sum().sum()
     total_count = df.select_dtypes(include='number').count().sum()
 
-    st.markdown(f"<h6 style='text-align: left;'>"
-                f"Visibility score : {round(float(total_sum / total_count),1)} % "
-                f"</h6>", unsafe_allow_html=True)
+    st.metric(label="Visibility score", value=f"{round(float(total_sum / total_count), 1)} % ")
 
     if data_rank is not None:
         avg_rank = data_rank[data_rank['location'] == search_query]["avg_rank"].mean()
         if avg_rank is not np.nan:
-            st.markdown(f"<h6 style='text-align: left;'>"
-                        f"Average Ranking : {round(float(avg_rank), 1)} "
-                        f"</h6>", unsafe_allow_html=True)
+            st.metric(label="Average Ranking", value=f"{round(float(avg_rank), 1)}")
 
     if data_sentiment is not None:
         avg_sentiment = data_sentiment[data_sentiment['location'] == search_query]["avg_sentiment"].mean()
         if avg_sentiment is not np.nan:
             if avg_sentiment != 'N/A':
                 avg_sentiment = transform_value(avg_sentiment)
-            st.markdown(f"<h6 style='text-align: left;'>"
-                        f"Sentiment Score : {round(float(avg_sentiment), 1)} % "
-                        f"</h6>", unsafe_allow_html=True)
-    st.divider()
-    st.write(f"{search_query}'s visibility score across AI platforms")
-    st.dataframe(df, hide_index=True, use_container_width=True)
+                st.metric(label="Sentiment Score", value=f"{round(float(avg_sentiment), 1)} % ")
+
 
 with col8:
     with st.container():
-        # Create and display the radar chart
-        radar_chart = create_radar_chart(df)
-        st.plotly_chart(radar_chart, use_container_width=True)
+        df_long = pd.melt(df,
+                          id_vars=['product'],
+                          value_vars=['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY'],
+                          var_name='AI Platform',
+                          value_name='Visibility Score (%)'
+                          )
 
-
-# Top Locations Analysis
+    st.plotly_chart(plot_group_bar(df_long), use_container_width=True)
 
 
 st.divider()
-
-st.markdown(f"<h3 style='text-align: left;'>Citations</h3>", unsafe_allow_html=True)
-st.markdown(f"<h7 style='text-align: left;'> These are sources used by the AI platforms in their responses this month.</h7>", unsafe_allow_html=True)
+# ------------------------------Citations-----------------------------
+st.subheader("Citations")
+st.write("These are sources used by the AI platforms in their responses this month.")
 
 tabs = st.tabs(models)
 for tab, model in zip(tabs, models):
     with tab:
         st.write(dict_to_text(get_sources(month, model)))
 
-# Sidebar menu
+# ------------------------------Sidebar Menu-----------------------------
 with st.sidebar:
     selected = option_menu(
         menu_title="Menu",  # Optional
         options=["Tracker", "Investigator", "Maps", "Clear Cache", "Logout", "Settings"],
-        icons=["eye", "search", "geo-alt", "arrow-clockwise", "box-arrow-left", "gear"],  # Optional icons
+        icons=["eye", "search", "geo-alt", "arrow-clockwise", "box-arrow-left", "gear"],
         menu_icon="list"
     )
 

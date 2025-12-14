@@ -178,4 +178,4 @@ def transform_value(x):
     if not (-1 <= x <= 1):
         raise ValueError("Input value must be between -1 and 1, inclusive.")
 
-    return (x + 1) * 50
+    return round((x + 1) * 50, 1)

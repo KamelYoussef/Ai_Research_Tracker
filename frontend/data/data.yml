@@ -13,6 +13,12 @@ ai_platforms:
   - PERPLEXITY
   - GEMINI
   - CLAUDE
+competitors:
+  Western Financial: total_count
+  Co-operators: competitor_1
+  Westland: competitor_2
+  Brokerlink: competitor_3
+  Acera Insurance: competitor_4
 locations:
   - Alix
   - Assiniboia

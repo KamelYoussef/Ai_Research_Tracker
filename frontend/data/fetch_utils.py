@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import logging
 from dateutil.relativedelta import relativedelta
 from typing import List, Optional
+import streamlit
+import yaml
 
 # Load environment variables
 load_dotenv()
@@ -519,3 +521,38 @@ def get_avg_rank_by_location(month, flag_competitor, is_city=True, locations=Non
                 return None
     else:
         return None
+
+
+def inject_styles():
+    """
+    Injects custom CSS to style Streamlit tabs (e.g., increase font size).
+    """
+    font_css = """
+    <style>
+       /* Target the button element that acts as the Streamlit tab */
+       button[data-baseweb="tab"] {
+           font-size: 24px;
+           margin: 0;
+           width: 100%;
+       }
+    </style>
+    """
+    return font_css
+
+
+@st.cache_data
+def load_app_config():
+    """Loads and caches all necessary configuration data from data.yml."""
+    try:
+        with open('data/data.yml', 'r') as file:
+            config = yaml.safe_load(file)
+            return {
+                "competitor_flags": config.get('competitors', {}),
+                "aggregation_list": config.get('top_41', [])
+            }
+    except FileNotFoundError:
+        st.error("Configuration file 'data/data.yml' not found.")
+        return {
+            "competitor_flags": {},
+            "aggregation_list": []
+        }
