@@ -200,11 +200,6 @@ if __name__ == "__main__":
                     max-width: 250px;
                 }
             </style>
-            <style>
-            html {
-                zoom: 90%;
-            }
-            </style>
             """,
             unsafe_allow_html=True
         )

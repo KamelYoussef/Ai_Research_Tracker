@@ -422,14 +422,3 @@ with st.sidebar:
       </p>
     </div>
     """, unsafe_allow_html=True)
-
-st.markdown(
-    """
-    <style>
-    html {
-        zoom: 92%;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
