@@ -242,42 +242,44 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
         st.subheader(f"{model}")
         st.metric(label="Visibility Score", value=f"{score} %", delta=delta,
                   border=True, chart_data=data, chart_type="area")
+        horizontal_group = st.container(horizontal=True)
+        with horizontal_group:
+            if COMPETITOR_FLAGS[choice] == "total_count":
+                st.metric(label="Average Ranking",
+                          value=f"""{get_avg_rank_by_platform(
+                              month, model, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])
+                          }""",
+                          border=True
+                          )
 
-        if COMPETITOR_FLAGS[choice] == "total_count":
-            st.metric(label="Average Ranking",
-                      value=f"""{get_avg_rank_by_platform(
-                          month, model, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])
-                      }""",
-                      border=True
-                      )
-
-            model_sentiment = get_avg_sentiment_by_platform(month, model, COMPETITOR_FLAGS[choice], is_city,
-                                                            locations=filter_locations[filter_view])
-            if model_sentiment != 'N/A' and model_sentiment != 0:
-                model_sentiment = transform_value(model_sentiment)
-            st.metric(label="Sentiment Score", value=f"{model_sentiment} %", border=True)
+                model_sentiment = get_avg_sentiment_by_platform(month, model, COMPETITOR_FLAGS[choice], is_city,
+                                                                locations=filter_locations[filter_view])
+                if model_sentiment != 'N/A' and model_sentiment != 0:
+                    model_sentiment = transform_value(model_sentiment)
+                st.metric(label="Sentiment Score", value=f"{model_sentiment} %", border=True)
 
         # Bar chart for Keyword Presence
-        bar_data = pd.DataFrame({
-            "Keyword": keywords,
-            "Visibility score": keyword_presence,
-        })
-        st.plotly_chart(
-            plot_bar_chart(bar_data),
-            key=f"bar_chart_{model}",
-            width='stretch'
-        )
-
-        # Pie chart for Locations Showed vs No Results
-        pie_data = pd.DataFrame({
-            "Category": ["Showed", "No Results"],
-            "Count": [locations_showed, locations_no_results],
-        })
-        st.plotly_chart(
-            plot_pie_chart(pie_data),
-            key=f"pie_chart_{model}",
-            width='stretch'
-        )
+        with st.container(border=True):
+            bar_data = pd.DataFrame({
+                "Keyword": keywords,
+                "Visibility score": keyword_presence,
+            })
+            st.plotly_chart(
+                plot_bar_chart(bar_data),
+                key=f"bar_chart_{model}",
+                width='stretch'
+            )
+        with st.container(border=True):
+            # Pie chart for Locations Showed vs No Results
+            pie_data = pd.DataFrame({
+                "Category": ["Showed", "No Results"],
+                "Count": [locations_showed, locations_no_results],
+            })
+            st.plotly_chart(
+                plot_pie_chart(pie_data),
+                key=f"pie_chart_{model}",
+                width='stretch'
+            )
 
 with st.expander("How to interpret this pie chart ? ℹ️"):
     st.markdown("""
@@ -307,20 +309,21 @@ with col7:
     total_sum = df.select_dtypes(include='number').sum().sum()
     total_count = df.select_dtypes(include='number').count().sum()
 
-    st.metric(label="Visibility score", value=f"{round(float(total_sum / total_count), 1)} % ")
+    st.metric(label="Visibility score", value=f"{round(float(total_sum / total_count), 1)} % ", border=True)
 
-    if data_rank is not None:
-        avg_rank = data_rank[data_rank['location'] == search_query]["avg_rank"].mean()
-        if avg_rank is not np.nan:
-            st.metric(label="Average Ranking", value=f"{round(float(avg_rank), 1)}")
+    horizontal_group = st.container(horizontal=True)
+    with horizontal_group:
+        if data_rank is not None:
+            avg_rank = data_rank[data_rank['location'] == search_query]["avg_rank"].mean()
+            if avg_rank is not np.nan:
+                st.metric(label="Average Ranking", value=f"{round(float(avg_rank), 1)}", border=True)
 
-    if data_sentiment is not None:
-        avg_sentiment = data_sentiment[data_sentiment['location'] == search_query]["avg_sentiment"].mean()
-        if avg_sentiment is not np.nan:
-            if avg_sentiment != 'N/A':
-                avg_sentiment = transform_value(avg_sentiment)
-                st.metric(label="Sentiment Score", value=f"{round(float(avg_sentiment), 1)} % ")
-
+        if data_sentiment is not None:
+            avg_sentiment = data_sentiment[data_sentiment['location'] == search_query]["avg_sentiment"].mean()
+            if avg_sentiment is not np.nan:
+                if avg_sentiment != 'N/A':
+                    avg_sentiment = transform_value(avg_sentiment)
+                    st.metric(label="Sentiment Score", value=f"{round(float(avg_sentiment), 1)} % ", border=True)
 
 with col8:
     with st.container():
