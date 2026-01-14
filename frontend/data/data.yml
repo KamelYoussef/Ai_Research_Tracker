@@ -198,6 +198,105 @@ top_41:
   - Terrace
   - Vernon
   - West Kelowna
+Western:
+  - Alix
+  - Assiniboia
+  - Barrhead
+  - Bashaw
+  - Bassano
+  - Beaverlodge
+  - Bolton
+  - Bow Island
+  - Brandon
+  - Brooks
+  - Campbell River
+  - Camrose
+  - Chase
+  - Claresholm
+  - Cochrane
+  - Cold Lake
+  - Coleman
+  - Coronation
+  - Cranbrook
+  - Creston
+  - Dawson Creek
+  - Drumheller
+  - Edmonton
+  - Edson
+  - Elkford
+  - Estevan
+  - Fairview
+  - Fernie
+  - Fort Nelson
+  - Fort St. John
+  - Fraser Lake
+  - Fruitvale
+  - Gilbert Plains
+  - Glenavon
+  - Golden
+  - Grande Cache
+  - Grande Prairie
+  - Grimshaw
+  - Gull Lake
+  - Hanna
+  - High River
+  - Houston
+  - Kaslo
+  - Kelowna
+  - Kimberley
+  - King City
+  - Lac La Biche
+  - Lacombe
+  - Leduc
+  - LeRoy
+  - Lethbridge
+  - Lloydminster
+  - Mayerthorpe
+  - Medicine Hat
+  - Melfort
+  - Nanaimo
+  - Nanton
+  - Nipawin
+  - North Battleford
+  - Okotoks
+  - Olds
+  - One Hundred Mile House
+  - Peace River
+  - Pender Island
+  - Prince Albert
+  - Prince George
+  - Red Deer
+  - Roblin
+  - Rosetown
+  - Salmo
+  - Schomberg
+  - Shaunavon
+  - Smithers
+  - Souris
+  - Sparwood
+  - Spruce Grove
+  - Strathmore
+  - Swift Current
+  - Taber
+  - Terrace
+  - Turner Valley
+  - Vanderhoof
+  - Vegreville
+  - Vermilion
+  - Vernon
+  - Victoria
+  - Vulcan
+  - Wainwright
+  - Watrous
+  - West Kelowna
+  - Weyburn
+  - White Fox
+  - Williams Lake
+  - Willow Bunch
+  - Winfield
+  - Winnipeg
+  - Wolseley
+  - Yorkton
 Huestis:
   - Charlottetown
   - Miramichi
@@ -226,3 +325,17 @@ Huestis:
   - Petitcodiac
   - Bridgetown
   - Annapolis
+Coast:
+  - Coquitlam
+  - Duncan
+  - Langley
+  - Mill Bay
+  - Nanaimo
+  - Richmond
+  - Saanichton
+  - Sidney
+  - Sooke
+  - Surrey
+  - Vancouver
+Wyatt:
+  - Winnipeg

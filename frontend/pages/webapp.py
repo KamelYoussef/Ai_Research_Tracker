@@ -38,6 +38,10 @@ header_col1, header_col2, header_col3, _, header_col4 = st.columns([1, 1, 1, 1, 
 CONFIG = load_app_config()
 COMPETITOR_FLAGS = CONFIG["competitor_flags"]
 AGGREGATION_LIST = CONFIG["aggregation_list"]
+HUESTIS_LIST = CONFIG["Huestis"]
+COAST_LIST = CONFIG["Coast"]
+WYATT_LIST = CONFIG["Wyatt"]
+WESTERN_LIST = CONFIG["Western"]
 
 # Choose company or one of the competitors
 with header_col1:
@@ -55,6 +59,10 @@ if is_city:
         filter_locations = {
             "All locations": None,
             "Top locations": AGGREGATION_LIST,
+            "Western": WESTERN_LIST,
+            "Huestis": HUESTIS_LIST,
+            "Coast": COAST_LIST,
+            "Wyatt": WYATT_LIST,
         }
         filter_view = st.selectbox(" ", list(filter_locations.keys()))
 else:
@@ -99,7 +107,7 @@ with col1:
 
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
-        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])} %"
+        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=HUESTIS_LIST)} %"
         f"</h1>",
         unsafe_allow_html=True)
 

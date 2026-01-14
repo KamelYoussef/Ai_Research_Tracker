@@ -1,8 +1,11 @@
-from data.fetch_utils import download_data, fetch_param
+from data.fetch_utils import download_data, fetch_param, load_app_config
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+
+CONFIG = load_app_config()
+HUESTIS_LIST = CONFIG["Huestis"]
 
 
 def ai_platforms_score(month, competitor_flag, is_city=True, locations=None):
@@ -204,11 +207,13 @@ def get_ai_platforms_score_full_year(from_month, flag_competitor, is_city=True, 
     end_date = datetime(year, month, 1)
 
     data = []
-    iter_ = 5
+    iter_ = 6
     if flag_competitor == "competitor_4":
-        iter_ = 1
+        iter_ = 2
     elif is_city:
-        iter_ = 9
+        iter_ = 10
+    if locations == HUESTIS_LIST:
+        iter_ = 2
     # Last 12 months: from (end_date - 11 months) to end_date
     # not a year for now
     for i in range(iter_):
@@ -248,11 +253,13 @@ def get_ai_scores_full_year_per_location(from_month, search_query, flag_competit
     end_date = datetime(year, month, 1)
     output = []
     data = []
-    iter_ = 5
+    iter_ = 6
     if flag_competitor == "competitor_4":
-        iter_ = 1
+        iter_ = 2
     elif is_city:
-        iter_ = 9
+        iter_ = 10
+    if locations == HUESTIS_LIST:
+        iter_ = 2
     # Last 12 months: from (end_date - 11 months) to end_date
     # not a year for now
     for i in range(iter_):

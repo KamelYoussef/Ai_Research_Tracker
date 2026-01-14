@@ -548,11 +548,19 @@ def load_app_config():
             config = yaml.safe_load(file)
             return {
                 "competitor_flags": config.get('competitors', {}),
-                "aggregation_list": config.get('top_41', [])
+                "aggregation_list": config.get('top_41', []),
+                "Western": config.get('Western', []),
+                "Huestis": config.get('Huestis', []),
+                "Coast": config.get('Coast', []),
+                "Wyatt": config.get('Wyatt', []),
             }
     except FileNotFoundError:
         st.error("Configuration file 'data/data.yml' not found.")
         return {
             "competitor_flags": {},
-            "aggregation_list": []
+            "aggregation_list": [],
+            "Western": [],
+            "Huestis": [],
+            "Coast": [],
+            "Wyatt": [],
         }
