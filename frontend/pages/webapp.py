@@ -107,7 +107,7 @@ with col1:
 
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
-        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=HUESTIS_LIST)} %"
+        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])} %"
         f"</h1>",
         unsafe_allow_html=True)
 
