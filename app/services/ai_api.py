@@ -60,7 +60,7 @@ def chatgpt(prompt):
 
 def gemini(prompt):
     try:
-        model = "gemini-2.0-flash"
+        model = "gemini-2.5-flash"
         google_search_tool = Tool(
             google_search=GoogleSearch()
         )
@@ -104,7 +104,7 @@ def perplexity(prompt):
 def claude(prompt):
     try:
         response = client_claude.messages.create(
-            model="claude-3-5-haiku-latest",
+            model="claude-haiku-4-5",
             max_tokens=4096,
             system="You are a helpful assistant for people in Canada.",
             messages=[
