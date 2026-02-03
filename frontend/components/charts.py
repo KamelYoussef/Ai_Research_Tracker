@@ -235,7 +235,7 @@ def display_overview_map(df_scores):
 
     # Merge geo data with scores
     df = df_locations.merge(df_scores, left_on="location", right_on="City", how="left")
-    #df['Avg Rank'] = df['Avg Rank'].fillna(0)
+    df['Avg Rank'] = round(df['Avg Rank'],2)
 
     # Cap rank visually at 10
     df['Color Rank'] = df['Avg Rank'].apply(lambda x: min(x, 10))

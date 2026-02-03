@@ -564,3 +564,87 @@ def load_app_config():
             "Coast": [],
             "Wyatt": [],
         }
+
+
+def get_avg_maps_rank_year(current_month_int):
+    # 1. Convert YYYYMM to a datetime object
+    end_date = datetime.strptime(str(current_month_int), "%Y%m")
+
+    all_ranks = []
+
+    # 2. Iterate back 12 months
+    for i in range(12):
+        target_month_dt = end_date - relativedelta(months=i)
+        target_month_str = target_month_dt.strftime("%Y%m")
+
+        # 3. Call your existing maps function
+        # Assuming maps returns a DataFrame with an 'avg_rank' column
+        df = maps(int(target_month_str), is_city=True)
+
+        if df is not None and not df.empty and 'Avg Rank' in df.columns:
+            df['Avg Rank'] = pd.to_numeric(df['Avg Rank'], errors='coerce')
+            all_ranks.append(round(df['Avg Rank'].mean(),2))
+
+    # Return the overall average of those 6 months
+    return all_ranks[::-1] if all_ranks else 'Nan'
+
+
+def get_avg_maps_rank_year_city(current_month_int, city):
+    # 1. Convert YYYYMM to a datetime object
+    end_date = datetime.strptime(str(current_month_int), "%Y%m")
+
+    all_ranks = []
+
+    # 2. Iterate back 12 months
+    for i in range(12):
+        target_month_dt = end_date - relativedelta(months=i)
+        target_month_str = target_month_dt.strftime("%Y%m")
+
+        # 3. Call your existing maps function
+        # Assuming maps returns a DataFrame with an 'avg_rank' column
+        df = maps(int(target_month_str), is_city=True)
+        if df is not None and not df.empty and 'Avg Rank' in df.columns:
+            df['Avg Rank'] = pd.to_numeric(df['Avg Rank'], errors='coerce')
+            city_data = df[df['City'] == city]
+
+            if city_data is not None and not city_data.empty and 'Avg Rank' in city_data.columns:
+                all_ranks.append(round(city_data['Avg Rank'].mean(),2))
+
+    # Return the overall average of those 6 months
+    return all_ranks[::-1] if all_ranks else 'Nan'
+
+
+def get_avg_maps_rank_year_top(current_month_int, label):
+    # 1. Convert YYYYMM to a datetime object
+    end_date = datetime.strptime(str(current_month_int), "%Y%m")
+
+    all_ranks = []
+
+    # 2. Iterate back 12 months
+    for i in range(12):
+        target_month_dt = end_date - relativedelta(months=i)
+        target_month_str = target_month_dt.strftime("%Y%m")
+
+        # 3. Call your existing maps function
+        # Assuming maps returns a DataFrame with an 'avg_rank' column
+        df = maps(int(target_month_str), is_city=True)
+        if df is not None and not df.empty and 'Avg Rank' in df.columns:
+            df['Avg Rank'] = pd.to_numeric(df['Avg Rank'], errors='coerce')
+            with open("data/data.yml", "r") as f:
+                yaml_data = yaml.safe_load(f)
+            label_keys = ["top_41", "Huestis"]
+            city_to_label = {}
+            for key in label_keys:
+                if key in yaml_data:
+                    for city in yaml_data[key]:
+                        city_to_label[city] = key
+
+            df["Labels"] = df["City"].map(city_to_label).fillna("None")
+
+            df_top = df[df["Labels"] == label]
+
+            if df_top is not None and not df_top.empty and 'Avg Rank' in df_top.columns:
+                all_ranks.append(round(df_top['Avg Rank'].mean(),2))
+
+    # Return the overall average of those 6 months
+    return all_ranks[::-1] if all_ranks else 'Nan'

@@ -5,7 +5,7 @@ from pathlib import Path
 import plotly.express as px
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from streamlit_option_menu import option_menu
-from data.fetch_utils import logout, maps, select_month, format_month
+from data.fetch_utils import logout, maps, select_month, format_month, get_avg_maps_rank_year, get_avg_maps_rank_year_city, get_avg_maps_rank_year_top
 from components.charts import display_overview_map
 import yaml
 
@@ -91,33 +91,15 @@ else:
             height=400
         )
 
-        # Add horizontal mean line
-        fig_overall.add_shape(
-            type="line",
-            x0=-0.5,
-            x1=len(keyword_avg) - 0.5,
-            y0=overall_mean,
-            y1=overall_mean,
-            line=dict(color="orange", width=2, dash="dash")
-        )
-
-        # Add annotation for mean line
-        fig_overall.add_annotation(
-            x=4.5,  # or use x=4.5 depending on layout
-            y=overall_mean,
-            text=f"Overall Avg. Rank: {overall_mean:.2f}",
-            showarrow=False,
-            yshift=10,
-            font=dict(color="orange")
-        )
-
         st.plotly_chart(fig_overall)
 
     with col2:
-        st.markdown("<div style='height: 140px;'></div>", unsafe_allow_html=True)
-        m1, m2, m3, _ = st.columns(4)
-        m2.metric("🔢 Avg. Rank", f"{df['Avg Rank'].mean():.2f}")
-        m2.metric("⭐ Avg. Rating", f"{df['Rating'].mean():.2f}")
+        st.markdown("<div style='height: 110px;'></div>", unsafe_allow_html=True)
+        m1, m2 = st.columns(2)
+        m1.metric(label="Avg. Rank", value=f"{df['Avg Rank'].mean():.2f}",
+                  border=True, chart_data=get_avg_maps_rank_year(month), chart_type="area")
+        #m2.metric("🔢 Avg. Rank", f"{df['Avg Rank'].mean():.2f}")
+        #m2.metric("⭐ Avg. Rating", f"{df['Rating'].mean():.2f}")
         #m3.metric("🗣️ Total Reviews", f"{int(df['Reviews'].sum() / df['Keyword'].nunique())}")
         #m3.metric("🗣️ Avg. Reviews", f"{int(df['Reviews'].mean())}")
 
@@ -145,9 +127,12 @@ else:
             """, unsafe_allow_html=True)
 
     st.divider()
+    # ---------------------
+    # Selected view
 
     selected_city = st.selectbox("Select a City", sorted(df['City'].unique()))
     city_data = df[df['City'] == selected_city]
+
     col5, col6 = st.columns([1.5, 1])
 
     with col5:
@@ -170,31 +155,14 @@ else:
             height=400
         )
 
-        # Add horizontal line for mean
-        fig2.add_shape(
-            type="line",
-            x0=-0.5, x1=len(city_data['Keyword']) - 0.5,  # full width of x-axis
-            y0=mean_rank, y1=mean_rank,
-            line=dict(color="orange", width=2, dash="dash"),
-        )
-
-        # Optional: Add annotation for the line
-        fig2.add_annotation(
-            x=4.5,  # position on x-axis
-            y=mean_rank,
-            text=f"Avg. Rank: {mean_rank:.2f}",
-            showarrow=False,
-            yshift=10,
-            font=dict(color="orange")
-        )
-
         st.plotly_chart(fig2)
 
     with col6:
-        st.markdown("<div style='height: 140px;'></div>", unsafe_allow_html=True)
-        col7, col8, col9, _ = st.columns(4)
-        col8.metric("🔢 Avg. Rank", f"{city_data['Avg Rank'].mean():.2f}")
-        col8.metric("⭐ Avg. Rating", f"{city_data['Rating'].mean():.2f}")
+        st.markdown("<div style='height: 110px;'></div>", unsafe_allow_html=True)
+        col7, col8, = st.columns(2)
+        col7.metric(label="Avg. Rank", value=f"{city_data['Avg Rank'].mean():.2f}",
+                  border=True, chart_data=get_avg_maps_rank_year_city(month, selected_city), chart_type="area")
+        #col8.metric("⭐ Avg. Rating", f"{city_data['Rating'].mean():.2f}")
         #col9.metric("🗣️ Total Reviews", f"{int(city_data['Reviews'].sum() / city_data['Keyword'].nunique())}")
 
     # ---------------------
@@ -218,9 +186,6 @@ else:
         keyword_avg = df_top.groupby("Keyword", as_index=False)["Avg Rank"].mean().round(2)
         keyword_avg['Color Rank'] = keyword_avg['Avg Rank'].apply(lambda x: min(x, 10))
 
-        # Calculate mean across all keywords
-        overall_mean = keyword_avg['Avg Rank'].mean()
-
         fig_overall = px.bar(
             keyword_avg,
             x="Keyword",
@@ -233,33 +198,15 @@ else:
             height=400
         )
 
-        # Add horizontal mean line
-        fig_overall.add_shape(
-            type="line",
-            x0=-0.5,
-            x1=len(keyword_avg) - 0.5,
-            y0=overall_mean,
-            y1=overall_mean,
-            line=dict(color="orange", width=2, dash="dash")
-        )
-
-        # Add annotation for mean line
-        fig_overall.add_annotation(
-            x=4.5,  # or use x=4.5 depending on layout
-            y=overall_mean,
-            text=f"Overall Avg. Rank: {overall_mean:.2f}",
-            showarrow=False,
-            yshift=10,
-            font=dict(color="orange")
-        )
-
         st.plotly_chart(fig_overall)
 
     with col11:
-        st.markdown("<div style='height: 140px;'></div>", unsafe_allow_html=True)
-        n1, n2, n3, _ = st.columns(4)
-        n2.metric("🔢 Avg. Rank", f"{df_top['Avg Rank'].mean():.2f}")
-        n2.metric("⭐ Avg. Rating", f"{df_top['Rating'].mean():.2f}")
+        st.markdown("<div style='height: 110px;'></div>", unsafe_allow_html=True)
+        n1, n2, = st.columns(2)
+        n1.metric(label="Avg. Rank", value=f"{df_top['Avg Rank'].mean():.2f}",
+                    border=True, chart_data=get_avg_maps_rank_year_top(month, "top_41"), chart_type="area")
+        #n2.metric("🔢 Avg. Rank", f"{df_top['Avg Rank'].mean():.2f}")
+        #n2.metric("⭐ Avg. Rating", f"{df_top['Rating'].mean():.2f}")
 
     # ---------------------
     # Huestis Locations
@@ -289,33 +236,15 @@ else:
             height=400
         )
 
-        # Add horizontal mean line
-        fig_overall.add_shape(
-            type="line",
-            x0=-0.5,
-            x1=len(keyword_avg) - 0.5,
-            y0=overall_mean,
-            y1=overall_mean,
-            line=dict(color="orange", width=2, dash="dash")
-        )
-
-        # Add annotation for mean line
-        fig_overall.add_annotation(
-            x=4.5,  # or use x=4.5 depending on layout
-            y=overall_mean,
-            text=f"Overall Avg. Rank: {overall_mean:.2f}",
-            showarrow=False,
-            yshift=10,
-            font=dict(color="orange")
-        )
-
         st.plotly_chart(fig_overall)
 
     with col13:
         st.markdown("<div style='height: 140px;'></div>", unsafe_allow_html=True)
-        n1, n2, n3, _ = st.columns(4)
-        n2.metric("🔢 Avg. Rank", f"{df_huestis['Avg Rank'].mean():.2f}")
-        n2.metric("⭐ Avg. Rating", f"{df_huestis['Rating'].mean():.2f}")
+        n1, n2 = st.columns(2)
+        n1.metric(label="Avg. Rank", value=f"{df_top['Avg Rank'].mean():.2f}",
+                  border=True, chart_data=get_avg_maps_rank_year_top(month, "Huestis"), chart_type="area")
+        #n2.metric("🔢 Avg. Rank", f"{df_huestis['Avg Rank'].mean():.2f}")
+        #n2.metric("⭐ Avg. Rating", f"{df_huestis['Rating'].mean():.2f}")
 
     with st.expander("📄 Explore Data"):
         st.dataframe(df)
