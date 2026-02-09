@@ -135,5 +135,6 @@
     {"location": "Grand Manan", "latitude": 44.7101, "longitude": -66.7997},
     {"location": "Petitcodiac", "latitude": 45.9288, "longitude": -65.1748},
     {"location": "Bridgetown", "latitude": 44.8334, "longitude": -65.2821},
-    {"location": "Annapolis", "latitude": 44.7420, "longitude": -65.5147}
+    {"location": "Annapolis", "latitude": 44.7420, "longitude": -65.5147},
+    {"location": "Ottawa", "latitude": 45.4215, "longitude": -75.6972}
 ]
