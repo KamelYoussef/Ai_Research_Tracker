@@ -241,7 +241,7 @@ else:
     with col13:
         st.markdown("<div style='height: 140px;'></div>", unsafe_allow_html=True)
         n1, n2 = st.columns(2)
-        n1.metric(label="Avg. Rank", value=f"{df_top['Avg Rank'].mean():.2f}",
+        n1.metric(label="Avg. Rank", value=f"{df_huestis['Avg Rank'].mean():.2f}",
                   border=True, chart_data=get_avg_maps_rank_year_top(month, "Huestis"), chart_type="area")
         #n2.metric("🔢 Avg. Rank", f"{df_huestis['Avg Rank'].mean():.2f}")
         #n2.metric("⭐ Avg. Rating", f"{df_huestis['Rating'].mean():.2f}")

@@ -102,7 +102,7 @@ col1, col2, col3 = st.columns(3)
 # Display Visibility Score
 with col1:
     render_tooltip_heading("Visibility Score", "How often your brand appeared in AI-generated responses this month \
-    across 4 AI platforms. \n [Based on 2360 prompts run weekly (4 runs per month), totaling 9,440 prompts across all \
+    across 4 AI platforms. \n [Based on 2860 prompts (2 runs per month), totaling 5720 prompts across all \
     locations and keywords].")
 
     st.markdown(
@@ -195,7 +195,7 @@ data_sentiment = get_avg_sentiment_by_location(
 # Insights
 col4, col5, col6 = st.columns(3)
 with col4:
-    st.subheader("Top-Performing Locations :")
+    st.subheader("Performing Locations :")
     st.write(
         "\n".join(f"- {location}" for location in top_locations(
             month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])[:7]
@@ -293,8 +293,8 @@ with st.expander("How to interpret this pie chart ? ℹ️"):
     st.markdown("""
     This chart presents data **aggregated by location**, showing how many locations your brand appeared in across \
     AI-generated responses this month.
-    It summarizes visibility using **9,440 prompts total**, which come from running **2360 prompts weekly \
-    (4 runs per month)** across multiple keywords and locations.
+    It summarizes visibility using **5720 prompts total**, which come from running **2860 prompts \
+    (2 runs per month)** across multiple keywords and locations.
     - **“Locations Showed”**: The brand showed up **at least once** in AI results for that location — even if only for \
     one keyword in one prompt.
     - **“Locations Not Showed”**: The brand **did not appear even once** for any keyword in that location across all 

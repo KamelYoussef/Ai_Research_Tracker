@@ -1,4 +1,5 @@
 prompts:
+  - "Where can I get a {keyword} insurance quote in {location}"
   - "What are some top rated {keyword} insurance companies in {location}"
   - "What are some good {keyword} insurance brokers in {location}"
   - "Best {keyword} insurance brokers in {location}"
