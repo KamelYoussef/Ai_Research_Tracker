@@ -64,7 +64,7 @@ def extract_organizations_gemini(text, retries=3, backoff=2):
     for attempt in range(retries):
         try:
             response = client_gemini.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.5-flash-lite",
                 contents=(
                     "Extract only insurance provider organization names in order of appearance "
                     "from the following text and return them as a JSON array:\n\n"
@@ -111,7 +111,7 @@ def extract_sentiment(text, retries=3, backoff=2):
     for attempt in range(retries):
         try:
             response = client_gemini.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.5-flash-lite",
                 contents=(
                     "Extract only the names of insurance provider organizations and their associated sentiment scores "
                     "from the text below. Return the results as a JSON array. "
