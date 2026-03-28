@@ -729,7 +729,7 @@ def calculate_sentiment_by_platform(
 def get_insurance_brokers_by_city(config_path):
     results = {}
     config = load_and_validate_config(config_path)
-    for location in config["locations"]:
+    for location in config["maps_locations"]:
         results[location] = []  # Initialize empty list for each city
 
         for product in config["products"]:
