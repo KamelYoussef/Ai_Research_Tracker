@@ -553,6 +553,7 @@ def load_app_config():
                 "Huestis": config.get('Huestis', []),
                 "Coast": config.get('Coast', []),
                 "Wyatt": config.get('Wyatt', []),
+                "Ontario": config.get('Ontario', []),
             }
     except FileNotFoundError:
         st.error("Configuration file 'data/data.yml' not found.")
@@ -563,6 +564,7 @@ def load_app_config():
             "Huestis": [],
             "Coast": [],
             "Wyatt": [],
+            "Ontario": [],
         }
 
 

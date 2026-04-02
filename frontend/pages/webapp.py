@@ -42,6 +42,7 @@ HUESTIS_LIST = CONFIG["Huestis"]
 COAST_LIST = CONFIG["Coast"]
 WYATT_LIST = CONFIG["Wyatt"]
 WESTERN_LIST = CONFIG["Western"]
+ONTARIO_LIST = CONFIG["Ontario"]
 
 # Choose company or one of the competitors
 with header_col1:
@@ -63,6 +64,7 @@ if is_city:
             "Huestis": HUESTIS_LIST,
             "Coast": COAST_LIST,
             "Wyatt": WYATT_LIST,
+            "Ontario": ONTARIO_LIST,
         }
         filter_view = st.selectbox(" ", list(filter_locations.keys()))
 else:
