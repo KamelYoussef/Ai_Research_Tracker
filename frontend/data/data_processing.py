@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 
 CONFIG = load_app_config()
 HUESTIS_LIST = CONFIG["Huestis"]
+ONTARIO_LIST = CONFIG["Ontario"]
 
 
 def ai_platforms_score(month, competitor_flag, is_city=True, locations=None):
@@ -212,7 +213,7 @@ def get_ai_platforms_score_full_year(from_month, flag_competitor, is_city=True, 
         iter_ = 2
     elif is_city:
         iter_ = 10
-    if locations == HUESTIS_LIST:
+    if locations == HUESTIS_LIST or locations == ONTARIO_LIST:
         iter_ = 2
     # Last 12 months: from (end_date - 11 months) to end_date
     # not a year for now
@@ -258,7 +259,7 @@ def get_ai_scores_full_year_per_location(from_month, search_query, flag_competit
         iter_ = 2
     elif is_city:
         iter_ = 10
-    if locations == HUESTIS_LIST:
+    if locations == HUESTIS_LIST or locations == ONTARIO_LIST:
         iter_ = 2
     # Last 12 months: from (end_date - 11 months) to end_date
     # not a year for now
