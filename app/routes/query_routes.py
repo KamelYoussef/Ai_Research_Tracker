@@ -12,7 +12,7 @@ from app.utils.helpers import track_responses, get_ai_response, aggregate_total_
     validate_token, verify_password, admin_required, hash_password, calculate_rank, calculate_rank_by_platform, \
     get_aggregated_sources, calculate_sentiment, calculate_sentiment_by_platform, \
     aggregate_maps_by_product_and_location, calculate_avg_sentiment_by_location_platform, \
-    calculate_avg_rank_by_location_platform
+    calculate_avg_rank_by_location_platform, calculate_rank_by_platform_by_keyword
 
 
 router = APIRouter()
@@ -320,7 +320,31 @@ async def get_rank_by_platform(
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error calculating rank: {str(e)}")
+
+
+@router.get("/rank/{month}/{ai_platform}/{keyword}")
+async def get_rank_by_platform_by_keyword(
+    month: str,
+    ai_platform: str,
+    keyword: str,
+    is_city: bool = Query(True, description="Filter by city or region"),
+    locations: Optional[List[str]] = Query(None, description="Optional list of locations only if is_city=True."),
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    try:
+        validate_token(credentials)
+
+        # Make sure your business logic supports is_city as well
+        position = calculate_rank_by_platform_by_keyword(db, month, ai_platform, keyword, is_city=is_city, locations=locations)
+
+        return {"month": month, "rank": position, "ai_platform": ai_platform, "product": keyword}
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating rank: {str(e)}")
 
 
 @router.get("/sources/{month}/{ai_platform}")

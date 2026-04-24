@@ -620,6 +620,47 @@ def calculate_rank_by_platform(
 
     return avg_rank
 
+def calculate_rank_by_platform_by_keyword(
+        db: Session,
+        month: str,
+        ai_platform: str,
+        keyword: str,
+        is_city: bool = True,
+        locations: Optional[List[str]] = None
+):
+    """
+    Calculate the average rank for a specific AI platform and month and keyword, filtered by
+    city status and an optional list of locations.
+
+    Args:
+        db (Session): SQLAlchemy session.
+        month (str): The month in 'YYYYMM' format.
+        ai_platform (str): The name of the AI platform.
+        is_city (bool): Filter rows based on whether location is a city. Default is True.
+        locations (Optional[List[str]]): Specific location strings to filter by.
+
+    Returns:
+        avg_rank: The average rank, or None if no data is found.
+    """
+
+    # Start the query
+    query = db.query(func.avg(Response.rank))
+
+    # 1. Apply required filters
+    query = query.filter(Response.ai_platform == ai_platform)
+    query = query.filter(Response.date == month)
+    query = query.filter(Response.is_city == is_city)
+    query = query.filter(Response.product == keyword)
+
+    # 2. Conditional Location Filter: Applied only if the list is provided and non-empty.
+    if is_city and locations:
+        query = query.filter(Response.location.in_(locations))
+
+    # Execute the final query
+    avg_rank = query.scalar()
+
+    return avg_rank
+
 
 def get_aggregated_sources(db: Session, ai_platform: str, month: str) -> dict:
     """

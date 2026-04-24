@@ -9,7 +9,8 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from data.fetch_utils import select_month, get_ai_total_score, download_data, logout, process_and_pivot_data, \
     validate_token, get_avg_rank, get_avg_rank_by_platform, get_ai_scores_full_year, get_ranks_full_year, format_month, \
     get_sources, dict_to_text, get_avg_sentiment, get_sentiments_full_year, get_avg_sentiment_by_platform, \
-    get_avg_sentiment_by_location, get_avg_rank_by_location, fetch_data, inject_styles, load_app_config
+    get_avg_sentiment_by_location, get_avg_rank_by_location, fetch_data, inject_styles, load_app_config, \
+    get_avg_rank_by_platform_by_keyword
 from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart, plot_ai_scores_chart, \
     plot_rank_chart, display_map_with_score_colors, plot_sentiment_chart, plot_group_bar
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location, \
@@ -273,38 +274,71 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
 
         bar_data = pd.DataFrame({
             "Keyword": keywords,
-            "Visibility score": keyword_presence,
+            "Visibility score": [int(x) for x in keyword_presence],
         })
         st.plotly_chart(
             plot_bar_chart(bar_data),
             key=f"bar_chart_{model}",
             width='stretch'
         )
-        # Pie chart for Locations Showed vs No Results
-        pie_data = pd.DataFrame({
-            "Category": ["Showed", "No Results"],
-            "Count": [locations_showed, locations_no_results],
-        })
-        st.plotly_chart(
-            plot_pie_chart(pie_data),
-            key=f"pie_chart_{model}",
-            width='stretch'
-        )
+        with st.container():
+            keyword_plot_ranking_list = []
+            for keyword in keywords:
+                rank = get_avg_rank_by_platform_by_keyword(
+                    month, model, COMPETITOR_FLAGS[choice], keyword=keyword, is_city=is_city,
+                    locations=filter_locations[filter_view]
+                )
+                keyword_plot_ranking_list.append({
+                    'Keyword': keyword,
+                    'Average Rank': rank
+                })
+        if COMPETITOR_FLAGS[choice] == "total_count" and is_city:
+            keyword_plot_ranking_df = pd.DataFrame(keyword_plot_ranking_list)
+            keyword_plot_ranking_df['Color Rank'] = keyword_plot_ranking_df['Average Rank'].apply(lambda x: min(x, 5))
 
-with st.expander("How to interpret this pie chart ? ℹ️"):
-    st.markdown("""
-    This chart presents data **aggregated by location**, showing how many locations your brand appeared in across \
-    AI-generated responses this month.
-    It summarizes visibility using **5720 prompts total**, which come from running **2860 prompts \
-    (2 runs per month)** across multiple keywords and locations.
-    - **“Locations Showed”**: The brand showed up **at least once** in AI results for that location — even if only for \
-    one keyword in one prompt.
-    - **“Locations Not Showed”**: The brand **did not appear even once** for any keyword in that location across all 
-    prompts for the month.
+            import plotly.express as px
+            fig_overall = px.bar(
+                keyword_plot_ranking_df,
+                x="Keyword",
+                y="Average Rank",
+                #color="Color Rank",
+                text="Average Rank",
+                #title="Average Rank by Keyword",
+                color_continuous_scale="OrRd",
+                #range_color=(1, 6),
+                height=350,
+                #range_y=[1, 5]
+            )
+            fig_overall.update_yaxes(range=[4, 0.8], autorange=False)
+            st.plotly_chart(fig_overall)
+
+
+
+        # Pie chart for Locations Showed vs No Results
+        #pie_data = pd.DataFrame({
+        #    "Category": ["Showed", "No Results"],
+        #    "Count": [locations_showed, locations_no_results],
+        #})
+        #st.plotly_chart(
+        #    plot_pie_chart(pie_data),
+        #    key=f"pie_chart_{model}",
+        #    width='stretch'
+        #)
+
+#with st.expander("How to interpret this pie chart ? ℹ️"):
+    #st.markdown(
+    #This chart presents data **aggregated by location**, showing how many locations your brand appeared in across \
+    #AI-generated responses this month.
+    #It summarizes visibility using **5720 prompts total**, which come from running **2860 prompts \
+    #(2 runs per month)** across multiple keywords and locations.
+    #- **“Locations Showed”**: The brand showed up **at least once** in AI results for that location — even if only for \
+    #one keyword in one prompt.
+    #- **“Locations Not Showed”**: The brand **did not appear even once** for any keyword in that location across all
+    #prompts for the month.
     
-    ⚠️ **Locations in “Not Showed” should be flagged.** These represent areas with **zero brand visibility** in 
-    AI-generated answers — a potential risk that may require further investigation or action.
-    """)
+    #⚠️ **Locations in “Not Showed” should be flagged.** These represent areas with **zero brand visibility** in
+    #AI-generated answers — a potential risk that may require further investigation or action.
+    #)
 
 st.divider()
 # -----------------------------Stats by location------------------------------

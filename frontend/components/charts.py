@@ -19,11 +19,12 @@ def plot_pie_chart(data):
 def plot_bar_chart(data):
     fig = px.bar(
         data, x="Keyword", y="Visibility score",
-        height=350
+        height=350,
+        text="Visibility score",
     )
     fig.update_layout(
         yaxis=dict(range=[0, 100]),
-        xaxis_title = " "
+        #xaxis_title = " "
     )
     return fig
 

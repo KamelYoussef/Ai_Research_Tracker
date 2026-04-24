@@ -18,7 +18,7 @@ FASTAPI_URL = os.getenv("FASTAPI_URL")
 
 
 # Utility: Fetch data from the API
-def fetch_data(endpoint: str, month: str, flag_competitor=None, is_city=True, locations: Optional[List[str]] = None):
+def fetch_data(endpoint: str, month: str, flag_competitor=None, ai_platform=None, keyword=None, is_city=True, locations: Optional[List[str]] = None):
     """
     Fetch data from the FastAPI endpoint. (Updated to handle multi-element locations list)
 
@@ -32,6 +32,8 @@ def fetch_data(endpoint: str, month: str, flag_competitor=None, is_city=True, lo
         # Build base URL (same as before)
         if flag_competitor is not None:
             url = f"{FASTAPI_URL}/{endpoint}/{month}/{flag_competitor}"
+        elif keyword is not None:
+            url = f"{FASTAPI_URL}/{endpoint}/{month}/{ai_platform}/{keyword}"
         else:
             url = f"{FASTAPI_URL}/{endpoint}/{month}"
 
@@ -314,6 +316,16 @@ def get_avg_rank_by_platform(month, ai_platform, flag_competitor, is_city=True, 
         if fetch_data("rank", month, ai_platform, is_city=is_city, locations=locations):
             if fetch_data("rank", month, ai_platform, is_city=is_city, locations=locations).get("rank", []) is not None:
                 return round(float(fetch_data("rank", month,ai_platform, is_city=is_city, locations=locations).get("rank", [])),1)
+            else:
+                return "N/A"
+    else:
+        return "N/A"
+
+def get_avg_rank_by_platform_by_keyword(month, ai_platform, flag_competitor, keyword, is_city=True, locations=None):
+    if flag_competitor == "total_count":
+        if fetch_data("rank", month=month, ai_platform=ai_platform, keyword=keyword, is_city=is_city, locations=locations):
+            if fetch_data("rank", month=month, ai_platform=ai_platform, keyword=keyword, is_city=is_city, locations=locations).get("rank", []) is not None:
+                return round(float(fetch_data("rank", month=month, ai_platform=ai_platform, keyword=keyword, is_city=is_city, locations=locations).get("rank", [])),1)
             else:
                 return "N/A"
     else:
