@@ -292,7 +292,7 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
                     'Keyword': keyword,
                     'Average Rank': rank
                 })
-        if COMPETITOR_FLAGS[choice] == "total_count" and is_city:
+        if COMPETITOR_FLAGS[choice] == "total_count" and is_city and filter_locations[filter_view] not in [WYATT_LIST, ONTARIO_LIST]:
             keyword_plot_ranking_df = pd.DataFrame(keyword_plot_ranking_list)
             keyword_plot_ranking_df['Color Rank'] = keyword_plot_ranking_df['Average Rank'].apply(lambda x: min(x, 5))
 
@@ -301,15 +301,12 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
                 keyword_plot_ranking_df,
                 x="Keyword",
                 y="Average Rank",
-                #color="Color Rank",
                 text="Average Rank",
-                #title="Average Rank by Keyword",
                 color_continuous_scale="OrRd",
-                #range_color=(1, 6),
                 height=350,
                 #range_y=[1, 5]
             )
-            fig_overall.update_yaxes(range=[4, 0.8], autorange=False)
+            fig_overall.update_yaxes(range=[5, 0.8], autorange=False)
             st.plotly_chart(fig_overall)
 
 
