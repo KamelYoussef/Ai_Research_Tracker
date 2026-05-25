@@ -1,15 +1,19 @@
 from openai import OpenAI
-from app.config import OPENAI_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY
+from app.config import OPENAI_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY, SERP_API_KEY
 from google import genai
 from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 from urllib.parse import urlparse
 from anthropic import Anthropic
+import serpapi
+import requests
+import html2text
 
 
 client_chatgpt = OpenAI(api_key=OPENAI_API_KEY)
 client_perplexity = OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
 client_gemini = genai.Client(api_key=GEMINI_API_KEY)
 client_claude = Anthropic(api_key=CLAUDE_API_KEY)
+client_google = serpapi.Client(api_key=SERP_API_KEY)
 
 
 def get_ai_response(prompt, ai_platform):
@@ -17,7 +21,8 @@ def get_ai_response(prompt, ai_platform):
         "CHATGPT": chatgpt,
         "GEMINI": gemini,
         "PERPLEXITY": perplexity,
-        "CLAUDE": claude
+        "CLAUDE": claude,
+        "GOOGLE": google
     }
 
     handler = platform_handlers.get(ai_platform)
@@ -60,7 +65,7 @@ def chatgpt(prompt):
 
 def gemini(prompt):
     try:
-        model = "gemini-2.5-flash"
+        model = "gemini-3.5-flash"
         google_search_tool = Tool(
             google_search=GoogleSearch()
         )
@@ -98,6 +103,29 @@ def perplexity(prompt):
 
     except Exception as e:
         print(f"Error getting response from perplexity: {e}")
+        return "", []
+
+
+def google(prompt):
+    try:
+        result = client_google.search({
+            "q": prompt
+        })
+
+        ai_overview = client_google.search({
+            "engine": "google_ai_overview",
+            "page_token": result["ai_overview"]["page_token"]
+        })
+
+        url = ai_overview["search_metadata"]["raw_html_file"]
+        response = requests.get(url)
+
+        html_string = response.text
+        text = html2text.html2text(html_string)
+        return text, None
+
+    except Exception as e:
+        print(f"Error getting response from google: {e}")
         return "", []
 
 

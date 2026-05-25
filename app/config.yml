@@ -13,6 +13,7 @@ ai_platforms:
   - PERPLEXITY
   - GEMINI
   - CLAUDE
+  - GOOGLE
 competitors:
   - co-operators
   - westland

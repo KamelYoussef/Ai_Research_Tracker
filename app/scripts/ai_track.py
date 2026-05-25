@@ -89,3 +89,8 @@ if __name__ == "__main__":
     daily_track("CLAUDE")
     claude_time = time.time() - tmp
     print(f"Time taken to execute claude: {claude_time:.2f}  seconds")
+
+    tmp = time.time()
+    daily_track("GOOGLE")
+    google_time = time.time() - tmp
+    print(f"Time taken to execute google: {google_time:.2f}  seconds")

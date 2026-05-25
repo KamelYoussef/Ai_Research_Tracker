@@ -14,6 +14,7 @@ ai_platforms:
   - PERPLEXITY
   - GEMINI
   - CLAUDE
+  - GOOGLE
 competitors:
   Western Financial: total_count
   Co-operators: competitor_1

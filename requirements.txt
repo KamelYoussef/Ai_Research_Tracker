@@ -196,3 +196,5 @@ websockets==15.0.1
 wrapt==1.17.0
 xyzservices==2025.4.0
 yarl==1.18.3
+serpapi==1.0.2
+html2text==2025.4.15
