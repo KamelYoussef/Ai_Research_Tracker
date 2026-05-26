@@ -15,7 +15,7 @@ from components.charts import plot_pie_chart, plot_bar_chart, create_radar_chart
     plot_rank_chart, display_map_with_score_colors, plot_sentiment_chart, plot_group_bar
 from data.data_processing import keywords_data, top_locations, top_low_keywords, convert_df, stats_by_location, \
     fetch_and_process_data, get_location_scores, transform_value, get_ai_platforms_score_full_year, ai_platforms_score,\
-    get_ai_scores_full_year_per_location
+    get_ai_scores_full_year_per_location, report_data
 from components.header import render_tooltip_heading
 
 # -----------------------------Initialisation------------------------------
@@ -393,7 +393,9 @@ with col8:
                           )
 
         st.plotly_chart(plot_group_bar(df_long), width='stretch')
-
+    if filter_locations[filter_view] == AGGREGATION_LIST:
+        with st.expander("Export data"):
+            st.write(report_data(download_data(month, COMPETITOR_FLAGS[choice], is_city)[2], AGGREGATION_LIST))
 
 st.divider()
 # ------------------------------Citations-----------------------------

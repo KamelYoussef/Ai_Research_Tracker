@@ -274,3 +274,29 @@ def get_ai_scores_full_year_per_location(from_month, search_query, flag_competit
             output.append(round(float(total_sum / total_count), 1))
 
     return output
+
+
+def report_data(df, list_cities):
+    cols = df.columns
+    location_col = next((c for c in cols if 'location' in c.lower() or 'city' in c.lower()), None)
+    product_col = next((c for c in cols if 'product' in c.lower() or 'keyword' in c.lower()), None)
+    platform_col = next((c for c in cols if 'platform' in c.lower() or 'ai' in c.lower()), None)
+
+    non_run_cols = [location_col, product_col, platform_col, 'Total Count']
+    run_cols = [c for c in cols if c not in non_run_cols]
+
+    num_keywords = df[product_col].nunique()
+    num_platforms = df[platform_col].nunique()
+    num_runs = len(run_cols)
+
+    max_possible_per_city = num_keywords * num_platforms * num_runs
+
+    city_total_appearances = df.groupby(location_col)[run_cols].sum().sum(axis=1)
+
+    city_visibility_score = (city_total_appearances / max_possible_per_city)*100
+
+    output_df = city_visibility_score.reset_index()
+    output_df.columns = ['city', 'ai visibility score']
+    output_df = output_df.loc[output_df.city.isin(list_cities)]
+
+    return output_df
