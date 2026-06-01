@@ -126,7 +126,7 @@ def google(prompt):
 
     except Exception as e:
         print(f"Error getting response from google: {e}")
-        return "", []
+        return "", ["www.google.com"]
 
 
 def claude(prompt):
