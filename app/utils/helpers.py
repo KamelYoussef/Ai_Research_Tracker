@@ -117,6 +117,8 @@ def process_product_location_with_delay(product, location, search_phrases, ai_pl
     semaphore.acquire()
     if ai_platform == 'CLAUDE':
         RPM = 1
+    elif ai_platform == 'GOOGLE':
+        RPM = 3
     else:
         RPM = 50
 
