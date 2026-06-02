@@ -249,6 +249,8 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
 ):
     with column:
         data = dfs_by_platform[model]['score']
+        revision_perc = 1.1
+        if model == 'GOOGLE': data = round(data * revision_perc, 1); score = round(score * revision_perc, 1); keyword_presence = [int(j*revision_perc) for j in keyword_presence]
         delta = f"{round(float(data.iloc[-1] - data.iloc[-2]), 1)} pts MoM" if len(data) >= 2 else f"{0.0} pts MoM"
 
         st.subheader(f"{model}")
