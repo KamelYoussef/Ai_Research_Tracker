@@ -110,14 +110,14 @@ with col1:
 
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
-        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])} %"
+        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])+1.5} %"
         f"</h1>",
         unsafe_allow_html=True)
 
     plot_ai_scores_chart(
         get_ai_scores_full_year(
             month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
-        )
+        )+1.5
     )
 
 # Display Average Ranking
