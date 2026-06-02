@@ -249,8 +249,13 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
 ):
     with column:
         data = dfs_by_platform[model]['score']
+        # google revision
         revision_perc = 1.1
-        if model == 'GOOGLE': data = round(data * revision_perc, 1); score = round(score * revision_perc, 1); keyword_presence = [int(j*revision_perc) for j in keyword_presence]
+        if model == 'GOOGLE':
+            data = (data * revision_perc).round(1).clip(upper=98.0)
+            score = min(round(score * revision_perc, 1), 98.0)
+            keyword_presence = [min(int(j * revision_perc), 98) for j in keyword_presence]
+
         delta = f"{round(float(data.iloc[-1] - data.iloc[-2]), 1)} pts MoM" if len(data) >= 2 else f"{0.0} pts MoM"
 
         st.subheader(f"{model}")
