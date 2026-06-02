@@ -111,7 +111,7 @@ def google(prompt):
         result = client_google.search({
             "q": prompt
         })
-
+        page_token = result["ai_overview"]["page_token"]
         ai_overview = client_google.search({
             "engine": "google_ai_overview",
             "page_token": result["ai_overview"]["page_token"]
