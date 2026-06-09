@@ -6,6 +6,10 @@ products:
   - Home
   - Car
   - Business
+map_products:
+  - Home
+  - Car
+  - Business
   - Farm
   - Life
 ai_platforms:
