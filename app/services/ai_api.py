@@ -22,7 +22,8 @@ def get_ai_response(prompt, ai_platform):
         "GEMINI": gemini,
         "PERPLEXITY": perplexity,
         "CLAUDE": claude,
-        "GOOGLE": google
+        "GOOGLE": google,
+        "AI MODE": google_ai_mode
     }
 
     handler = platform_handlers.get(ai_platform)
