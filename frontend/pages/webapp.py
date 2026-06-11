@@ -110,14 +110,14 @@ with col1:
 
     st.markdown(
         f"<h1 style='text-align: left; margin-top: -30px;'>"
-        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])+1.5} %"
+        f"{get_ai_total_score(month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view])} %"
         f"</h1>",
         unsafe_allow_html=True)
 
     plot_ai_scores_chart(
         get_ai_scores_full_year(
             month, COMPETITOR_FLAGS[choice], is_city, locations=filter_locations[filter_view]
-        )+1.5
+        )
     )
 
 # Display Average Ranking
@@ -250,11 +250,11 @@ for model, score, locations_showed, locations_no_results, keyword_presence, colu
     with column:
         data = dfs_by_platform[model]['score']
         # google revision
-        revision_perc = 1.1
-        if model == 'GOOGLE':
-            data = (data * revision_perc).round(1).clip(upper=98.0)
-            score = min(round(score * revision_perc, 1), 98.0)
-            keyword_presence = [min(int(j * revision_perc), 98) for j in keyword_presence]
+        #revision_perc = 1.1
+        #if model == 'GOOGLE':
+        #    data = (data * revision_perc).round(1).clip(upper=98.0)
+        #    score = min(round(score * revision_perc, 1), 98.0)
+        #    keyword_presence = [min(int(j * revision_perc), 98) for j in keyword_presence]
 
         delta = f"{round(float(data.iloc[-1] - data.iloc[-2]), 1)} pts MoM" if len(data) >= 2 else f"{0.0} pts MoM"
 
@@ -391,7 +391,7 @@ with col8:
         if int(month) < 202606:
             ai_list_bars = ['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY']
         else :
-            ai_list_bars = ['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY', 'GOOGLE']
+            ai_list_bars = ['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY', 'GOOGLE', 'AI MODE']
         df_long = pd.melt(df,
                           id_vars=['product'],
                           value_vars=ai_list_bars,

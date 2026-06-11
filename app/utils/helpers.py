@@ -184,32 +184,6 @@ def track_responses(ai_platform, config_path, locations=None, products=None, pro
     return ai_responses, results
 
 
-def get_counts_from_config(config_path):
-    """
-    Get the number of locations and products from the config file.
-
-    Args:
-        config_path (str): Path to the configuration file.
-
-    Returns:
-        int: Number of products and locations.
-    """
-    try:
-        config = load_and_validate_config(config_path)
-
-        # Count locations and products
-        n_provinces = 6 # provinces in locations in config.yml
-        n_locations = len(config['locations']) - n_provinces
-        n_products = len(config['products'])
-        n_ai_platforms = len(config['ai_platforms'])
-
-        # Return the counts
-        return n_locations, n_products, n_ai_platforms
-
-    except Exception as e:
-        raise RuntimeError(f"Error retrieving counts from configuration: {str(e)}")
-
-
 def aggregate_total_by_product(
         db: Session,
         month: str,
@@ -450,8 +424,11 @@ def calculate_score_ai(
     )
     unique_days = unique_days_query.scalar()
 
-    # 3. Get N Products (from config, no DB filter change needed)
-    _, n_products, _ = get_counts_from_config(config_path)
+    # 3. Get N Products
+    n_products_query = get_base_query().with_entities(
+        func.count(distinct(Response.product))
+    )
+    n_products = n_products_query.scalar()
 
     # 4. Calculate N Locations
     if is_city is False:
@@ -773,7 +750,7 @@ def get_insurance_brokers_by_city(config_path):
     for location in config["maps_locations"]:
         results[location] = []  # Initialize empty list for each city
 
-        for product in config["products"]:
+        for product in config["map_products"]:
             query = f"{product} insurance in {location} canada"
             params = {
                 'query': query,

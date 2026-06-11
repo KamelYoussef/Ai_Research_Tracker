@@ -6,6 +6,10 @@ products:
   - Home
   - Car
   - Business
+map_products:
+  - Home
+  - Car
+  - Business
   - Farm
   - Life
 ai_platforms:
@@ -14,6 +18,7 @@ ai_platforms:
   - GEMINI
   - CLAUDE
   - GOOGLE
+  - AI MODE
 competitors:
   - co-operators
   - westland
