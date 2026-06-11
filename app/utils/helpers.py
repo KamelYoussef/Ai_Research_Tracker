@@ -115,7 +115,7 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
 def process_product_location_with_delay(product, location, search_phrases, ai_platform, prompt, competitors):
     # Wait until we are allowed to acquire the semaphore (this will throttle the rate)
     semaphore.acquire()
-    if ai_platform == 'GOOGLE':
+    if ai_platform == 'GOOGLE' or ai_platform == 'AI MODE':
         RPM = 1
     else:
         RPM = 50
