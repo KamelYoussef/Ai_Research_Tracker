@@ -3,6 +3,7 @@ from app.utils.helpers import *
 import json
 import pandas as pd
 from app.routes.query_routes import aggregate_maps_by_product_and_location_route
+from app.services.ai_api import google_ai_mode
 
 
 if __name__ == "__main__":
@@ -21,6 +22,8 @@ if __name__ == "__main__":
     #print(aggregate_maps_by_product_and_location(db, month, is_city=True))
     #print(calculate_rank(db, month, is_city=True, locations=['Leduc','Alix']))
 
-    print(calculate_rank_by_platform_by_keyword(db, month, "CHATGPT", "Farm"))
+    #print(calculate_rank_by_platform_by_keyword(db, month, "CHATGPT", "Farm"))
+
+    #print(google_ai_mode("where can i get a home insurance quote in winnipeg canada"))
 
     db.close()

@@ -15,6 +15,7 @@ ai_platforms:
   - GEMINI
   - CLAUDE
   - GOOGLE
+  - AI MODE
 competitors:
   Western Financial: total_count
   Co-operators: competitor_1

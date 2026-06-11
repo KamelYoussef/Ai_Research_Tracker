@@ -129,6 +129,26 @@ def google(prompt):
         return "", ["www.google.com"]
 
 
+def google_ai_mode(prompt):
+    try:
+        ai_mode = client_google.search({
+            "engine": "google_ai_mode",
+            "q": prompt
+        })
+        print(ai_mode)
+        text = ai_mode["reconstructed_markdown"]
+
+        citations = []
+        for ref in ai_mode["references"]:
+            citations.append(ref["link"])
+        sources = extract_base_domains(citations)
+        return text, sources
+
+    except Exception as e:
+        print(f"Error getting response from google: {e}")
+        return "", []
+
+
 def claude(prompt):
     try:
         response = client_claude.messages.create(

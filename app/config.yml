@@ -18,6 +18,7 @@ ai_platforms:
   - GEMINI
   - CLAUDE
   - GOOGLE
+  - AI MODE
 competitors:
   - co-operators
   - westland

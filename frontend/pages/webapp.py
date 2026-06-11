@@ -391,7 +391,7 @@ with col8:
         if int(month) < 202606:
             ai_list_bars = ['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY']
         else :
-            ai_list_bars = ['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY', 'GOOGLE']
+            ai_list_bars = ['CHATGPT', 'CLAUDE', 'GEMINI', 'PERPLEXITY', 'GOOGLE', 'AI MODE']
         df_long = pd.melt(df,
                           id_vars=['product'],
                           value_vars=ai_list_bars,
