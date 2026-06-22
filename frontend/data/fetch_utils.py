@@ -90,7 +90,7 @@ def process_and_pivot_data(endpoint, index_columns, month, competitor_flag, is_c
 
     if data:
         df = pd.DataFrame(data)
-
+        df = df.fillna(0.5)
         # Handle cases where the required columns are missing (though they shouldn't be based on the aggregation)
         if not all(col in df.columns for col in index_columns + ["day", competitor_flag]):
              st.error("Missing required columns in fetched data.")
@@ -102,7 +102,7 @@ def process_and_pivot_data(endpoint, index_columns, month, competitor_flag, is_c
             columns="day",
             values=competitor_flag,
             aggfunc="max",
-            fill_value=0
+            #fill_value=0
         ).reset_index()
 
         # Calculate 'Total Count' (sum across day columns)

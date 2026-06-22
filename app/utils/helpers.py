@@ -447,9 +447,13 @@ def calculate_score_ai(
     )
     n_ai_platforms = n_ai_platforms_query.scalar()
 
+    null_count_query = get_base_query().filter(
+        getattr(Response, flag_competitor).is_(None)
+    ).count()
+
     # Calculation
     # Note: Using max(1) to prevent DivisionByZeroError if counts are 0
-    divisor = max(n_locations, 1) * max(n_products, 1) * max(n_ai_platforms, 1) * max(unique_days, 1)
+    divisor = max(n_locations, 1) * max(n_products, 1) * max(n_ai_platforms, 1) * max(unique_days, 1) - null_count_query
 
     if divisor == 0:
         return 0
