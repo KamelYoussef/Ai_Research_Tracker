@@ -79,6 +79,21 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
 
         query = prompt.format(keyword=product, location=location)
         ai_response, sources = get_ai_response(query+" CANADA", ai_platform)
+
+        # Check if ai_response is empty
+        if not ai_response or ai_response.strip() == "":
+            return {
+                "product": product,
+                "location": location,
+                "ai_response": "",
+                "total_count": 0.5,
+                "matches": {},
+                "competitors": {"co-operators": 0.5, "westland": 0.5, "brokerlink": 0.5},
+                "rank": None,
+                "sentiment": None,
+                "sources": sources
+            }
+
         rank = ranking(ai_response, search_phrases)
         sentiment = get_sentiment_score(ai_response, search_phrases)
         match_results = find_words_in_texts(ai_response, search_phrases)

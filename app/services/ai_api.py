@@ -112,10 +112,12 @@ def google(prompt):
         result = client_google.search({
             "q": prompt
         })
+
         page_token = result["ai_overview"]["page_token"]
+
         ai_overview = client_google.search({
             "engine": "google_ai_overview",
-            "page_token": result["ai_overview"]["page_token"]
+            "page_token": page_token
         })
 
         url = ai_overview["search_metadata"]["raw_html_file"]
@@ -123,7 +125,10 @@ def google(prompt):
 
         html_string = response.text
         text = html2text.html2text(html_string)
-        return text, None
+
+        sources = extract_base_domains([item["link"] for item in ai_overview["references"]])
+
+        return text, sources
 
     except Exception as e:
         print(f"Error getting response from google: {e}")
@@ -136,7 +141,7 @@ def google_ai_mode(prompt):
             "engine": "google_ai_mode",
             "q": prompt
         })
-        print(ai_mode)
+
         text = ai_mode["reconstructed_markdown"]
 
         citations = []
