@@ -126,7 +126,7 @@ def google(prompt):
         html_string = response.text
         text = html2text.html2text(html_string)
 
-        sources = extract_base_domains([item["link"] for item in ai_overview["references"]])
+        sources = extract_base_domains([item["link"] for item in ai_overview['ai_overview']["references"]])
 
         return text, sources
 
