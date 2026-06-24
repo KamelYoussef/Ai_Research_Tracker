@@ -16,7 +16,7 @@ client_claude = Anthropic(api_key=CLAUDE_API_KEY)
 client_google = serpapi.Client(api_key=SERP_API_KEY)
 
 
-def get_ai_response(prompt, ai_platform):
+def get_ai_response(prompt, ai_platform, location):
     platform_handlers = {
         "CHATGPT": chatgpt,
         "GEMINI": gemini,
@@ -28,12 +28,12 @@ def get_ai_response(prompt, ai_platform):
 
     handler = platform_handlers.get(ai_platform)
     if handler:
-        return handler(prompt)
+        return handler(prompt, location)
     else:
         raise ValueError(f"Unsupported AI platform: {ai_platform}")
 
 
-def chatgpt(prompt):
+def chatgpt(prompt, location):
     try:
         response = client_chatgpt.responses.create(
             model="gpt-5-nano",
@@ -42,8 +42,7 @@ def chatgpt(prompt):
                 "user_location": {
                     "type": "approximate",
                     "country": "CA",
-                    "city": "Calgary",
-                    "region": "Alberta",
+                    "city": location
                 }
             }],
             include=["web_search_call.action.sources"],
@@ -64,7 +63,7 @@ def chatgpt(prompt):
         return "", []
 
 
-def gemini(prompt):
+def gemini(prompt, location):
     try:
         model = "gemini-2.5-flash"
         google_search_tool = Tool(
@@ -87,14 +86,20 @@ def gemini(prompt):
         return "", []
 
 
-def perplexity(prompt):
+def perplexity(prompt, location):
     try:
         completion = client_perplexity.chat.completions.create(
             model="sonar",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant for people in Canada."},
                 {"role": "user", "content": prompt}
-            ]
+            ],
+            web_search_options={
+                "user_location": {
+                    "country": "CA",
+                    "city": location
+                }
+            }
         )
 
         answer = completion.choices[0].message.content
@@ -107,7 +112,7 @@ def perplexity(prompt):
         return "", []
 
 
-def google(prompt):
+def google(prompt, location):
     try:
         result = client_google.search({
             "q": prompt
@@ -135,11 +140,13 @@ def google(prompt):
         return "", ["www.google.com"]
 
 
-def google_ai_mode(prompt):
+def google_ai_mode(prompt, location):
     try:
         ai_mode = client_google.search({
             "engine": "google_ai_mode",
-            "q": prompt
+            "q": prompt,
+            "gl": "ca",
+            #"location": location
         })
 
         text = ai_mode["reconstructed_markdown"]
@@ -155,12 +162,11 @@ def google_ai_mode(prompt):
         return "", []
 
 
-def claude(prompt):
+def claude(prompt, location):
     try:
         response = client_claude.messages.create(
             model="claude-haiku-4-5",
             max_tokens=4096,
-            system="You are a helpful assistant for people in Canada.",
             messages=[
                 {"role": "user", "content": prompt}
             ],
@@ -171,7 +177,7 @@ def claude(prompt):
                 "user_location": {
                     "type": "approximate",
                     "country": "CA",
-                    "city": "Calgary"
+                    "city": location
                 }
             }]
         )

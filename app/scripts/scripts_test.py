@@ -24,6 +24,6 @@ if __name__ == "__main__":
 
     #print(calculate_rank_by_platform_by_keyword(db, month, "CHATGPT", "Farm"))
 
-    print(google("where can i get a home insurance quote in alix canada"))
+    print(google_ai_mode("where can i get a home insurance quote near me", "Alix"))
 
     db.close()

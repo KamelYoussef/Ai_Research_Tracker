@@ -78,7 +78,7 @@ def process_product_location(product, location, search_phrases, ai_platform, pro
             prompt = f"where can I get a {product} insurance quote in {location}"
 
         query = prompt.format(keyword=product, location=location)
-        ai_response, sources = get_ai_response(query+" CANADA", ai_platform)
+        ai_response, sources = get_ai_response(query+" CANADA", ai_platform, location)
 
         # Check if ai_response is empty
         if not ai_response or ai_response.strip() == "":
